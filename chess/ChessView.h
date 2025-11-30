@@ -1,21 +1,51 @@
-//
 //  ChessView.h
 //  chess
 //
-//  Created by Andrew Wang on 7/15/13.
+//  Created by Andrew Wang on 15/07/2013, Completed by MCN on 2020
 //  Copyright (c) 2013 Andrew Wang. All rights reserved.
-//
 
-#import <Cocoa/Cocoa.h>
-#import "util.h"
+//#import <Cocoa/Cocoa.h>
+#import "Move.h"
+#import "RuleBook.h"
 
-@class ChessBoard,Pos;
+
+
+@class ChessBoard, Pos;
+
+@protocol ChessViewDelegate <NSObject>
+   -(void)AlerteEchecRoiSide:(Side)side;
+@end
+
 @interface ChessView : NSView
-{
-    ChessBoard *board;
     
-    BOOL hasSelTile;
-    Pos *selTile;
-    NSSet *coverage;
-}
+   {
+      // Déclaration des variables d'instance utiles
+      @public ChessBoard *liveBoard; // déclarée public MCN (ligne originale : 'ChessBoard *board;')
+      BOOL isThereTileSelected;
+      Pos *selTile;
+      NSSet *PosAcceptees;
+   }
+
+   @property (weak) id <ChessViewDelegate> delegate;
+
+   // Déclaration de méthodes devant être appelées à l'ext de la classe (dans ChessTests pour le coup...)
+   -(id)   initWithFrame:(NSRect)frame;
+
+   // dito pour méthodes MCN
+   -(void) MakeIAMoveForSide:(Side)side Board:(ChessBoard *)board;
+   
+   -(void) MajStatusBarViaMove:(Move *)move
+                     PrecBoard:(ChessBoard *)precBoard
+                      StrCheck:(NSString *)strCheck;
+
+   // rappel des autres méthodes
+   -(void) drawBoard;
+   -(void) mouseDown:(NSEvent *)theEvent;
+   -(void) MakeComputerMove;
+   -(void) drawRect:(NSRect)dirtyRect;
+
+   // rappel des méthodes MCN
+   -(void) MakeJoueurMoveVersDest:(Pos *) dest;
+
+
 @end

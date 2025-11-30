@@ -1,19 +1,29 @@
-//
 //  Move.h
 //  chess
 //
-//  Created by Andrew Wang on 7/15/13.
+//  Created by Andrew Wang on 15/07/2013, Completed by MCN on 2020
 //  Copyright (c) 2013 Andrew Wang. All rights reserved.
-//
 
-#import <Foundation/Foundation.h>
 
-@class Piece,Pos;
+@class Piece,Pos;  /* @class permet d'indiquer au compilateur que les classes "Piece" et "Pos" existent et
+                   sont déclarées ailleurs, ce qui permet d'éviter des #import bouclant sur eux-mêmes, en
+                   particulier en cas de classe en appelant une autre, comme ici Move qui utilise Pos
+                   NB : le rappel que Piece existe ne parait par contre pas pertinent ici... */
+
+/* Déclaration de la Classe Move qui adopte le protocole NSCopying permettant
+de faire des copies d'objets Move, ...ce dont nous avons besoin            */
 @interface Move : NSObject <NSCopying>
+                        
+    // ...comprenant 2 propriétés, start et dest...
+   @property (nonatomic, strong) Pos *start;
+   @property (nonatomic, strong) Pos *dest;
 
-@property (nonatomic, strong) Pos *start;
-@property (nonatomic, strong) Pos *dest;
 
--(id)initWithStart:(Pos *)start dest:(Pos *)dest;
+   // ...et une méthode initWithStart permettant d'en initialiser les valeurs
+   -(id)         initWithStart:(Pos *)start dest:(Pos *)dest;
+   
+   -(id)         copyWithZone:(NSZone *)zone;
+   -(NSString *) description;
+
 
 @end

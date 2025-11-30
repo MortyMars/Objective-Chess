@@ -1,18 +1,68 @@
-//
 //  AppDelegate.m
 //  chess
 //
-//  Created by Andrew Wang on 7/15/13.
+//  Created by Andrew Wang on 15/07/2013, Completed by MCN on 2020
 //  Copyright (c) 2013 Andrew Wang. All rights reserved.
-//
 
 #import "AppDelegate.h"
 
+
 @implementation AppDelegate
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
-{
-    // Insert code here to initialize your application
-}
+   @synthesize monMCNconnecteur; // MCN
+   @synthesize window;           // MCN (plus de pertinence)
+
+   
+   //***************************************************************************************************
+   // Unique méthode (d'instance) de la classe
+   // ayant pour objectif d'initialiser l'application
+   - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
+   {
+      // Insert code here to initialize your application
+      
+      /* L'appel ici, dans AppDelegate, de méthodes de la classe MCNconnecteur permet d'avoir l'assurance
+      du chargement préalable de tous les objets de l'interface (instances de classes en particulier...)
+      Un appel trop tôt dans le code, avec des objets encore 'nil' rendrait inefficace la mise à jour
+      souhaitée de l'affichage (c'est en tous cas ce que je crois avoir compris...)  */
+      
+      // MCN - MàJ des repères de cases selon l'affichache standard
+      sideJoueur = sideWhite;  sideIA = sideBlack; //choix arbitraire à ce stade, qui sera confirmé + tard
+      [monMCNconnecteur MajReperesCases];
+      
+      /* MCN - MàJ du listing des coups joués
+      'InitialiseTxtCoups' est appelée afin d'afficher le premier coup lorsque l'IA a les Blancs, sachant
+      qu'il faut d'abord définir la police utilisée dans le contrôle txtCoups (exigence de TextView)...  */
+      [monMCNconnecteur.txtCoups setFont:[NSFont fontWithName:@"Helvetica" size:14]];
+      //[monMCNconnecteur InitialiseTxtCoups:stringCoupsPartie];
+      
+      // MCN - Initialisation des indicateurs
+      monMCNconnecteur.indicIAdoitJouer.transparent = YES;
+      monMCNconnecteur.indicJdoitJouer.transparent = NO;
+      
+      /* MCN - Initialisation du niveau de prospection de l'IA par appel de la méthode 'SetDifficulty' ad-hoc
+      On note qu'ici c'est AppDelegate (self) qui envoi le message à SetDifficulty3 qui est une IBAction
+      ici on choisit le niveau 3... qui correspond à fixer NUMBER_MOVE_AHEAD à 2
+      (le mini = Difficulty1 -> NUMBER_MOVE_AHEAD = 0, et le maxi = Difficulty5 -> NUMBER_MOVE_AHEAD = 4) */
+      [monMCNconnecteur SetDifficulty3:self];
+      
+      /* MCN - INITIALISATION DE LA VARIABLE GLOBALE 'monMCNControleur' CRÉÉE DANS 'util.h'
+      La variable est identifiée comme étant l'objet 'monMCNconnecteur' instancié dans AppDelegate.
+      Elle en prend avantageusement la place puisque l'instance courante 'monMCNConnecteur' perdra le focus
+      sur l'UI dès que l'on sortira de 'applicationDidFinishLaunching' et n'aura plus d'utilité.
+      'monMCNControleur' devient dès lors le seul moyen efficace d'interagir ultérieurement et directement
+      avec l'interface  durant toute la durée de vie de l'application */
+      monMCNControleur = monMCNconnecteur;
+      
+      //@class Minimax;
+      //Minimax.delegate = MCNconnecteur;
+      
+      monMCNControleur.maChessView.delegate = monMCNControleur;
+      
+      // MCN - NSLog de contrôle
+      NSLog(@"\nInterface chargée");
+      
+   } // Fin de Méthode 'applicationDidFinishLaunching'
+
 
 @end
+
