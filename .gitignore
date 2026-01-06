@@ -1,2 +1,7 @@
-Chess/*histo*.*
-_doc_annexe/
+.DS_Store
+Thumbs.db
+UserInterfaceState.xcuserstate
+/node_modules
+
+/Chess/*histo*.*
+/_doc_annexe

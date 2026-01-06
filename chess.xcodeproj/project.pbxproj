@@ -24,12 +24,9 @@
 		83172A4627FA0873006FB509 /* MCNdiagramme.m in Sources */ = {isa = PBXBuildFile; fileRef = 83172A4527FA0873006FB509 /* MCNdiagramme.m */; };
 		833949A228120B1B0043F12F /* BoardsForTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 833949A128120B1B0043F12F /* BoardsForTests.m */; };
 		8359FCE82561F309000CCF2A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8359FCE72561F309000CCF2A /* AppDelegate.m */; };
-		838A608327C62E310041CB3D /* Méthodes.xlsx in Resources */ = {isa = PBXBuildFile; fileRef = 838A608227C62E310041CB3D /* Méthodes.xlsx */; };
 		839B0EA62393F4E300254843 /* Util.m in Sources */ = {isa = PBXBuildFile; fileRef = 839B0EA52393F4E300254843 /* Util.m */; };
 		83A693AE28273A430098C629 /* Codes FEN.txt in Resources */ = {isa = PBXBuildFile; fileRef = 83A693AC28273A430098C629 /* Codes FEN.txt */; };
 		83A693AF28273A430098C629 /* Codes FEN.txt in Resources */ = {isa = PBXBuildFile; fileRef = 83A693AC28273A430098C629 /* Codes FEN.txt */; };
-		83A693B028273A430098C629 /* Snippets.txt in Resources */ = {isa = PBXBuildFile; fileRef = 83A693AD28273A430098C629 /* Snippets.txt */; };
-		83A693B128273A430098C629 /* Snippets.txt in Resources */ = {isa = PBXBuildFile; fileRef = 83A693AD28273A430098C629 /* Snippets.txt */; };
 		83B442B2254F17A00008D95C /* MCNconnecteur.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B442B1254F17A00008D95C /* MCNconnecteur.m */; };
 		83D60B6D2829C84300A6196B /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 83D60B6C2829C84300A6196B /* README.md */; };
 		83E4FD9327F4DADA007F62F9 /* piecesMCN.png in Resources */ = {isa = PBXBuildFile; fileRef = 83E4FD9227F4DADA007F62F9 /* piecesMCN.png */; };
@@ -84,10 +81,8 @@
 		833949A428120D890043F12F /* ChessTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ChessTests.h; sourceTree = "<group>"; };
 		8359FCE62561F309000CCF2A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		8359FCE72561F309000CCF2A /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		838A608227C62E310041CB3D /* Méthodes.xlsx */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Méthodes.xlsx"; sourceTree = SOURCE_ROOT; };
 		839B0EA52393F4E300254843 /* Util.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Util.m; sourceTree = "<group>"; };
 		83A693AC28273A430098C629 /* Codes FEN.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "Codes FEN.txt"; sourceTree = SOURCE_ROOT; };
-		83A693AD28273A430098C629 /* Snippets.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Snippets.txt; sourceTree = SOURCE_ROOT; };
 		83B442B0254F17A00008D95C /* MCNconnecteur.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MCNconnecteur.h; sourceTree = "<group>"; };
 		83B442B1254F17A00008D95C /* MCNconnecteur.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MCNconnecteur.m; sourceTree = "<group>"; };
 		83D60B6C2829C84300A6196B /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
@@ -179,8 +174,6 @@
 				49AE4AE017948EC3009D59BE /* Util.h */,
 				839B0EA52393F4E300254843 /* Util.m */,
 				83A693AC28273A430098C629 /* Codes FEN.txt */,
-				83A693AD28273A430098C629 /* Snippets.txt */,
-				838A608227C62E310041CB3D /* Méthodes.xlsx */,
 				83E4FD9227F4DADA007F62F9 /* piecesMCN.png */,
 				49AE4ABB17948BAD009D59BE /* Images.xcassets */,
 				83D60B6C2829C84300A6196B /* README.md */,
@@ -299,9 +292,7 @@
 			files = (
 				83A693AE28273A430098C629 /* Codes FEN.txt in Resources */,
 				83E4FD9327F4DADA007F62F9 /* piecesMCN.png in Resources */,
-				83A693B028273A430098C629 /* Snippets.txt in Resources */,
 				49AE4ABC17948BAD009D59BE /* Images.xcassets in Resources */,
-				838A608327C62E310041CB3D /* Méthodes.xlsx in Resources */,
 				49AE4AB417948BAD009D59BE /* Credits.rtf in Resources */,
 				83D60B6D2829C84300A6196B /* README.md in Resources */,
 				49AE4ABA17948BAD009D59BE /* MainMenu.xib in Resources */,
@@ -312,7 +303,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				83A693B128273A430098C629 /* Snippets.txt in Resources */,
 				83A693AF28273A430098C629 /* Codes FEN.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -490,7 +480,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "chess/Chess-Prefix.pch";
 				INFOPLIST_FILE = "chess/chess-Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				PRODUCT_BUNDLE_IDENTIFIER = "net.landofstuff.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
@@ -507,7 +497,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "chess/Chess-Prefix.pch";
 				INFOPLIST_FILE = "chess/chess-Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				PRODUCT_BUNDLE_IDENTIFIER = "net.landofstuff.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;

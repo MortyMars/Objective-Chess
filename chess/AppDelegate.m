@@ -25,7 +25,7 @@
       Un appel trop tôt dans le code, avec des objets encore 'nil' rendrait inefficace la mise à jour
       souhaitée de l'affichage (c'est en tous cas ce que je crois avoir compris...)  */
       
-      // MCN - MàJ des repères de cases selon l'affichache standard
+      // MCN - MàJ des repères de cases selon l'affichage standard
       sideJoueur = sideWhite;  sideIA = sideBlack; //choix arbitraire à ce stade, qui sera confirmé + tard
       [monMCNconnecteur MajReperesCases];
       
