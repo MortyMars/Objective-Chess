@@ -1,29 +1,35 @@
-//
 //  Piece.m
 //  chess
 //
-//  Created by Andrew Wang on 7/15/13.
+//  Created by Andrew Wang on 15/07/2013, Completed by MCN on 2020
 //  Copyright (c) 2013 Andrew Wang. All rights reserved.
-//
 
 #import "Piece.h"
 
+
 @implementation Piece
 
--(id)initWithType:(PieceType)type side:(Side)side
-{
-    if (self = [super init]) {
-        _type = type;
-        _side = side;
-    }
-    return self;
-}
+   // **************************************************************************************************
+   // Méthode d'instance définissant une Pièce sur la base d'un type et d'une couleur
+   -(id)initWithType:(PieceType)type
+                side:(Side)side
+   {
+      if (self = [super init]) {
+         _type = type;
+         _side = side;
+      }
+      return self;
+   }
 
--(id)copyWithZone:(NSZone *)zone
-{
-    Piece *newPiece = [[Piece allocWithZone:zone] initWithType:self.type side:self.side];
-    newPiece.numMoves = self.numMoves;
-    return newPiece;
-}
+   // **************************************************************************************************
+   // Méthode exigée par le Protocol NSCopying dont hérite la classe Piece
+   // Elle n'est pas formellement appelée dans le code, mais s'active dès l'envoi d'un msg copy sur un objet
+   -(id)copyWithZone:(NSZone *)zone
+   {
+      Piece *newPiece = [[Piece allocWithZone:zone] initWithType:self.type
+                                                            side:self.side];
+      newPiece.numMoves = self.numMoves;
+      return newPiece;
+   }
 
 @end

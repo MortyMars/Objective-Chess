@@ -1,20 +1,23 @@
-//
 //  Piece.h
 //  chess
 //
-//  Created by Andrew Wang on 7/15/13.
+//  Created by Andrew Wang on 15/07/2013, Completed by MCN on 2020
 //  Copyright (c) 2013 Andrew Wang. All rights reserved.
-//
 
-#import <Foundation/Foundation.h>
-#import "util.h"
+#import "Util.h"
 
-@interface Piece : NSObject <NSCopying>
 
-@property (nonatomic) PieceType type;
-@property (nonatomic) Side side;
-@property (nonatomic) int numMoves;
+@interface Piece : NSObject <NSCopying> /* Le protocole NSCopying permettra de faire des copies d'objets
+                                        Piece, ...ce dont nous avons besoin */
+    
+   @property (nonatomic) PieceType type;
+   @property (nonatomic) Side side;
+   @property (nonatomic) int numMoves;
 
--(id)initWithType:(PieceType)type side:(Side)side;
+   -(id) initWithType:(PieceType)type
+                 side:(Side)side;
+
+   -(id) copyWithZone:(NSZone *)zone;
+
 
 @end
