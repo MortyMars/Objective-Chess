@@ -1,0 +1,65 @@
+Snippets en vrac
+================
+
+
+[viewEC performSelectorOnMainThread:@selector(setNeedsDisplay) withObject:nil waitUntilDone:NO];
+
+dispatch_queue_t q = dispatch_get_main_queue();
+dispatch_async(q, ^{
+   [viewEC setNeedsDisplay: YES];
+});
+
+dispatch_async(dispatch_get_main_queue(), ^{
+   [monMCNControleur.maChessView setNeedsDisplay:YES];
+});
+            
+dispatch_sync(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^(void){
+   [viewEC MakeIAMoveForSide:sideWhite Board:boardEC];
+   [viewEC setNeedsDisplay:YES];
+});
+               
+[viewEC drawRect:CGRectMake(0, 0, 600, 600)];
+
+[NSThread sleepForTimeInterval:1.0f];
+
+NSDictionary *dicoBlack = @{[NSNumber numberWithInt:sideBlack]:@"SideEnInt", boardEC:@"ObjBoard"};
+
+NSDictionary *dicoBlack = [[NSDictionary alloc] initWithObjectsAndKeys:
+                           [NSNumber numberWithInt:sideBlack], @"SideEnInt", boardEC, @"ObjBoard", nil];
+                             
+[NSTimer scheduledTimerWithTimeInterval:1
+                                 target:viewEC
+                               selector:@selector(MakeIAMoveForSide:Board:)
+                               userInfo:dicoBlack
+                                repeats:NO];
+
+[NSTimer scheduledTimerWithTimeInterval:0.02
+                                 target:self
+                               selector:@selector(LancerCoupNoirs)
+                               userInfo:nil
+                                repeats:NO];
+                                
+[NSTimer performSelector:@selector(LancerCoupNoirs) withObject:self afterDelay:1];
+
+NSTimeInterval delayInSeconds = 1.0;
+dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+   [viewEC MakeIAMoveForSide:sideWhite Board:boardEC];
+   [viewEC MakeIAMoveForSide:sideBlack Board:boardEC];
+});
+                  
+dispatch_queue_t q = dispatch_get_main_queue();
+dispatch_async(q, ^{
+});
+
+dispatch_async(dispatch_get_main_queue(), ^{
+   // Code à exécuter dans le thread ppal
+});
+                  
+if ([NSThread isMainThread]){
+   // Code à exécuter si le thread courant est le thread ppal
+}
+
+if (![NSThread isMainThread]){
+   // Code à exécuter si le thread courant est un thread secondaire
+}
