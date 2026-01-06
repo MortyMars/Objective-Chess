@@ -7,4 +7,5 @@ Chess/*histo*.*
 xcuserdata/
 DerivedData/
 node_modules/
-_doc_annexe.DS_Store/
+_doc_annexe/
+_historique/
