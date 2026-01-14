@@ -15,40 +15,45 @@
 
 @interface Minimax : NSObject
 
-   {
-   // variable d'instance
+    // DÉCLARATION DES VARIABLES D'INSTANCE
+    // (logiquement vide car Minimax n'a pas vocation à avoir d'instances)
+    {
    
-   }
+    }
 
-    
-   // Méthode de classe déterminant le meilleur coup pour les blancs / les noirs
-   +(Move *)     BestMoveForSide:(Side)side             // côté blanc ou côté noir
-                           board:(ChessBoard *)board;   // et selon la configuration de l'échiquier courant
+    // DÉCLARATION DES MÉTHODES DE CLASSE
+    // Méthode de classe déterminant le meilleur coup pour 'side''
+    +(Move *)     BestMoveForSide:(Side)side             // côté blanc ou côté noir
+                            board:(ChessBoard *)board;   // et selon la configuration de l'échiquier courant
 
-   // Méthode de classe évaluant l'échiquier à un moment donné de la partie
-   +(int)        EvalBoardForSide:(Side)side
-                            board:(ChessBoard *)board;
+    // Méthode de classe évaluant l'échiquier à un moment donné de la partie
+    +(int)        EvalBoardForSide:(Side)side
+                             board:(ChessBoard *)board;
 
-   +(NSSet *)    PossibleMovesForSide:(Side)side
-                                board:(ChessBoard *)board;
+    // Méthode déterminant tous les coups possibles pour un 'side'
+    +(NSSet *)    PossibleMovesForSide:(Side)side
+                                 board:(ChessBoard *)board;
 
-   +(void)       NotifiePatMatDesSide:(Side)side
-                              onBoard:(ChessBoard*)board;
+    // Méthode notifiant s'il y a Pat ou Mat des 'side'
+    +(void)       NotifiePatMatDesSide:(Side)side
+                               onBoard:(ChessBoard*)board;
    
 
-   // Méthodes de Classe MCN
-   +(NSString *) TestEchecFavSide:(Side)side
-                            Board:(ChessBoard *)board;
+    // MÉTHODES DE CLASSE MCN
+    // Méthode testant si 'side' met son adversaire en échec
+    +(NSString *) TestEchecFavSide:(Side)side
+                             Board:(ChessBoard *)board;
 
-   +(BOOL)       TestEchecRoiSide:(Side)side
-                          inBoard:(ChessBoard*)board;
+    // Méthode testant si le roi 'side' est en échec
+    +(BOOL)       TestEchecRoiSide:(Side)side
+                           inBoard:(ChessBoard*)board;
 
-   // Déclaration de méthodes, ajoutées pour qu'elles soient accessibles pour les tests
-   +(int)        NegamaxForSide:(Side)side
-                          board:(ChessBoard *)board
-                          depth:(int)depth
-                          alpha:(int)alpha
-                           beta:(int)beta;
+    // DÉCLARATION DE MÉTHODES AFIN QU'ELLES SOIENT VISIBLES POUR LES TESTS
+    +(int)        NegamaxForSide:(Side)side
+                           board:(ChessBoard *)board
+                           depth:(int)depth
+                           alpha:(int)alpha
+                            beta:(int)beta;
 
 
 @end

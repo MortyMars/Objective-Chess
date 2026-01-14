@@ -19,21 +19,22 @@ NB : c'est également le cas des très respectables classes 'Minimax' et 'RuleBo
    // No variable d'instance
    }
 
-   // Méthode de Classe générant une chaine décrivant un Move
-   +(NSMutableString *) ConvertEnStringMove:(Move *) move
-                                   PromPion:(NSString *) promPion
-                                   StrEchec:(NSString *) strEchec
-                                      Board:(ChessBoard *) board;
+    // DÉCLARATION DES MÉTHODES, TOUTES DE CLASSE
+    // Méthode générant une chaine décrivant un Move
+    +(NSMutableString *) ConvertEnStringMove:(Move *) move
+                                    PromPion:(NSString *) promPion
+                                    StrEchec:(NSString *) strEchec
+                                       Board:(ChessBoard *) board;
 
    
-   // Méthode de Classe mettant en forme ordonnée la chaine ci-dessus
-   +(void)              MettreEnFormeChaine:(NSString *) moveToStr
-                               Protagoniste:(NSString *) strJ_IA;
+    // Méthode mettant en forme ordonnée la chaine ci-dessus
+    +(void)              MettreEnFormeChaine:(NSString *) moveToStr
+                                Protagoniste:(NSString *) strJ_IA;
                      
    
-   // Méthode de Classe modifiant le repérage des cases en 'a1 à g8'
-   +(NSString *)        Modif00EnA1:(Move *)move
-                           surBoard:(ChessBoard*)board;
+    // Méthode modifiant le repérage des cases en 'a1 à g8'
+    +(NSString *)        Modif00EnA1:(Move *)move
+                            surBoard:(ChessBoard*)board;
 
 
 

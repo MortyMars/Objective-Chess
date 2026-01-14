@@ -102,7 +102,7 @@ int nbElag = 0;
       Si le camp adversaire est Mat ou Pat, alors on sort */
       
       /* ************************************************************** */
-      /* ********* MODIF du 02/06/2025 - OPTIMISATION CLAUDE IA ******* */
+      /* ********* MODIF du 02/06/2025 - OPTIMISATION DU CODE ********* */
       int eval = [self EvalBoardForSide:side board:board];
    
       if ([self PossibleMovesForSide:otherSide board:board].count == 0) {
@@ -114,7 +114,7 @@ int nbElag = 0;
             return 0;      // Pat = nulle
          }
       }
-      /* ********* FIN DE MODIF        - OPTIMISATION CLAUDE IA ******* */
+      /* ********* FIN DE MODIF        - OPTIMISATION DU CODE ********* */
       /* ************************************************************** */
       
       /* 'depth <= 0' n'est plus un cas de sortie inconditionnelle, mais le début d'une QS */
