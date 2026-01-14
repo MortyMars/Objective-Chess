@@ -48,7 +48,7 @@
          // Boite de dialogue, générant une interruption rendant possible l'affichage du board avant moves
          NSAlert *stop1 = [[NSAlert alloc] init];
          [stop1 setMessageText:    @"Résolution de Diagramme IA vs IA"];
-         [stop1 setInformativeText:@"Voici le Diagramme proposé à l'IA, Trait aux Blancs, 100 coups max"];
+         [stop1 setInformativeText:@"Voici le Diagramme proposé à l'IA, Trait aux BLANCS, 100 coups max"];
          [stop1 addButtonWithTitle:@"OK, c'est parti !"];
          [stop1 setAlertStyle:NSAlertStyleInformational];
          [stop1 runModal];
@@ -97,8 +97,54 @@
       // Cas du trait aux Noirs
       else if ([monMCNControleur.lblTrait.cell.stringValue isEqual:@"Trait : Noirs"]) {
          
-         // CC à faire à partir du code consolidé du cas 'trait aux Blancs' et modifier params passés
-      }
+          // Boite de dialogue, générant une interruption rendant possible l'affichage du board avant moves
+          NSAlert *stop1 = [[NSAlert alloc] init];
+          [stop1 setMessageText:    @"Résolution de Diagramme IA vs IA"];
+          [stop1 setInformativeText:@"Voici le Diagramme proposé à l'IA, Trait aux NOIRS, 100 coups max"];
+          [stop1 addButtonWithTitle:@"OK, c'est parti !"];
+          [stop1 setAlertStyle:NSAlertStyleInformational];
+          [stop1 runModal];
+          /* Boucle des coups successifs, limitée à 10 coups, Noirs au trait
+          Tant que Noirs non Pat ou Mat ET Blancs non Pat ou Mat ET compteur inférieur à 10
+          (mais dès que l'un des trois, on sort de la boucle)   */
+          
+          // Bloc NSOpération
+          [self->maFileSerie addOperationWithBlock:^{
+             
+             /* Boucle 'limitée' à 100 coups max */
+             while (compteur < 101) {
+                
+                sleep(1);
+                //sideIA = sideWhite; sideJoueur = sideBlack; /* pour éval cohérente */
+                [self SilentMakeIAMoveForSide:sideBlack Board:boardEC];
+                /* Test pour provoquer une sortie de boucle si nécessaire */
+                if ([Minimax PossibleMovesForSide:sideWhite board:boardEC].count == 0) compteur = 101;
+                /* Forcement du thread principal pour MàJ ChessView et liste coups */
+                dispatch_async(dispatch_get_main_queue(), ^{
+                   [viewEC setNeedsDisplay:YES];
+                   [monMCNControleur MaJtxtCoups];
+                }); // Fin Dispatch
+             
+                /* Si les Blancs ne se retrouvent pas Pat ou Mat après le coup Noirs ci-dessus... */
+                if ([Minimax PossibleMovesForSide:sideWhite board:boardEC].count!=0) {
+                   sleep(1);
+                   /* ...alors on joue un coup Blancs */
+                   //sideIA = sideWhite; sideJoueur = sideBlack; /* pour éval cohérente */
+                   [self SilentMakeIAMoveForSide:sideWhite Board:boardEC];
+                   /* Test pour provoquer une sortie de boucle si nécessaire */
+                   if ([Minimax PossibleMovesForSide:sideBlack board:boardEC].count == 0) compteur = 101;
+                   /* Forcement du thread principal pour MàJ ChessView et liste coups */
+                   dispatch_async(dispatch_get_main_queue(), ^{
+                      [viewEC setNeedsDisplay:YES];
+                      [monMCNControleur MaJtxtCoups];
+                   }); // Fin Dispatch
+                } // Fin if
+             
+                compteur ++;
+             } // Fin de while
+          }]; // fin de bloc NSOperation
+          
+       } // Fin de if Trait aux Noirs
       
    } // Fin de 'ProposerDiagPourIA'
 
