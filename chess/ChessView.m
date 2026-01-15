@@ -54,7 +54,7 @@
       float tileWidth  = self.bounds.size.width  / 8;
       float tileHeight = self.bounds.size.height / 8;
       
-      CGContextRef context = [[NSGraphicsContext currentContext] graphicsPort];
+      CGContextRef context = [[NSGraphicsContext currentContext] CGContext];
       
       /* CHARGEMENT DE L'IMAGE DE TOUTES LES PIÈCES - Pour que ça marche, l'image regroupant les pièces doit
       être au format de 360x120 avec une résolution de 72x72 - Chaque pièce a donc une taille de 60x60    */

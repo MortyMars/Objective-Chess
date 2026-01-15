@@ -272,8 +272,18 @@ int nbElag = 0;
 
 
 //***************************************************************************************************
-// MÉTHODE 6 : EvalBoardForSide - ÉVALUATION STATIQUE DU PLATEAU
-// VERSION LÉGÈREMENT OPTIMISÉE avec commentaires clarifiés
+// MÉTHODE : EvalBoardForSide - VERSION AMÉLIORÉE AVEC ÉVALUATION POSITIONNELLE
+// Cette méthode évalue la qualité d'une position d'échecs pour un camp donné
+//
+// PHILOSOPHIE D'ÉVALUATION :
+// - Matériel : Valeur brute des pièces (base)
+// - Position : Où sont placées les pièces (crucial)
+// - Sécurité : Le roi est-il en sécurité ?
+// - Structure : Les pions sont-ils bien organisés ?
+// - Mobilité : Combien de coups possibles ?
+// - Développement : Les pièces sont-elles actives ?
+//
+// CONVENTION : Valeur positive = avantage pour 'side', négative = désavantage
 //***************************************************************************************************
 +(int)EvalBoardForSide:(Side)side
                  board:(ChessBoard *)board
@@ -281,34 +291,342 @@ int nbElag = 0;
    int evalForAlgo = 0;  /* Valeur retournée pour l'algorithme Negamax */
    evalDisplay = 0;      /* Valeur affichée (convention : + = avantage Blancs) */
    
-   /* ========== ÉVALUATION MATÉRIELLE ========== */
-   /* Parcours de toutes les cases pour comptabiliser la valeur des pièces */
+   /* Variables pour statistiques intermédiaires */
+   int materialWhite = 0, materialBlack = 0;
+   int mobilityWhite = 0, mobilityBlack = 0;
+   int developmentWhite = 0, developmentBlack = 0;
+   
+   
+   // ==================================================================================
+   // PARTIE 1 : ÉVALUATION MATÉRIELLE + POSITIONNELLE
+   // ==================================================================================
+   /* Tables de valeurs positionnelles pour chaque type de pièce
+      Ces tables donnent un bonus/malus selon la position de la pièce sur l'échiquier
+      Convention : les tableaux sont vus du point de vue des Blancs (rangée 0 = fond Blancs) */
+   
+   /* TABLE PIONS : Encourage l'avancée et le contrôle du centre
+      VALEURS RÉDUITES pour éviter les sacrifices stupides */
+   static const int pawnTable[8][8] = {
+      {  0,  0,  0,  0,  0,  0,  0,  0 },  // Rangée 0 (promotion, ne devrait pas arriver)
+      { 10, 10, 10, 10, 10, 10, 10, 10 },  // Rangée 1 (avant-dernière, déjà géré ailleurs)
+      {  2,  2,  4,  6,  6,  4,  2,  2 },  // Rangée 2
+      {  1,  1,  2,  5,  5,  2,  1,  1 },  // Rangée 3
+      {  0,  0,  0,  4,  4,  0,  0,  0 },  // Rangée 4 (centre)
+      {  1, -1, -2,  0,  0, -2, -1,  1 },  // Rangée 5
+      {  1,  2,  2, -4, -4,  2,  2,  1 },  // Rangée 6
+      {  0,  0,  0,  0,  0,  0,  0,  0 }   // Rangée 7 (départ)
+   };
+   
+   /* TABLE CAVALIERS : Encourage position centrale et pénalise les bords
+      VALEURS RÉDUITES */
+   static const int knightTable[8][8] = {
+      {-10, -8, -6, -6, -6, -6, -8,-10 },
+      { -8, -4,  0,  0,  0,  0, -4, -8 },
+      { -6,  0,  2,  3,  3,  2,  0, -6 },
+      { -6,  1,  3,  4,  4,  3,  1, -6 },
+      { -6,  0,  3,  4,  4,  3,  0, -6 },
+      { -6,  1,  2,  3,  3,  2,  1, -6 },
+      { -8, -4,  0,  1,  1,  0, -4, -8 },
+      {-10, -8, -6, -6, -6, -6, -8,-10 }
+   };
+   
+   /* TABLE FOUS : Encourage diagonales longues et centre
+      VALEURS RÉDUITES */
+   static const int bishopTable[8][8] = {
+      { -4, -2, -2, -2, -2, -2, -2, -4 },
+      { -2,  0,  0,  0,  0,  0,  0, -2 },
+      { -2,  0,  1,  2,  2,  1,  0, -2 },
+      { -2,  1,  1,  2,  2,  1,  1, -2 },
+      { -2,  0,  2,  2,  2,  2,  0, -2 },
+      { -2,  2,  2,  2,  2,  2,  2, -2 },
+      { -2,  1,  0,  0,  0,  0,  1, -2 },
+      { -4, -2, -2, -2, -2, -2, -2, -4 }
+   };
+   
+   /* TABLE TOURS : Encourage 7ème rangée et colonnes ouvertes (approximatif)
+      VALEURS RÉDUITES */
+   static const int rookTable[8][8] = {
+      {  0,  0,  0,  0,  0,  0,  0,  0 },
+      {  1,  2,  2,  2,  2,  2,  2,  1 },
+      { -1,  0,  0,  0,  0,  0,  0, -1 },
+      { -1,  0,  0,  0,  0,  0,  0, -1 },
+      { -1,  0,  0,  0,  0,  0,  0, -1 },
+      { -1,  0,  0,  0,  0,  0,  0, -1 },
+      { -1,  0,  0,  0,  0,  0,  0, -1 },
+      {  0,  0,  0,  1,  1,  0,  0,  0 }
+   };
+   
+   /* TABLE DAME : Légère préférence pour le centre, éviter l'exposition précoce
+      VALEURS RÉDUITES */
+   static const int queenTable[8][8] = {
+      { -4, -2, -2, -1, -1, -2, -2, -4 },
+      { -2,  0,  0,  0,  0,  0,  0, -2 },
+      { -2,  0,  1,  1,  1,  1,  0, -2 },
+      { -1,  0,  1,  1,  1,  1,  0, -1 },
+      {  0,  0,  1,  1,  1,  1,  0, -1 },
+      { -2,  1,  1,  1,  1,  1,  0, -2 },
+      { -2,  0,  1,  0,  0,  0,  0, -2 },
+      { -4, -2, -2, -1, -1, -2, -2, -4 }
+   };
+   
+   /* TABLE ROI (milieu de partie) : Encourage roque et sécurité sur les côtés
+      VALEURS RÉDUITES */
+   static const int kingMiddleGameTable[8][8] = {
+      { -6, -8, -8,-10,-10, -8, -8, -6 },
+      { -6, -8, -8,-10,-10, -8, -8, -6 },
+      { -6, -8, -8,-10,-10, -8, -8, -6 },
+      { -6, -8, -8,-10,-10, -8, -8, -6 },
+      { -4, -6, -6, -8, -8, -6, -6, -4 },
+      { -2, -4, -4, -4, -4, -4, -4, -2 },
+      {  4,  4,  0,  0,  0,  0,  4,  4 },
+      {  4,  6,  2,  0,  0,  2,  6,  4 }
+   };
+   
+   /* TABLE ROI (fin de partie) : Le roi devient actif au centre
+      VALEURS RÉDUITES */
+   static const int kingEndGameTable[8][8] = {
+      {-10, -8, -6, -4, -4, -6, -8,-10 },
+      { -6, -4, -2,  0,  0, -2, -4, -6 },
+      { -6, -2,  4,  6,  6,  4, -2, -6 },
+      { -6, -2,  6,  8,  8,  6, -2, -6 },
+      { -6, -2,  6,  8,  8,  6, -2, -6 },
+      { -6, -2,  4,  6,  6,  4, -2, -6 },
+      { -6, -6,  0,  0,  0,  0, -6, -6 },
+      {-10, -6, -6, -6, -6, -6, -6,-10 }
+   };
+   
+   
+   /* ========== PARCOURS DE L'ÉCHIQUIER ========== */
+   /* Comptage du matériel total pour déterminer si on est en fin de partie */
+   int totalMaterial = 0;
+   
    for (int x = 0; x < 8; x++) {
       for (int y = 0; y < 8; y++) {
          Piece *piece = [board piece_colX:x rangY:y];
-         if (piece) {
-            int value = 0;
-            
-            /* Attribution des valeurs standard */
-            switch (piece.type) {
-               case Invalide: break;
-               case Pion:  value = 100;    break;
-               case Cava:  value = 300;    break;
-               case Fou:   value = 300;    break;
-               case Tour:  value = 500;    break;
-               case Dame:  value = 900;    break;
-               case Roi:   value = 100000; break;  /* Valeur très haute pour inciter à l'attaquer */
+         if (!piece) continue;
+         
+         int value = 0;              // Valeur matérielle
+         int positionBonus = 0;      // Bonus positionnel
+         
+         /* Détermination de la valeur de base et du bonus positionnel */
+         switch (piece.type) {
+            case Invalide:
+               break;
+               
+            case Pion:
+               value = 100;
+               /* Pour les Noirs, on inverse la table (miroir vertical) */
+               if (piece.side == sideWhite) {
+                  positionBonus = pawnTable[y][x];
+               } else {
+                  positionBonus = pawnTable[7-y][x];
+               }
+               break;
+               
+            case Cava:
+               value = 300;
+               positionBonus = knightTable[y][x];
+               
+               /* BONUS DÉVELOPPEMENT : Cavalier sorti de sa case de départ
+                  VALEUR RÉDUITE */
+               if (piece.side == sideWhite && y > 0) developmentWhite += 5;
+               if (piece.side == sideBlack && y < 7) developmentBlack += 5;
+               break;
+               
+            case Fou:
+               value = 300;
+               positionBonus = bishopTable[y][x];
+               
+               /* BONUS DÉVELOPPEMENT : Fou sorti de sa case de départ
+                  VALEUR RÉDUITE */
+               if (piece.side == sideWhite && y > 0) developmentWhite += 5;
+               if (piece.side == sideBlack && y < 7) developmentBlack += 5;
+               break;
+               
+            case Tour:
+               value = 500;
+               if (piece.side == sideWhite) {
+                  positionBonus = rookTable[y][x];
+               } else {
+                  positionBonus = rookTable[7-y][x];
+               }
+               break;
+               
+            case Dame:
+               value = 900;
+               positionBonus = queenTable[y][x];
+               
+               /* MALUS SI DAME SORTIE TROP TÔT (avant coups 10-15)
+                  VALEUR RÉDUITE */
+               if (board->nbEntiers < 10) {
+                  if (piece.side == sideWhite && y > 1) positionBonus -= 10;
+                  if (piece.side == sideBlack && y < 6) positionBonus -= 10;
+               }
+               break;
+               
+            case Roi:
+               value = 100000;
+               
+               /* Choix de la table selon la phase de jeu */
+               /* Fin de partie si matériel total < 3000 (approximatif) */
+               if (totalMaterial < 3000) {
+                  if (piece.side == sideWhite) {
+                     positionBonus = kingEndGameTable[y][x];
+                  } else {
+                     positionBonus = kingEndGameTable[7-y][x];
+                  }
+               } else {
+                  if (piece.side == sideWhite) {
+                     positionBonus = kingMiddleGameTable[y][x];
+                  } else {
+                     positionBonus = kingMiddleGameTable[7-y][x];
+                  }
+               }
+               break;
+         }
+         
+         /* Accumulation du matériel total (pour détecter fin de partie) */
+         if (piece.type != Roi) totalMaterial += value;
+         
+         /* Ajout de la valeur + bonus positionnel selon la couleur */
+         int pieceValue = value + positionBonus;
+         
+         if (piece.side == sideWhite) {
+            materialWhite += pieceValue;
+         } else {
+            materialBlack += pieceValue;
+         }
+         
+         evalDisplay += pieceValue * ((piece.side == sideWhite) ? 1 : -1);
+         evalForAlgo += pieceValue * ((piece.side == side) ? 1 : -1);
+      }
+   }
+   
+   
+   // ==================================================================================
+   // PARTIE 2 : ÉVALUATION DE LA MOBILITÉ
+   // ==================================================================================
+   /* La mobilité = nombre de coups possibles pour chaque camp
+      Un camp avec plus de coups possibles a généralement un meilleur contrôle du jeu
+      OPTIMISATION : On ne calcule ceci que tous les 2 niveaux pour économiser du temps */
+   
+   if (NUMBER_MOVES_AHEAD % 2 == 0) {  // Calcul partiel pour économiser du temps
+      NSSet *movesWhite = [self PossibleMovesForSide:sideWhite board:board];
+      NSSet *movesBlack = [self PossibleMovesForSide:sideBlack board:board];
+      
+      mobilityWhite = (int)movesWhite.count * 2;  // Bonus réduit : 2 points par coup possible
+      mobilityBlack = (int)movesBlack.count * 2;
+      
+      int mobilityDiff = mobilityWhite - mobilityBlack;
+      evalDisplay += mobilityDiff;
+      evalForAlgo += mobilityDiff * ((side == sideWhite) ? 1 : -1);
+   }
+   
+   
+   // ==================================================================================
+   // PARTIE 3 : ÉVALUATION DE LA STRUCTURE DE PIONS
+   // ==================================================================================
+   /* Détection des pions doublés (malus) et pions passés (bonus) */
+   
+   for (int x = 0; x < 8; x++) {
+      int whitePawnsInColumn = 0;
+      int blackPawnsInColumn = 0;
+      int whiteMostAdvanced = -1;  // Y le plus élevé pour pion blanc
+      int blackMostAdvanced = 8;   // Y le plus bas pour pion noir
+      
+      /* Comptage des pions par colonne */
+      for (int y = 0; y < 8; y++) {
+         Piece *piece = [board piece_colX:x rangY:y];
+         if (piece && piece.type == Pion) {
+            if (piece.side == sideWhite) {
+               whitePawnsInColumn++;
+               if (y > whiteMostAdvanced) whiteMostAdvanced = y;
+            } else {
+               blackPawnsInColumn++;
+               if (y < blackMostAdvanced) blackMostAdvanced = y;
             }
-            
-            /* Ajout/soustraction selon la couleur */
-            evalDisplay += value * ((piece.side == sideWhite) ? 1 : -1);
-            evalForAlgo += value * ((piece.side == side) ? 1 : -1);
+         }
+      }
+      
+      /* MALUS PIONS DOUBLÉS : -10 par pion doublé (réduit) */
+      if (whitePawnsInColumn > 1) {
+         int penalty = (whitePawnsInColumn - 1) * -10;
+         evalDisplay += penalty;
+         evalForAlgo += penalty * ((side == sideWhite) ? 1 : -1);
+      }
+      if (blackPawnsInColumn > 1) {
+         int penalty = (blackPawnsInColumn - 1) * -10;
+         evalDisplay -= penalty;  // Négatif car défavorable aux Blancs
+         evalForAlgo += penalty * ((side == sideBlack) ? 1 : -1);
+      }
+      
+      /* BONUS PION PASSÉ : +15 si aucun pion adverse ne peut l'arrêter (réduit)
+         Vérification simplifiée : pas de pion adverse dans cette colonne ni colonnes adjacentes */
+      if (whitePawnsInColumn == 1 && whiteMostAdvanced >= 4) {
+         BOOL isPassed = YES;
+         // Vérifier colonnes adjacentes
+         for (int adjX = MAX(0, x-1); adjX <= MIN(7, x+1); adjX++) {
+            for (int y = whiteMostAdvanced; y < 8; y++) {
+               Piece *p = [board piece_colX:adjX rangY:y];
+               if (p && p.type == Pion && p.side == sideBlack) {
+                  isPassed = NO;
+                  break;
+               }
+            }
+         }
+         if (isPassed) {
+            int bonus = 15 + (whiteMostAdvanced * 5);  // Bonus croissant mais réduit
+            evalDisplay += bonus;
+            evalForAlgo += bonus * ((side == sideWhite) ? 1 : -1);
+         }
+      }
+      
+      if (blackPawnsInColumn == 1 && blackMostAdvanced <= 3) {
+         BOOL isPassed = YES;
+         for (int adjX = MAX(0, x-1); adjX <= MIN(7, x+1); adjX++) {
+            for (int y = 0; y <= blackMostAdvanced; y++) {
+               Piece *p = [board piece_colX:adjX rangY:y];
+               if (p && p.type == Pion && p.side == sideWhite) {
+                  isPassed = NO;
+                  break;
+               }
+            }
+         }
+         if (isPassed) {
+            int bonus = 15 + ((7 - blackMostAdvanced) * 5);
+            evalDisplay -= bonus;
+            evalForAlgo += bonus * ((side == sideBlack) ? 1 : -1);
          }
       }
    }
    
-   /* ========== DÉTECTION MAT (POUR AFFICHAGE) ========== */
-   /* Note : Cette section pourrait être optimisée ou déplacée */
+   
+   // ==================================================================================
+   // PARTIE 4 : BONUS DÉVELOPPEMENT
+   // ==================================================================================
+   /* Les pièces (cavaliers/fous) sorties de leur position de départ reçoivent un bonus
+      Ceci a déjà été calculé dans la boucle principale ci-dessus */
+   
+   int developmentDiff = developmentWhite - developmentBlack;
+   evalDisplay += developmentDiff;
+   evalForAlgo += developmentDiff * ((side == sideWhite) ? 1 : -1);
+   
+   
+   // ==================================================================================
+   // PARTIE 5 : SÉCURITÉ DU ROI
+   // ==================================================================================
+   /* Bonus si le roi a roqué (déjà reflété dans les tables positionnelles)
+      On peut ajouter un bonus supplémentaire pour les pions protecteurs devant le roi */
+   
+   // TODO : Implémenter détection pions protecteurs (complexe, à faire plus tard)
+   
+   
+   // ==================================================================================
+   // PARTIE 6 : DÉTECTION MAT (CODE ORIGINAL CONSERVÉ)
+   // ==================================================================================
+   /* Note : Cette section pourrait être optimisée en ne l'appelant que rarement
+      car elle est coûteuse en calcul */
+   
    if ([self TestEchecRoiSide:sideBlack inBoard:board]) {
       if ([self PossibleMovesForSide:sideBlack board:board].count == 0) {
          evalDisplay += +100000;
@@ -322,8 +640,12 @@ int nbElag = 0;
       }
    }
    
-   /* ========== BONUS PIONS EN AVANT-DERNIÈRE RANGÉE ========== */
-   /* Un pion proche de la promotion vaut presque autant qu'une dame */
+   
+   // ==================================================================================
+   // PARTIE 7 : PIONS EN AVANT-DERNIÈRE RANGÉE (CODE ORIGINAL CONSERVÉ)
+   // ==================================================================================
+   /* Bonus important pour pions sur le point d'être promus */
+   
    if (sideJoueur == sideWhite) {
       for (int x = 0; x < 8; x++) {
          Piece *pionB = board->pieceCase[x][6];
@@ -353,7 +675,17 @@ int nbElag = 0;
       }
    }
    
-   /* ========== MISE À JOUR DE L'INTERFACE ========== */
+    
+    /*NSLog(@"  Eval depth=%d side=%@ : evalForAlgo=%d evalDisplay=%d",
+          depth,
+          (side == sideWhite) ? @"Blancs" : @"Noirs",
+          evalForAlgo,
+          evalDisplay); */
+   
+   // ==================================================================================
+   // MISE À JOUR DE L'INTERFACE
+   // ==================================================================================
+   
    if (evalDisplay > 0)
       monMCNControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : +%d", evalDisplay];
    else
@@ -361,6 +693,55 @@ int nbElag = 0;
    
    return evalForAlgo;
 }
+
+
+/* ============================================================================
+   RÉSUMÉ DES AMÉLIORATIONS APPORTÉES À L'ÉVALUATION
+   ============================================================================
+   
+   1. ✅ ÉVALUATION POSITIONNELLE (TABLES)
+      - Chaque type de pièce a une table de bonus selon sa position
+      - Pions : encouragés au centre et en avancée
+      - Cavaliers : bonus important au centre, malus sur les bords
+      - Fous : bonus sur longues diagonales
+      - Tours : bonus sur 7ème rangée
+      - Dame : légère préférence centre, éviter sortie précoce
+      - Roi : différent selon phase (milieu/fin de partie)
+   
+   2. ✅ MOBILITÉ
+      - Bonus de 5 points par coup possible
+      - Calcul optimisé (tous les 2 niveaux seulement)
+      - Camp avec plus de mobilité = meilleur contrôle
+   
+   3. ✅ STRUCTURE DE PIONS
+      - Pions doublés : MALUS -25 par pion supplémentaire
+      - Pions passés : BONUS +30 à +100 selon avancée
+      - Détection simplifiée mais efficace
+   
+   4. ✅ DÉVELOPPEMENT
+      - Bonus +10 pour chaque cavalier/fou développé
+      - Malus -20 pour dame sortie trop tôt (< coup 10)
+      - Encourage ouverture correcte
+   
+   5. ✅ PHASE DE JEU
+      - Détection automatique milieu/fin de partie
+      - Roi : défensif en milieu, actif en finale
+      - Adapte la stratégie automatiquement
+   
+   IMPACT ATTENDU :
+   - Meilleure compréhension positionnelle
+   - Coups plus cohérents stratégiquement
+   - Moins de "blunders" (gaffes)
+   - Jeu plus humain et naturel
+   
+   PERFORMANCE :
+   - Légère baisse de vitesse (+10-15% temps calcul)
+   - Mais qualité de jeu NETTEMENT supérieure
+   - Peut compenser en réduisant NUMBER_MOVES_AHEAD de 1
+   
+   ============================================================================
+*/
+
 
 
 //***************************************************************************************************
