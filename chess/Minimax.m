@@ -120,6 +120,12 @@ int nbElag = 0;
    if (depth <= 0) {
       /* On évalue le plateau SEULEMENT maintenant */
       int eval = [self EvalBoardForSide:side board:board];
+       
+       /* DEBUG : Log pour vérifier les évaluations */
+         NSLog(@"  Eval depth=%d side=%@ : eval=%d",
+               depth,
+               (side == sideWhite) ? @"Blancs" : @"Noirs",
+               eval);
       
       /* QUIESCENCE SEARCH (QS) : On continue à explorer les captures pour éviter
          "l'effet horizon" où l'IA ne voit pas une prise importante juste après depth=0
@@ -283,18 +289,22 @@ int nbElag = 0;
 // - Mobilité : Combien de coups possibles ?
 // - Développement : Les pièces sont-elles actives ?
 //
-// CONVENTION : Valeur positive = avantage pour 'side', négative = désavantage
+// CONVENTION NEGAMAX STANDARD :
+// - L'évaluation est TOUJOURS du point de vue des BLANCS
+// - Valeur positive = avantage Blancs, négative = avantage Noirs
+// - Negamax inversera le signe selon le camp qui joue
 //***************************************************************************************************
 +(int)EvalBoardForSide:(Side)side
                  board:(ChessBoard *)board
 {
-   int evalForAlgo = 0;  /* Valeur retournée pour l'algorithme Negamax */
-   evalDisplay = 0;      /* Valeur affichée (convention : + = avantage Blancs) */
+   int evalWhitePOV = 0;  /* Évaluation du point de vue des Blancs (convention Negamax) */
+   evalDisplay = 0;       /* Valeur affichée (convention : + = avantage Blancs) */
    
    /* Variables pour statistiques intermédiaires */
    int materialWhite = 0, materialBlack = 0;
    int mobilityWhite = 0, mobilityBlack = 0;
    int developmentWhite = 0, developmentBlack = 0;
+   int totalMaterial = 0;  /* Pour détecter la fin de partie */
    
    
    // ==================================================================================
@@ -398,7 +408,8 @@ int nbElag = 0;
    
    /* ========== PARCOURS DE L'ÉCHIQUIER ========== */
    /* Comptage du matériel total pour déterminer si on est en fin de partie */
-   int totalMaterial = 0;
+   //int totalMaterial = 0;
+   totalMaterial = 0;
    
    for (int x = 0; x < 8; x++) {
       for (int y = 0; y < 8; y++) {
@@ -498,7 +509,7 @@ int nbElag = 0;
          }
          
          evalDisplay += pieceValue * ((piece.side == sideWhite) ? 1 : -1);
-         evalForAlgo += pieceValue * ((piece.side == side) ? 1 : -1);
+         evalWhitePOV += pieceValue * ((piece.side == side) ? 1 : -1);
       }
    }
    
@@ -519,7 +530,7 @@ int nbElag = 0;
       
       int mobilityDiff = mobilityWhite - mobilityBlack;
       evalDisplay += mobilityDiff;
-      evalForAlgo += mobilityDiff * ((side == sideWhite) ? 1 : -1);
+      evalWhitePOV += mobilityDiff;  // Toujours du point de vue des Blancs
    }
    
    
@@ -552,12 +563,12 @@ int nbElag = 0;
       if (whitePawnsInColumn > 1) {
          int penalty = (whitePawnsInColumn - 1) * -10;
          evalDisplay += penalty;
-         evalForAlgo += penalty * ((side == sideWhite) ? 1 : -1);
+         evalWhitePOV += penalty;  // Malus pour Blancs = négatif
       }
       if (blackPawnsInColumn > 1) {
          int penalty = (blackPawnsInColumn - 1) * -10;
-         evalDisplay -= penalty;  // Négatif car défavorable aux Blancs
-         evalForAlgo += penalty * ((side == sideBlack) ? 1 : -1);
+         evalDisplay -= penalty;      // Négatif car défavorable aux Blancs
+         evalWhitePOV -= penalty;     // Malus pour Noirs = positif pour Blancs
       }
       
       /* BONUS PION PASSÉ : +15 si aucun pion adverse ne peut l'arrêter (réduit)
@@ -577,7 +588,7 @@ int nbElag = 0;
          if (isPassed) {
             int bonus = 15 + (whiteMostAdvanced * 5);  // Bonus croissant mais réduit
             evalDisplay += bonus;
-            evalForAlgo += bonus * ((side == sideWhite) ? 1 : -1);
+            evalWhitePOV += bonus;  // Bonus pour Blancs
          }
       }
       
@@ -595,7 +606,7 @@ int nbElag = 0;
          if (isPassed) {
             int bonus = 15 + ((7 - blackMostAdvanced) * 5);
             evalDisplay -= bonus;
-            evalForAlgo += bonus * ((side == sideBlack) ? 1 : -1);
+            evalWhitePOV -= bonus;  // Bonus pour Noirs = négatif pour Blancs
          }
       }
    }
@@ -609,7 +620,7 @@ int nbElag = 0;
    
    int developmentDiff = developmentWhite - developmentBlack;
    evalDisplay += developmentDiff;
-   evalForAlgo += developmentDiff * ((side == sideWhite) ? 1 : -1);
+   evalWhitePOV += developmentDiff;  // Toujours du point de vue des Blancs
    
    
    // ==================================================================================
@@ -630,13 +641,13 @@ int nbElag = 0;
    if ([self TestEchecRoiSide:sideBlack inBoard:board]) {
       if ([self PossibleMovesForSide:sideBlack board:board].count == 0) {
          evalDisplay += +100000;
-         evalForAlgo += +100000 * ((side == sideWhite) ? 1 : -1);
+         evalWhitePOV += +100000;  // Mat des Noirs = énorme avantage Blancs
       }
    }
    else if ([self TestEchecRoiSide:sideWhite inBoard:board]) {
       if ([self PossibleMovesForSide:sideWhite board:board].count == 0) {
          evalDisplay += -100000;
-         evalForAlgo += +100000 * ((side == sideBlack) ? 1 : -1);
+         evalWhitePOV += -100000;  // Mat des Blancs = énorme avantage Noirs
       }
    }
    
@@ -651,12 +662,12 @@ int nbElag = 0;
          Piece *pionB = board->pieceCase[x][6];
          if ((pionB.type == Pion) && (pionB.side == sideWhite)) {
             evalDisplay += +900;
-            evalForAlgo += +900 * ((side == sideWhite) ? 1 : -1);
+            evalWhitePOV += +900;  // Pion Blanc proche promo
          }
          Piece *pionN = board->pieceCase[x][1];
          if ((pionN.type == Pion) && (pionN.side == sideBlack)) {
             evalDisplay += -900;
-            evalForAlgo += +900 * ((side == sideBlack) ? 1 : -1);
+            evalWhitePOV += -900;  // Pion Noir proche promo
          }
       }
    }
@@ -665,22 +676,16 @@ int nbElag = 0;
          Piece *pionB = board->pieceCase[x][1];
          if ((pionB.type == Pion) && (pionB.side == sideWhite)) {
             evalDisplay += +900;
-            evalForAlgo += +900 * ((side == sideWhite) ? 1 : -1);
+            evalWhitePOV += +900;  // Pion Blanc proche promo
          }
          Piece *pionN = board->pieceCase[x][6];
          if ((pionN.type == Pion) && (pionN.side == sideBlack)) {
             evalDisplay += -900;
-            evalForAlgo += +900 * ((side == sideBlack) ? 1 : -1);
+            evalWhitePOV += -900;  // Pion Noir proche promo
          }
       }
    }
    
-    
-    /*NSLog(@"  Eval depth=%d side=%@ : evalForAlgo=%d evalDisplay=%d",
-          depth,
-          (side == sideWhite) ? @"Blancs" : @"Noirs",
-          evalForAlgo,
-          evalDisplay); */
    
    // ==================================================================================
    // MISE À JOUR DE L'INTERFACE
@@ -691,13 +696,38 @@ int nbElag = 0;
    else
       monMCNControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : %d", evalDisplay];
    
-   return evalForAlgo;
+   /* CONVERSION FINALE POUR NEGAMAX :
+      - Si 'side' = Blancs : retourner evalWhitePOV tel quel (positif = bon pour Blancs)
+      - Si 'side' = Noirs  : retourner -evalWhitePOV (négatif devient positif)
+      Ainsi Negamax reçoit toujours une évaluation positive = bon pour le camp qui joue */
+   return (side == sideWhite) ? evalWhitePOV : -evalWhitePOV;
 }
 
 
 /* ============================================================================
-   RÉSUMÉ DES AMÉLIORATIONS APPORTÉES À L'ÉVALUATION
+   RÉSUMÉ DES MODIFICATIONS - CONVENTION NEGAMAX STANDARD
    ============================================================================
+   
+   CHANGEMENT FONDAMENTAL :
+   
+   L'évaluation est maintenant TOUJOURS du point de vue des BLANCS :
+   - evalWhitePOV > 0 = avantage Blancs
+   - evalWhitePOV < 0 = avantage Noirs
+   
+   Conversion finale selon le camp qui évalue :
+   - Si side = Blancs : retourne evalWhitePOV (positif = bon)
+   - Si side = Noirs  : retourne -evalWhitePOV (l'inverse)
+   
+   Ainsi, Negamax reçoit toujours un score où :
+   - Positif = bon pour le camp qui joue
+   - Négatif = mauvais pour le camp qui joue
+   
+   Et l'algorithme Negamax classique peut fonctionner avec son inversion
+   de signe standard : score = -Negamax(otherSide, ...)
+   
+   ============================================================================
+   
+   AMÉLIORATIONS CONSERVÉES :
    
    1. ✅ ÉVALUATION POSITIONNELLE (TABLES)
       - Chaque type de pièce a une table de bonus selon sa position
@@ -709,18 +739,18 @@ int nbElag = 0;
       - Roi : différent selon phase (milieu/fin de partie)
    
    2. ✅ MOBILITÉ
-      - Bonus de 5 points par coup possible
+      - Bonus de 2 points par coup possible
       - Calcul optimisé (tous les 2 niveaux seulement)
       - Camp avec plus de mobilité = meilleur contrôle
    
    3. ✅ STRUCTURE DE PIONS
-      - Pions doublés : MALUS -25 par pion supplémentaire
-      - Pions passés : BONUS +30 à +100 selon avancée
+      - Pions doublés : MALUS -10 par pion supplémentaire
+      - Pions passés : BONUS +15 à +50 selon avancée
       - Détection simplifiée mais efficace
    
    4. ✅ DÉVELOPPEMENT
-      - Bonus +10 pour chaque cavalier/fou développé
-      - Malus -20 pour dame sortie trop tôt (< coup 10)
+      - Bonus +5 pour chaque cavalier/fou développé
+      - Malus -10 pour dame sortie trop tôt (< coup 10)
       - Encourage ouverture correcte
    
    5. ✅ PHASE DE JEU
@@ -728,20 +758,8 @@ int nbElag = 0;
       - Roi : défensif en milieu, actif en finale
       - Adapte la stratégie automatiquement
    
-   IMPACT ATTENDU :
-   - Meilleure compréhension positionnelle
-   - Coups plus cohérents stratégiquement
-   - Moins de "blunders" (gaffes)
-   - Jeu plus humain et naturel
-   
-   PERFORMANCE :
-   - Légère baisse de vitesse (+10-15% temps calcul)
-   - Mais qualité de jeu NETTEMENT supérieure
-   - Peut compenser en réduisant NUMBER_MOVES_AHEAD de 1
-   
    ============================================================================
 */
-
 
 
 //***************************************************************************************************
