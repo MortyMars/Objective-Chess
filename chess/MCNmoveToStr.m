@@ -7,10 +7,11 @@
 #import "MCNmoveToStr.h"
 
 
-   /* Classe créée afin d'abriter les Méthodes implémentées
+   /*
+   Classe créée afin d'abriter les Méthodes implémentées ...
       1) pour EXTRAIRE d'un 'Move' le déplacement exécuté
-   et 2) pour le TRANSFORMER en une NSString aussi compréhensible que proche de la 'Notation algébrique réversible'
-   Elles sont utilisées pour l'affichage de la liste des coups joués successivement par l'IA et par le Joueur
+      2) pour le TRANSFORMER en une NSString aussi compréhensible que proche de la 'Notation algébrique réversible'
+   ... et utilisées pour l'affichage de la liste des coups joués successivement par l'IA et par le Joueur
 
    Les deux méthodes sont appelées l'une après l'autre :
         - dans ChessBoard.m lors du premier coup de l'IA lorsqu'elle a les blancs
@@ -86,7 +87,7 @@
       après ajout d'un retour chariot pour un nouveau coup Blancs
       ou après ajout d'espaces pour un nouveau coup Noirs
       
-      Cas du 1er demi-coup de la partie (des Blancs donc) quand il est joué par le Joueur
+      Cas du 1er demi-coup de la partie (des Blancs donc) quand il est joué par le Joueur,
       sachant que le premier demi-coup quand il est joué par l'IA est géré par PremCoupAIBlancs */
       if ((sideCourant == sideWhite) && [stringCoupsPartie isEqual:@""]) {
          stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"1.\t"];
@@ -132,7 +133,7 @@
             
             int typPrenante = [board pieceAtPos:move.start].type;
             int typPrise    = [board pieceAtPos:move.dest] .type;
-            NSString *strType[6] = {@"",@"C",@"F",@"T",@"D",@"R"};
+            NSString *strType[6] = {@"",@"C",@"F",@"T",@"D",@"R"}; // notation française (sic)
             
             movVerStr = [NSString stringWithFormat:@"%@",move]; //movVerStr reçoit le move au format NSString
             

@@ -1,10 +1,10 @@
 //  ChessBoard.h
 //  chess
 //
-//  Created by Andrew Wang on 15/07/2013, Completed by MCN on 2020
+//  Created by Andrew Wang on 15/07/2013
+//  Completed by MCN on 2020
 //  Copyright (c) 2013 Andrew Wang. All rights reserved.
 
-//#import <Foundation/Foundation.h>
 #import "MCNmoveToStr.h"
 #import "Pos.h"
 

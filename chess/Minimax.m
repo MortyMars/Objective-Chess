@@ -408,8 +408,7 @@ int nbElag = 0;
    
    /* ========== PARCOURS DE L'ÉCHIQUIER ========== */
    /* Comptage du matériel total pour déterminer si on est en fin de partie */
-   //int totalMaterial = 0;
-   totalMaterial = 0;
+   // int totalMaterial = 0;
    
    for (int x = 0; x < 8; x++) {
       for (int y = 0; y < 8; y++) {
@@ -504,12 +503,14 @@ int nbElag = 0;
          
          if (piece.side == sideWhite) {
             materialWhite += pieceValue;
+            evalWhitePOV += pieceValue;   // Blancs = positif
          } else {
             materialBlack += pieceValue;
+            evalWhitePOV -= pieceValue;   // Noirs = négatif
          }
-         
+
          evalDisplay += pieceValue * ((piece.side == sideWhite) ? 1 : -1);
-         evalWhitePOV += pieceValue * ((piece.side == side) ? 1 : -1);
+         
       }
    }
    
@@ -760,6 +761,7 @@ int nbElag = 0;
    
    ============================================================================
 */
+
 
 
 //***************************************************************************************************

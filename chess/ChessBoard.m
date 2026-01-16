@@ -1,20 +1,22 @@
 //  ChessBoard.m
 //  chess
 //
-//  Created by Andrew Wang on 15/07/2013, Completed by MCN on 2020
+//  Created by Andrew Wang on 15/07/2013
+//  Completed by MCN on 2020
 //  Copyright (c) 2013 Andrew Wang. All rights reserved.
 
-//  CLASSE DE DÉFINITION DE L'ÉCHIQUIER EN TERMES DE DONNÉES : couleur, nature, position des pièces...
+//  CLASSE DE DÉFINITION DE L'ÉCHIQUIER EN TERMES DE DONNÉES (couleur, nature, position des pièces...)
+//  par opposition à la classe ChessView qui traite la représentation graphique du 'board'
 
 #import "ChessBoard.h"
-//#import "MCNmoveToStr.h"
-//#import "Pos.h"
+
+
 
 @implementation ChessBoard
 
 
    @synthesize lastMove; // Ajout MCN pour accéder à lastMove hors de sa classe, dans RuleBook
-   //@synthesize pieceCase;
+
 
    // **************************************************************************************************
    // Méthode d'instance

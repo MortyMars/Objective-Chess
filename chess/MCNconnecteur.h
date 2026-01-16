@@ -13,8 +13,10 @@
 
 @interface MCNconnecteur : NSObjectController <ChessViewDelegate>
 
+   // Variables d'instance :
    {
-      // Aucune variable d'instance
+   
+   
    }
 
 
@@ -82,7 +84,6 @@
 
    /* Déclaration des Méthodes gérant les NSAlert déléguées */
    -(void) AlerteEchecRoiSide:(Side) side;
-
 
 
 @end

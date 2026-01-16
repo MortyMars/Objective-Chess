@@ -15,8 +15,10 @@ NB : c'est également le cas des très respectables classes 'Minimax' et 'RuleBo
 
 @interface MCNmoveToStr : NSObject
 
+   // No variable d'instance :
    {
-   // No variable d'instance
+      
+   
    }
 
     // DÉCLARATION DES MÉTHODES, TOUTES DE CLASSE

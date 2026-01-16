@@ -1,7 +1,8 @@
 //  AppDelegate.m
 //  chess
 //
-//  Created by Andrew Wang on 15/07/2013, Completed by MCN on 2020
+//  Created by Andrew Wang on 15/07/2013
+//  Completed by MCN on 2020
 //  Copyright (c) 2013 Andrew Wang. All rights reserved.
 
 #import "AppDelegate.h"
@@ -14,8 +15,7 @@
 
    
    //***************************************************************************************************
-   // Unique méthode (d'instance) de la classe
-   // ayant pour objectif d'initialiser l'application
+   // Unique méthode (d'instance) de la classe ayant pour objectif d'initialiser l'application
    - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
    {
       // Insert code here to initialize your application
@@ -41,9 +41,9 @@
       
       /* MCN - Initialisation du niveau de prospection de l'IA par appel de la méthode 'SetDifficulty' ad-hoc
       On note qu'ici c'est AppDelegate (self) qui envoi le message à SetDifficulty3 qui est une IBAction
-      ici on choisit le niveau 3... qui correspond à fixer NUMBER_MOVE_AHEAD à 2
+      ici on choisit le niveau 2... qui correspond à fixer NUMBER_MOVE_AHEAD à 2
       (le mini = Difficulty1 -> NUMBER_MOVE_AHEAD = 0, et le maxi = Difficulty5 -> NUMBER_MOVE_AHEAD = 4) */
-      [monMCNconnecteur SetDifficulty3:self];
+      [monMCNconnecteur SetDifficulty2:self];
       
       /* MCN - INITIALISATION DE LA VARIABLE GLOBALE 'monMCNControleur' CRÉÉE DANS 'util.h'
       La variable est identifiée comme étant l'objet 'monMCNconnecteur' instancié dans AppDelegate.
@@ -53,9 +53,7 @@
       avec l'interface  durant toute la durée de vie de l'application */
       monMCNControleur = monMCNconnecteur;
       
-      //@class Minimax;
-      //Minimax.delegate = MCNconnecteur;
-      
+      // Revoir finalité de cette commande...
       monMCNControleur.maChessView.delegate = monMCNControleur;
       
       // MCN - NSLog de contrôle
