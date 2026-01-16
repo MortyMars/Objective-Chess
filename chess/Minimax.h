@@ -48,6 +48,11 @@
     +(BOOL)       TestEchecRoiSide:(Side)side
                            inBoard:(ChessBoard*)board;
 
+    
+    // Méthode SSE qui calcule si une capture est bonne
+    +(int)StaticExchangeEvaluation:(Move *)capture
+                         board:(ChessBoard *)board;
+
     // DÉCLARATION DE MÉTHODES AFIN QU'ELLES SOIENT VISIBLES POUR LES TESTS
     +(int)        NegamaxForSide:(Side)side
                            board:(ChessBoard *)board
