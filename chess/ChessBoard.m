@@ -11,11 +11,11 @@
 #import "ChessBoard.h"
 
 
-
 @implementation ChessBoard
 
 
    @synthesize lastMove; // Ajout MCN pour accéder à lastMove hors de sa classe, dans RuleBook
+   
 
 
    // **************************************************************************************************

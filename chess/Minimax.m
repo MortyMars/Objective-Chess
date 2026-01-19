@@ -17,6 +17,11 @@ static int copyBoardCount = 0;
 static NSTimeInterval evalTotalTime = 0;
 static NSTimeInterval moveGenTotalTime = 0;
 
+// Variables de cache
+static NSMutableDictionary *evalCache = nil;
+static int cacheHits = 0;
+static int cacheMisses = 0;
+
 
 @implementation Minimax
 
@@ -32,11 +37,16 @@ static NSTimeInterval moveGenTotalTime = 0;
    nodeCount = 0;
    
    /* ✅ RÉINITIALISER LES COMPTEURS DU PROFILLING */
-      evalCount = 0;
-      moveGenCount = 0;
-      copyBoardCount = 0;
-      evalTotalTime = 0;
-      moveGenTotalTime = 0;
+   evalCount = 0;
+   moveGenCount = 0;
+   copyBoardCount = 0;
+   evalTotalTime = 0;
+   moveGenTotalTime = 0;
+   
+   // Réinit valeurs cache
+   evalCache = [[NSMutableDictionary alloc] initWithCapacity:10000];
+   cacheHits = 0;
+   cacheMisses = 0;
    
    /* Détermination du jeu de tous les moves possibles pour 'side' */
    NSSet *movesPossibles = [self PossibleMovesForSide:side board:board];
@@ -423,6 +433,17 @@ static NSTimeInterval moveGenTotalTime = 0;
 +(int)EvalBoardForSide:(Side)side
                  board:(ChessBoard *)board
 {
+   // Générer une clé unique pour cette position
+      NSString *key = [self BoardHashKey:board forSide:side];
+      
+      NSNumber *cached = evalCache[key];
+      if (cached) {
+         cacheHits++;
+         return [cached intValue];
+      }
+      cacheMisses++;
+   
+   
    int evalWhitePOV = 0;  /* Évaluation du point de vue des Blancs (convention Negamax) */
    evalDisplay = 0;       /* Valeur affichée (convention : + = avantage Blancs) */
    
@@ -808,6 +829,14 @@ static NSTimeInterval moveGenTotalTime = 0;
    else
       monMCNControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : %d", evalDisplay];
    
+   // Stocker dans le cache
+      evalCache[key] = @(evalWhitePOV);
+      
+      // Limiter la taille du cache
+      if (evalCache.count > 50000) {
+         [evalCache removeAllObjects];
+      }
+   
    /* CONVERSION FINALE POUR NEGAMAX :
       - Si 'side' = Blancs : retourner evalWhitePOV tel quel (positif = bon pour Blancs)
       - Si 'side' = Noirs  : retourner -evalWhitePOV (négatif devient positif)
@@ -1079,6 +1108,26 @@ static NSTimeInterval moveGenTotalTime = 0;
    }
    
    return NO;
+}
+
+
+//***************************************************************************************************
+// Nouvelle méthode pour générer une clé de hachage
+//***************************************************************************************************
++(NSString *)BoardHashKey:(ChessBoard *)board forSide:(Side)side
+{
+   NSMutableString *hash = [NSMutableString stringWithCapacity:128];
+   
+   for (int y = 0; y < 8; y++) {
+      for (int x = 0; x < 8; x++) {
+         Piece *p = [board piece_colX:x rangY:y];
+         if (p && p.type != Invalide) {
+            [hash appendFormat:@"%d%d%d", p.type, p.side, y*8+x];
+         }
+      }
+   }
+   [hash appendFormat:@"_%d", side];
+   return hash;
 }
 
 @end

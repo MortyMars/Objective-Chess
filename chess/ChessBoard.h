@@ -28,6 +28,11 @@ ce qui permettra notamment de faire des copies d'objets ChessBoard, ...ce dont n
 
    // 'lastmove' est le dernier move réalisé, déclaré ici, mais défini dans 'PerformMove'
    @property (nonatomic, strong) Move *lastMove;
+   
+   /* 'currentEvaluation' détermine l'évaluation en cours, à partir de laquelle l'évaluation
+    incrémentale démarre ; elle est utilisée dans 'PerformMove' */
+   //@property int currentEvaluation;
+   
 
    // Méthodes d'instance
    -(id)         init;
