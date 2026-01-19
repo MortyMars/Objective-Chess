@@ -1,19 +1,25 @@
-//  Minimax.m - VERSION OPTIMISÉE
-//  chess
-//
-//  Created by Andrew Wang on 15/07/2013, Completed by MCN on 2020
-//  Optimisé pour performance IA - 2025
-//  Copyright (c) 2013 Andrew Wang. All rights reserved.
+// Minimax.m - VERSION OPTIMISÉE
+// chess
+// Created by Andrew Wang on 15/07/2013
+// Completed by MCN on 2020 - Optimisé pour performance IA - 2025
+// Copyright (c) 2013 Andrew Wang. All rights reserved.
 
 #import "Minimax.h"
 
 int nbLoop = 0;
 int nbElag = 0;
-static int nodeCount = 0;  // ✅ AJOUTER ICI
+static int nodeCount = 0;
+
+// Variables de profilling
+static int evalCount = 0;
+static int moveGenCount = 0;
+static int copyBoardCount = 0;
+static NSTimeInterval evalTotalTime = 0;
+static NSTimeInterval moveGenTotalTime = 0;
+
 
 @implementation Minimax
 
-   
 //***************************************************************************************************
 // MÉTHODE 1 : BestMoveForSide - Point d'entrée du moteur IA
 // Cette méthode trouve le meilleur coup pour l'IA en explorant l'arbre des possibilités
@@ -24,6 +30,13 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
    /* ========== DÉMARRAGE DU TIMER ========== */
    NSDate *startTime = [NSDate date];
    nodeCount = 0;
+   
+   /* ✅ RÉINITIALISER LES COMPTEURS DU PROFILLING */
+      evalCount = 0;
+      moveGenCount = 0;
+      copyBoardCount = 0;
+      evalTotalTime = 0;
+      moveGenTotalTime = 0;
    
    /* Détermination du jeu de tous les moves possibles pour 'side' */
    NSSet *movesPossibles = [self PossibleMovesForSide:side board:board];
@@ -104,12 +117,12 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
    }
    
    if (safeMovesOnly.count == 0) {
-      //NSLog(@"⚠️ Tous les coups sont dangereux");
       safeMovesOnly = [NSMutableSet setWithArray:[movesPossibles allObjects]];
    } else if (dangerousMovesFiltered > 0) {
       NSLog(@"🛡️ Filtre : %d coups dangereux bloqués, %lu gardés",
             dangerousMovesFiltered, (unsigned long)safeMovesOnly.count);
    }
+   /* ======= FIN DE FILTRAGE SÉCURITÉ ======= */
    
    /* TRI DES COUPS */
    NSArray *sortedMoves = [self SortMovesByPriority:safeMovesOnly board:board];
@@ -117,7 +130,6 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
    NSLog(@"=== IA (%@) analyse %lu coups ===",
          (side == sideWhite) ? @"Blancs" : @"Noirs",
          (unsigned long)sortedMoves.count);
-   
    
    /* ========== DÉTECTION MENACE DE MAT ========== */
    Side enemySide = (side == sideWhite) ? sideBlack : sideWhite;
@@ -146,14 +158,11 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
       }
    }
    
-   
-   
    /* ========== ÉVALUATION DE CHAQUE COUP ========== */
    for (Move *moveEnCours in sortedMoves)
    {
       ChessBoard *newBoard = board.copy;
       [newBoard PerformMove:moveEnCours];
-      
       /* DÉTECTION RAPIDE DU MAT */
       if ([self PossibleMovesForSide:otherSide board:newBoard].count == 0) {
          if ([self TestEchecRoiSide:otherSide inBoard:newBoard]) {
@@ -163,14 +172,12 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
             return moveEnCours;
          }
       }
-      
       /* Appel à Negamax */
       int negaMax = [self NegamaxForSide:side
                                    board:newBoard
                                    depth:NUMBER_MOVES_AHEAD
                                    alpha:-INT_MAX
                                     beta:INT_MAX];
-      
       /* Mise à jour du meilleur coup */
       if (negaMax > bestScore || !bestMove) {
          bestScore = negaMax;
@@ -183,18 +190,27 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
    
    NSLog(@"✅ Coup choisi : %@ (score=%d, %.1fs, %d nœuds, %.0f n/s)\n",
          bestMove, bestScore, elapsed, nodeCount, nodeCount/elapsed);
+   // Log de PROFILLING
+   NSLog(@"\n📊 PROFILING :");
+   NSLog(@"   EvalBoard : %d appels, %.2fs total, %.1fms/appel",
+         evalCount, evalTotalTime, evalCount > 0 ? (evalTotalTime * 1000.0) / evalCount : 0);
+   NSLog(@"   MoveGen   : %d appels, %.2fs total, %.1fms/appel",
+         moveGenCount, moveGenTotalTime, moveGenCount > 0 ? (moveGenTotalTime * 1000.0) / moveGenCount : 0);
+   NSLog(@"   CopyBoard : %d copies", copyBoardCount);
+
+   double percentEval = evalTotalTime / elapsed * 100.0;
+   double percentMoveGen = moveGenTotalTime / elapsed * 100.0;
+   NSLog(@"   Répartition : EvalBoard=%.0f%%, MoveGen=%.0f%%\n", percentEval, percentMoveGen);
    
    return bestMove;
 }
 
-
 //***************************************************************************************************
 // MÉTHODE 2 : NegamaxForSide - CÅ’UR DE L'ALGORITHME (VERSION OPTIMISÉE)
 // Implémentation de l'algorithme Negamax avec élagage alpha-beta et Quiescence Search
-//
 // OPTIMISATIONS PRINCIPALES :
-// 1. Évaluation déplacée aprÃ¨s les conditions de sortie (gain majeur)
-// 2. Limitation stricte de la Quiescence Search Ã  -3 niveaux max
+// 1. Évaluation déplacée après les conditions de sortie (gain majeur)
+// 2. Limitation stricte de la Quiescence Search à  -3 niveaux max
 // 3. Filtrage des captures AVANT la boucle en mode QS
 // 4. Tri des coups pour améliorer l'élagage
 //***************************************************************************************************
@@ -204,11 +220,10 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
                alpha:(int)alpha
                 beta:(int)beta
 {
-   /* Au début de NegamaxForSide
-    Vidage du cache */
+   /* Vidage du cache */
    nodeCount++;
 
-   /* Toutes les 10000 évaluations, vider les caches si vous en avez */
+   /* Toutes les 10000 évaluations, vider les caches */
    if (nodeCount % 10000 == 0) {
       NSLog(@"⏱️ Negamax : %d nœuds explorés", nodeCount);
    }
@@ -220,19 +235,19 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
    }
    /* Fin de vidage du cache */
    
-   
-   
    Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
    
-   /* ÉTAPE 1 : GÉNÉRATION DES COUPS POSSIBLES
-      On génÃ¨re les coups ici pour pouvoir détecter mat/pat ET les utiliser plus tard */
-   NSSet *movesPossibles = [self PossibleMovesForSide:otherSide board:board];
+   /* ÉTAPE 1 : GÉNÉRATION DES COUPS POSSIBLES */
+      NSDate *startMoveGen = [NSDate date];
+      NSSet *movesPossibles = [self PossibleMovesForSide:otherSide board:board];
+      moveGenTotalTime += [[NSDate date] timeIntervalSinceDate:startMoveGen];
+      moveGenCount++;   // ✅ PROFILER LA GÉNÉRATION DE COUPS
    
    /* ÉTAPE 2 : DÉTECTION MAT/PAT
       Si aucun coup n'est possible, c'est soit mat soit pat */
    if (movesPossibles.count == 0) {
       if ([self TestEchecRoiSide:otherSide inBoard:board]) {
-         return 100000;  // Mat favorable Ã  'side'
+         return 100000;  // Mat favorable à  'side'
       }
       return 0;  // Pat = nulle
    }
@@ -240,23 +255,21 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
    /* ÉTAPE 3 : CONDITIONS DE SORTIE ET QUIESCENCE SEARCH
       OPTIMISATION CRITIQUE : L'évaluation n'est faite QUE quand on atteint la profondeur limite */
    if (depth <= 0) {
-      /* On évalue le plateau SEULEMENT maintenant */
-      int eval = [self EvalBoardForSide:side board:board];
-       
-       /* DEBUG : Log pour vérifier les évaluations */
-         /*NSLog(@"  Eval depth=%d side=%@ : eval=%d",
-               depth,
-               (side == sideWhite) ? @"Blancs" : @"Noirs",
-               eval); */
       
-      /* QUIESCENCE SEARCH (QS) : On continue Ã  explorer les captures pour éviter
-         "l'effet horizon" oÃ¹ l'IA ne voit pas une prise importante juste aprÃ¨s depth=0
-         OPTIMISATION : Limitation stricte Ã  3 niveaux supplémentaires maximum */
+      /* Évaluation du plateau */
+            NSDate *startEval = [NSDate date];                                // ✅ PROFIlage de L'ÉVALUATION
+            int eval = [self EvalBoardForSide:side board:board];              // Évaluation du plateau
+            evalTotalTime += [[NSDate date] timeIntervalSinceDate:startEval]; // ✅ PROFIlage de L'ÉVALUATION
+            evalCount++;                                                      // ✅ PROFIlage de L'ÉVALUATION
+       
+      /* QUIESCENCE SEARCH (QS) : On continue à explorer les captures pour éviter "l'effet horizon" où l'IA
+         ne voit pas une prise importante juste après depth=0
+         OPTIMISATION : Limitation stricte à 3 niveaux supplémentaires maximum */
       if (depth > -3) {
          /* Élagage beta cutoff précoce */
          if (eval >= beta) return eval;
          
-         /* Mise Ã  jour de la fenÃªtre alpha */
+         /* Mise à  jour de la fenêtre alpha */
          if (eval > alpha) alpha = eval;
          
          /* OPTIMISATION : Filtrer les captures AVANT la boucle
@@ -268,10 +281,10 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
          
          /* On remplace movesPossibles par les captures uniquement */
          movesPossibles = captures;
-         //NSLog(@"\n  QS (depth %d) : %lu captures Ã  examiner", depth, (unsigned long)captures.count);
+         //NSLog(@"\n  QS (depth %d) : %lu captures à  examiner", depth, (unsigned long)captures.count);
          
       } else {
-         /* Limite QS atteinte : on arrÃªte l'exploration */
+         /* Limite QS atteinte : on arrête l'exploration */
          return eval;
       }
    }
@@ -286,8 +299,9 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
    for (Move *moveEnCours in sortedMoves)
    {
       /* Création d'un plateau virtuel pour simuler le coup */
-      ChessBoard *newBoard = board.copy;
-      [newBoard PerformMove:moveEnCours];
+            copyBoardCount++; // ✅ PROFILER LES COPIES DE PLATEAU
+            ChessBoard *newBoard = board.copy; // Création d'un plateau
+            [newBoard PerformMove:moveEnCours];
       
       /* APPEL RÉCURSIF : On inverse les rôles (otherSide joue), on descend d'un niveau,
          et on inverse alpha/beta (principe du Negamax) */
@@ -297,12 +311,11 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
                                   alpha:-beta
                                    beta:-alpha];
       
-      /* Mise Ã  jour du meilleur score trouvé */
+      /* Mise à  jour du meilleur score trouvé */
       if (score > alpha) {
          alpha = score;
-         
          /* ÉLAGAGE ALPHA-BETA : Si alpha >= beta, les coups suivants ne peuvent pas
-            améliorer la position, on peut arrÃªter l'exploration de cette branche */
+            améliorer la position, on peut arrêter l'exploration de cette branche */
          if (alpha >= beta) {
             nbElag++;
             break;  // Cutoff beta
@@ -313,13 +326,11 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
    return alpha;
 }
 
-
 //***************************************************************************************************
 // MÉTHODE 3 : SortMovesByPriority - TRI DES COUPS PAR PRIORITÉ
 // NOUVELLE MÉTHODE pour améliorer l'efficacité de l'élagage alpha-beta
-//
 // Principe : Les meilleurs coups sont examinés en premier, ce qui provoque plus de cutoffs
-// et réduit donc le nombre de branches Ã  explorer
+// et réduit donc le nombre de branches à  explorer
 //***************************************************************************************************
 +(NSArray *)SortMovesByPriority:(NSSet *)moves board:(ChessBoard *)board
 {
@@ -337,14 +348,12 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
    }];
 }
 
-
 //***************************************************************************************************
 // MÉTHODE 4 : ScoreMove - ÉVALUATION RAPIDE D'UN COUP
 // NOUVELLE MÉTHODE pour le tri des coups
-//
 // Attribution d'un score heuristique rapide basé sur :
-// - La valeur de la piÃ¨ce capturée (si capture)
-// - D'autres critÃ¨res possibles (coups centraux, développement, etc.)
+// - La valeur de la pièce capturée (si capture)
+// - D'autres critères possibles (coups centraux, développement, etc.)
 //***************************************************************************************************
 +(int)ScoreMove:(Move *)move board:(ChessBoard *)board
 {
@@ -353,7 +362,7 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
    /* Vérifier s'il y a une capture */
    Piece *captured = [board pieceAtPos:move.dest];
    if (captured && captured.type != Invalide) {
-      /* Priorité haute pour les captures : score de base + valeur de la piÃ¨ce */
+      /* Priorité haute pour les captures : score de base + valeur de la pièce */
       switch (captured.type) {
          case Pion:  score = 1000 + 100;    break;
          case Cava:  score = 1000 + 300;    break;
@@ -366,19 +375,17 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
    }
    
    /* AMÉLIORATION FUTURE : Ajouter d'autres heuristiques
-      - Coups vers le centre du plateau (bonus +10 Ã  +30)
-      - Développement des piÃ¨ces (sortir cavaliers/fous)
+      - Coups vers le centre du plateau (bonus +10 à  +30)
+      - Développement des pièces (sortir cavaliers/fous)
       - Contrôle des cases importantes
       - Menaces sur le roi adverse */
    
    return score;
 }
 
-
 //***************************************************************************************************
 // MÉTHODE 5 : FilterCaptures - FILTRAGE DES CAPTURES POUR QUIESCENCE SEARCH
 // NOUVELLE MÉTHODE pour optimiser le QS
-//
 // Ne conserve que les coups qui sont des captures, car ce sont les coups "tactiques"
 // qui peuvent changer drastiquement l'évaluation d'une position
 //***************************************************************************************************
@@ -389,7 +396,7 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
    for (Move *move in moves) {
       Piece *captured = [board pieceAtPos:move.dest];
       
-      /* Vérifier qu'il y a bien une piÃ¨ce adverse Ã  la destination */
+      /* Vérifier qu'il y a bien une pièce adverse à  la destination */
       if (captured && captured.type != Invalide && captured.side != side) {
          [captures addObject:move];
       }
@@ -398,19 +405,16 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
    return captures;
 }
 
-
 //***************************************************************************************************
 // MÉTHODE : EvalBoardForSide - VERSION AMÉLIORÉE AVEC ÉVALUATION POSITIONNELLE
 // Cette méthode évalue la qualité d'une position d'échecs pour un camp donné
-//
 // PHILOSOPHIE D'ÉVALUATION :
-// - Matériel : Valeur brute des piÃ¨ces (base)
-// - Position : OÃ¹ sont placées les piÃ¨ces (crucial)
+// - Matériel : Valeur brute des pièces (base)
+// - Position : Où sont placées les pièces (crucial)
 // - Sécurité : Le roi est-il en sécurité ?
 // - Structure : Les pions sont-ils bien organisés ?
 // - Mobilité : Combien de coups possibles ?
-// - Développement : Les piÃ¨ces sont-elles actives ?
-//
+// - Développement : Les pièces sont-elles actives ?
 // CONVENTION NEGAMAX STANDARD :
 // - L'évaluation est TOUJOURS du point de vue des BLANCS
 // - Valeur positive = avantage Blancs, négative = avantage Noirs
@@ -428,19 +432,16 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
    int developmentWhite = 0, developmentBlack = 0;
    int totalMaterial = 0;  /* Pour détecter la fin de partie */
    
-   
-   // ==================================================================================
-   // PARTIE 1 : ÉVALUATION MATÉRIELLE + POSITIONNELLE
-   // ==================================================================================
-   /* Tables de valeurs positionnelles pour chaque type de piÃ¨ce
-      Ces tables donnent un bonus/malus selon la position de la piÃ¨ce sur l'échiquier
+   // ===========================================
+   // PARTIE 1 : ÉVAL. MATÉRIELLE + POSITIONNELLE
+   /* Tables de valeurs positionnelles pour chaque type de pièce
+      Ces tables donnent un bonus/malus selon la position de la pièce sur l'échiquier
       Convention : les tableaux sont vus du point de vue des Blancs (rangée 0 = fond Blancs) */
    
-   /* TABLE PIONS : Encourage l'avancée et le contrôle du centre
-      VALEURS RÉDUITES pour éviter les sacrifices stupides */
+   /* TABLE PIONS : Encourage l'avancée et le contrôle du centre */
    static const int pawnTable[8][8] = {
       {  0,  0,  0,  0,  0,  0,  0,  0 },  // Rangée 0 (promotion, ne devrait pas arriver)
-      { 10, 10, 10, 10, 10, 10, 10, 10 },  // Rangée 1 (avant-derniÃ¨re, déjÃ  géré ailleurs)
+      { 10, 10, 10, 10, 10, 10, 10, 10 },  // Rangée 1 (avant-dernière, déjà  géré ailleurs)
       {  2,  2,  4,  6,  6,  4,  2,  2 },  // Rangée 2
       {  1,  1,  2,  5,  5,  2,  1,  1 },  // Rangée 3
       {  0,  0,  0,  4,  4,  0,  0,  0 },  // Rangée 4 (centre)
@@ -449,8 +450,7 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
       {  0,  0,  0,  0,  0,  0,  0,  0 }   // Rangée 7 (départ)
    };
    
-   /* TABLE CAVALIERS : Encourage position centrale et pénalise les bords
-      VALEURS RÉDUITES */
+   /* TABLE CAVALIERS : Encourage position centrale et pénalise les bords */
    static const int knightTable[8][8] = {
       {-10, -8, -6, -6, -6, -6, -8,-10 },
       { -8, -4,  0,  0,  0,  0, -4, -8 },
@@ -462,8 +462,7 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
       {-10, -8, -6, -6, -6, -6, -8,-10 }
    };
    
-   /* TABLE FOUS : Encourage diagonales longues et centre
-      VALEURS RÉDUITES */
+   /* TABLE FOUS : Encourage diagonales longues et centre */
    static const int bishopTable[8][8] = {
       { -4, -2, -2, -2, -2, -2, -2, -4 },
       { -2,  0,  0,  0,  0,  0,  0, -2 },
@@ -475,8 +474,7 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
       { -4, -2, -2, -2, -2, -2, -2, -4 }
    };
    
-   /* TABLE TOURS : Encourage 7Ã¨me rangée et colonnes ouvertes (approximatif)
-      VALEURS RÉDUITES */
+   /* TABLE TOURS : Encourage 7ème rangée et colonnes ouvertes (approximatif) */
    static const int rookTable[8][8] = {
       {  0,  0,  0,  0,  0,  0,  0,  0 },
       {  1,  2,  2,  2,  2,  2,  2,  1 },
@@ -488,8 +486,7 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
       {  0,  0,  0,  1,  1,  0,  0,  0 }
    };
    
-   /* TABLE DAME : LégÃ¨re préférence pour le centre, éviter l'exposition précoce
-      VALEURS RÉDUITES */
+   /* TABLE DAME : Légère préférence pour le centre, éviter l'exposition précoce */
    static const int queenTable[8][8] = {
       { -4, -2, -2, -1, -1, -2, -2, -4 },
       { -2,  0,  0,  0,  0,  0,  0, -2 },
@@ -501,8 +498,7 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
       { -4, -2, -2, -1, -1, -2, -2, -4 }
    };
    
-   /* TABLE ROI (milieu de partie) : Encourage roque et sécurité sur les côtés
-      VALEURS RÉDUITES */
+   /* TABLE ROI (milieu de partie) : Encourage roque et sécurité sur les côtés */
    static const int kingMiddleGameTable[8][8] = {
       { -6, -8, -8,-10,-10, -8, -8, -6 },
       { -6, -8, -8,-10,-10, -8, -8, -6 },
@@ -514,8 +510,7 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
       {  4,  6,  2,  0,  0,  2,  6,  4 }
    };
    
-   /* TABLE ROI (fin de partie) : Le roi devient actif au centre
-      VALEURS RÉDUITES */
+   /* TABLE ROI (fin de partie) : Le roi devient actif au centre */
    static const int kingEndGameTable[8][8] = {
       {-10, -8, -6, -4, -4, -6, -8,-10 },
       { -6, -4, -2,  0,  0, -2, -4, -6 },
@@ -527,10 +522,8 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
       {-10, -6, -6, -6, -6, -6, -6,-10 }
    };
    
-   
    /* ========== PARCOURS DE L'ÉCHIQUIER ========== */
    /* Comptage du matériel total pour déterminer si on est en fin de partie */
-   // int totalMaterial = 0;
    
    for (int x = 0; x < 8; x++) {
       for (int y = 0; y < 8; y++) {
@@ -559,8 +552,7 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
                value = 300;
                positionBonus = knightTable[y][x];
                
-               /* BONUS DÉVELOPPEMENT : Cavalier sorti de sa case de départ
-                  VALEUR RÉDUITE */
+               /* BONUS DÉVELOPPEMENT : Cavalier sorti de sa case de départ */
                if (piece.side == sideWhite && y > 0) developmentWhite += 5;
                if (piece.side == sideBlack && y < 7) developmentBlack += 5;
                break;
@@ -569,8 +561,7 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
                value = 300;
                positionBonus = bishopTable[y][x];
                
-               /* BONUS DÉVELOPPEMENT : Fou sorti de sa case de départ
-                  VALEUR RÉDUITE */
+               /* BONUS DÉVELOPPEMENT : Fou sorti de sa case de départ */
                if (piece.side == sideWhite && y > 0) developmentWhite += 5;
                if (piece.side == sideBlack && y < 7) developmentBlack += 5;
                break;
@@ -588,8 +579,7 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
                value = 900;
                positionBonus = queenTable[y][x];
                
-               /* MALUS SI DAME SORTIE TROP TÃ”T (avant coups 10-15)
-                  VALEUR RÉDUITE */
+               /* MALUS SI DAME SORTIE TROP TÔT (avant coups 10-15) */
                if (board->nbEntiers < 10) {
                   if (piece.side == sideWhite && y > 1) positionBonus -= 10;
                   if (piece.side == sideBlack && y < 6) positionBonus -= 10;
@@ -636,10 +626,6 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
       } // fin de for 2
    } // Fin de parcours de l'échiquier (for 1)
    
-   /* Après le parcours de l'échiquier
-    Log concernant la gestion des promotions */
-   //NSLog(@"🔍 EVAL DEBUG : totalMaterial=%d, evalWhitePOV=%d, side=%@",totalMaterial, evalWhitePOV, (side == sideWhite) ? @"Blancs" : @"Noirs");
-
    /* Compter les dames pour vérifier les promotions */
    int queensWhite = 0, queensBlack = 0;
    for (int x = 0; x < 8; x++) {
@@ -657,9 +643,8 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
             queensWhite, queensBlack);
    }
    
-   // ==================================================================================
+   // ===========================================
    // PARTIE 2 : ÉVALUATION DE LA MOBILITÉ
-   // ==================================================================================
    /* La mobilité = nombre de coups possibles pour chaque camp
       Un camp avec plus de coups possibles a généralement un meilleur contrôle du jeu
       OPTIMISATION : On ne calcule ceci que tous les 2 niveaux pour économiser du temps */
@@ -676,10 +661,8 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
       evalWhitePOV += mobilityDiff;  // Toujours du point de vue des Blancs
    }
    
-   
-   // ==================================================================================
-   // PARTIE 3 : ÉVALUATION DE LA STRUCTURE DE PIONS
-   // ==================================================================================
+   // ===========================================
+   // PARTIE 3 : ÉVAL. DE LA STRUCTURE DE PIONS
    /* Détection des pions doublés (malus) et pions passés (bonus) */
    
    for (int x = 0; x < 8; x++) {
@@ -702,7 +685,7 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
          }
       }
       
-      /* MALUS PIONS DOUBLÉS : -10 par pion doublé (réduit) */
+      /* MALUS PIONS DOUBLÉS : -10 par pion doublé */
       if (whitePawnsInColumn > 1) {
          int penalty = (whitePawnsInColumn - 1) * -10;
          evalDisplay += penalty;
@@ -714,7 +697,7 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
          evalWhitePOV -= penalty;     // Malus pour Noirs = positif pour Blancs
       }
       
-      /* BONUS PION PASSÉ : +15 si aucun pion adverse ne peut l'arrÃªter (réduit)
+      /* BONUS PION PASSÉ : +15 si aucun pion adverse ne peut l'arrêter
          Vérification simplifiée : pas de pion adverse dans cette colonne ni colonnes adjacentes */
       if (whitePawnsInColumn == 1 && whiteMostAdvanced >= 4) {
          BOOL isPassed = YES;
@@ -754,33 +737,25 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
       }
    }
    
-   
-   // ==================================================================================
+   // ===========================================
    // PARTIE 4 : BONUS DÉVELOPPEMENT
-   // ==================================================================================
-   /* Les piÃ¨ces (cavaliers/fous) sorties de leur position de départ reÃ§oivent un bonus
-      Ceci a déjÃ  été calculé dans la boucle principale ci-dessus */
-   
+   /* Les pièces (cavaliers/fous) sorties de leur position de départ reà§oivent un bonus
+      Ceci a déjà  été calculé dans la boucle principale ci-dessus */
    int developmentDiff = developmentWhite - developmentBlack;
    evalDisplay += developmentDiff;
    evalWhitePOV += developmentDiff;  // Toujours du point de vue des Blancs
    
-   
-   // ==================================================================================
+   // ===========================================
    // PARTIE 5 : SÉCURITÉ DU ROI
-   // ==================================================================================
-   /* Bonus si le roi a roqué (déjÃ  reflété dans les tables positionnelles)
+   /* Bonus si le roi a roqué (déjà  reflété dans les tables positionnelles)
       On peut ajouter un bonus supplémentaire pour les pions protecteurs devant le roi */
+   // TODO : Implémenter détection pions protecteurs (complexe, à faire plus tard)
    
-   // TODO : Implémenter détection pions protecteurs (complexe, Ã  faire plus tard)
    
-   
-   // ==================================================================================
-   // PARTIE 6 : DÉTECTION MAT (CODE ORIGINAL CONSERVÉ)
-   // ==================================================================================
-   /* Note : Cette section pourrait Ãªtre optimisée en ne l'appelant que rarement
-      car elle est coÃ»teuse en calcul */
-   
+   // ===========================================
+   // PARTIE 6 : DÉTECTION MAT
+   /* Note : Cette section pourrait être optimisée en ne l'appelant que rarement
+      car elle est coûteuse en calcul */
    if ([self TestEchecRoiSide:sideBlack inBoard:board]) {
       if ([self PossibleMovesForSide:sideBlack board:board].count == 0) {
          evalDisplay += +100000;
@@ -794,12 +769,9 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
       }
    }
    
-   
-   // ==================================================================================
-   // PARTIE 7 : PIONS EN AVANT-DERNIÃˆRE RANGÉE (CODE ORIGINAL CONSERVÉ)
-   // ==================================================================================
-   /* Bonus important pour pions sur le point d'Ãªtre promus */
-   
+   // ===========================================
+   // PARTIE 7 : PIONS EN AVANT-DERNIÈRE RANGÉE
+   /* Bonus important pour pions sur le point d'être promus */
    if (sideJoueur == sideWhite) {
       for (int x = 0; x < 8; x++) {
          Piece *pionB = board->pieceCase[x][6];
@@ -829,11 +801,8 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
       }
    }
    
-   
-   // ==================================================================================
+   // ===========================================
    // MISE À JOUR DE L'INTERFACE
-   // ==================================================================================
-   
    if (evalDisplay > 0)
       monMCNControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : +%d", evalDisplay];
    else
@@ -842,14 +811,12 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
    /* CONVERSION FINALE POUR NEGAMAX :
       - Si 'side' = Blancs : retourner evalWhitePOV tel quel (positif = bon pour Blancs)
       - Si 'side' = Noirs  : retourner -evalWhitePOV (négatif devient positif)
-      Ainsi Negamax reÃ§oit toujours une évaluation positive = bon pour le camp qui joue */
+      Ainsi Negamax reà§oit toujours une évaluation positive = bon pour le camp qui joue */
    return (side == sideWhite) ? evalWhitePOV : -evalWhitePOV;
 }
 
-
 //***************************************************************************************************
 // MÉTHODE 7 : PossibleMovesForSide - GÉNÉRATION DES COUPS LÉGAUX
-// (Code conservé tel quel - déjÃ  optimisé)
 //***************************************************************************************************
 +(NSSet *)PossibleMovesForSide:(Side)side
                          board:(ChessBoard *)board
@@ -879,10 +846,8 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
    return moves;
 }
 
-
 //***************************************************************************************************
 // MÉTHODE 8 : TestEchecFavSide - DÉTECTION ÉCHEC AVEC NOTIFICATION
-// (Code conservé tel quel)
 //***************************************************************************************************
 +(NSString *)TestEchecFavSide:(Side)side Board:(ChessBoard *)board
 {
@@ -919,10 +884,8 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
    return strEchec;
 }
 
-
 //***************************************************************************************************
 // MÉTHODE 9 : TestEchecRoiSide - VERSION RAPIDE DE LA DÉTECTION D'ÉCHEC
-// (Code conservé tel quel)
 //***************************************************************************************************
 +(BOOL)TestEchecRoiSide:(Side)side inBoard:(ChessBoard *)board
 {
@@ -951,10 +914,8 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
    return NO;
 }
 
-
 //***************************************************************************************************
 // MÉTHODE 10 : NotifiePatMatDesSide - GESTION FIN DE PARTIE
-// (Code conservé tel quel)
 //***************************************************************************************************
 +(void)NotifiePatMatDesSide:(Side)side
                     onBoard:(ChessBoard*)board
@@ -1030,11 +991,9 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
 }
 
 //***************************************************************************************************
-// MÉTHODE HELPER : IsSquareAttacked
-// Vérifie si une case est attaquée par un camp donné
-// Retourne la valeur de l'attaquant le moins cher (ou 0 si pas attaqué)
+// MÉTHODE HELPER :
+// Vérifie ... Retourne ...
 //***************************************************************************************************
-
 +(int)CheapestAttackerValue:(Pos *)targetSquare
                      bySide:(Side)attackingSide
                     inBoard:(ChessBoard *)board
@@ -1093,28 +1052,11 @@ static int nodeCount = 0;  // ✅ AJOUTER ICI
    return isAttacked ? cheapestValue : 0;
 }
 
-
-// Helper ajouté
-+(NSString *)PieceTypeName:(PieceType)type {
-   switch (type) {
-      case Pion: return @"Pion";
-      case Cava: return @"Cavalier";
-      case Fou: return @"Fou";
-      case Tour: return @"Tour";
-      case Dame: return @"Dame";
-      case Roi: return @"Roi";
-      default: return @"?";
-   }
-}
-
-
 //***************************************************************************************************
 // NOUVELLE MÉTHODE : DetectImmediateMateThreats
 // Détecte si l'adversaire a un coup qui donne mat au prochain tour
-//
 // À ajouter dans Minimax.m, et à appeler dans BestMoveForSide
 //***************************************************************************************************
-
 +(BOOL)HasMateInOne:(Side)attackingSide
             inBoard:(ChessBoard *)board
 {
