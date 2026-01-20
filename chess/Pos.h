@@ -5,8 +5,6 @@
 //  Updated by MCN in 2020
 
 
-
-
 @interface Pos : NSObject <NSCopying> /* Le protocole NSCopying permettra de faire des copies d'objets Pos,
                                       ...ce dont nous avons besoin  */
     
