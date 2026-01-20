@@ -1,8 +1,8 @@
 //  Util.h
 //  chess
-//
-//  Created by Andrew Wang on 15/07/2013, Completed by MCN on 2020
-//  Copyright (c) 2013 Andrew Wang. All rights reserved.
+//  Created by Andrew Wang on 15/07/2013,
+//  Copyright (c) 2013 Andrew Wang. All rights reserved
+//  Updated by MCN in 2020
 
 /* MCN - Macro permettant de supprimer les indications Date, Heure, Appli, ... des messages NSLog */
 #define NSLog(FORMAT, ...) printf("%s\n", [[NSString stringWithFormat:FORMAT, ##__VA_ARGS__] UTF8String]);

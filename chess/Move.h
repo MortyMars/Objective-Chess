@@ -1,9 +1,8 @@
 //  Move.h
 //  chess
-//
-//  Created by Andrew Wang on 15/07/2013, Completed by MCN on 2020
-//  Copyright (c) 2013 Andrew Wang. All rights reserved.
-
+//  Created by Andrew Wang on 15/07/2013,
+//  Copyright (c) 2013 Andrew Wang. All rights reserved
+//  Updated by MCN in 2020
 
 @class Piece,Pos;  /* @class permet d'indiquer au compilateur que les classes "Piece" et "Pos" existent et
                    sont déclarées ailleurs, ce qui permet d'éviter des #import bouclant sur eux-mêmes, en

@@ -1,8 +1,9 @@
-// Minimax.m - VERSION OPTIMISÉE
+// Minimax.m
 // chess
 // Created by Andrew Wang on 15/07/2013
-// Completed by MCN on 2020 - Optimisé pour performance IA - 2025
 // Copyright (c) 2013 Andrew Wang. All rights reserved.
+// Optimized for AI perfs by MCN in 2025
+
 
 #import "Minimax.h"
 
@@ -450,7 +451,7 @@ static int cacheMisses = 0;
    
    /* Variables pour statistiques intermédiaires */
    int materialWhite = 0, materialBlack = 0;
-   int mobilityWhite = 0, mobilityBlack = 0;
+   // int mobilityWhite = 0, mobilityBlack = 0;
    int developmentWhite = 0, developmentBlack = 0;
    int totalMaterial = 0;  /* Pour détecter la fin de partie */
    

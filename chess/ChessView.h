@@ -1,14 +1,11 @@
 //  ChessView.h
 //  chess
-//
 //  Created by Andrew Wang on 15/07/2013
-//  Completed by MCN on 2020
-//  Copyright (c) 2013 Andrew Wang. All rights reserved.
+//  Copyright (c) 2013 Andrew Wang. All rights reserved
+//  Updated by MCN in 2020
 
-//#import <Cocoa/Cocoa.h>
 #import "Move.h"
 #import "RuleBook.h"
-
 
 
 @class ChessBoard, Pos;

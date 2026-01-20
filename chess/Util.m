@@ -1,8 +1,7 @@
 //  Util.m
 //  chess
-//
-//  Created by MCN on 01/12/2019 (Util.h existait déjà)
-//  Copyright © 2019 MCN - All rights reserved.
+//  Created by MCN on 01/12/2019 (Util.h was alone)
+//  Copyright © 2019 MCN - All rights reserved
 
 #import "Util.h"
 

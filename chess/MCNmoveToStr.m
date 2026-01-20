@@ -1,14 +1,11 @@
 //  MCNmoveToStr.m
 //  Chess
-//
-//  Created by MCN on 22/02/2022.
-//  Copyright © 2022 MCN. All rights reserved.
+//  Created by MCN on 22/02/2022
+//  Copyright © 2022 MCN. All rights reserved
 
 #import "MCNmoveToStr.h"
 
-
-   /*
-   Classe créée afin d'abriter les Méthodes implémentées ...
+   /* Classe créée afin d'abriter les Méthodes implémentées ...
       1) pour EXTRAIRE d'un 'Move' le déplacement exécuté
       2) pour le TRANSFORMER en une NSString aussi compréhensible que proche de la 'Notation algébrique réversible'
    ... et utilisées pour l'affichage de la liste des coups joués successivement par l'IA et par le Joueur

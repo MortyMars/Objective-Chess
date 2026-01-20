@@ -50,21 +50,14 @@ Notes de mise à jour (05/2022)
 - v1.0.5-beta : la fonction d'évaluation tient désormais compte du danger présenté par un pion parvenant en avant-dernière rangée ; Negamax a été retouché ; le dessin des pièces est une nouvelle fois modifié
 - v1.0.8-beta : possibilité de charger un diagramme au format FEN ; possibilité de modifier à tout moment le niveau de jeu de l'IA ; interface revue pour intégrer ces nouvelles fonctionnalités : ajout de menus et création d'une 'barre d'état'
 - v1.0.9-beta : possibilité de demander à l'IA de résoudre un diagramme de situation de partie
+- v1.1.0-beta : amélioration sensible de la fonction d'évaluation qui ajoute désormais aux calculs matériels des critères positionnels
 
 Ce qui reste à faire (ma TODO list)
 -----------------------------------
 Nécessairement :
-- Améliorer les temps de réponse de l'IA qui n'est rapide qu'avec une valeur de NUMBER_MOVES_AHEAD inférieure à 3 :-(
-- Améliorer encore la qualité de jeu de l'IA, notamment pour les bons coups les plus immédiats
-- Enrichir la fonction d'évaluation en pondérant la valeur des pièces selon leur position sur l'échiquier
+- Améliorer les temps de réponse de l'IA qui n'est vraiment réactive qu'avec une valeur de NUMBER_MOVES_AHEAD inférieure à 3
+- Améliorer encore la qualité de jeu de l'IA concernant les bons coups les plus immédiats et certains sacrifices inutiles
 - Implémenter la possibilité d'enregistrer une partie (au dernier coup, voire pour tous les coups successifs...)
 
 Optionnellement :
 - Offrir au Joueur la possibilité de se voir proposer un prochain bon coup
-
-Apologies et remerciements
---------------------------
-Désolé, mais je suis nul en Github :-( 
-J'ai donc été amené à bidouiller ce repo à plusieurs reprises, pour arriver à mettre à disposition régulièrement le code et ses versions successives.   
-Ainsi, si en tentant de lancer le projet, votre IDE vous indique un quelconque problème n'hésitez pas pas à m'en faire part.
-Je remercierai en outre quiconque souhaitera faire des remarques sur le code lui-même, son organisation, ou son commentaire...

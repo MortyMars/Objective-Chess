@@ -1,9 +1,8 @@
 //  ChessView.m
 //  chess
-//
 //  Created by Andrew Wang on 15/07/2013
-//  Completed by MCN on 2020
-//  Copyright (c) 2013 Andrew Wang. All rights reserved.
+//  Copyright (c) 2013 Andrew Wang. All rights reserved
+//  Updated by MCN on 2020
 
 //  CLASSE DE DÉFINITION DE L'ÉCHIQUIER EN TERMES DE VUES (construction graphique de l'échiquier, des pièces...)
 //  par opposition à la classe ChessBoard qui traite les données d'un 'board'
