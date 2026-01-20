@@ -25,6 +25,7 @@ static int cacheMisses = 0;
 
 @implementation Minimax
 
+
 //***************************************************************************************************
 // MÉTHODE 1 : BestMoveForSide - Point d'entrée du moteur IA
 // Cette méthode trouve le meilleur coup pour l'IA en explorant l'arbre des possibilités
@@ -121,9 +122,7 @@ static int cacheMisses = 0;
          }
       }
       
-      if (!isDangerous) {
-         [safeMovesOnly addObject:move];
-      }
+      if (!isDangerous) [safeMovesOnly addObject:move];
    }
    
    if (safeMovesOnly.count == 0) {
@@ -142,23 +141,23 @@ static int cacheMisses = 0;
          (unsigned long)sortedMoves.count);
    
    /* ========== DÉTECTION MENACE DE MAT ========== */
+   /* DÉTECTION DÉSACTIVÉE car présente dans NagamaxForSide
    Side enemySide = (side == sideWhite) ? sideBlack : sideWhite;
 
    if ([self HasMateInOne:enemySide inBoard:board]) {
       NSLog(@"⚠️ ALERTE : L'adversaire a un mat en 1 coup !");
       
-      /* Filtrer les coups qui NE BLOQUENT PAS le mat */
+      // Filtrer les coups qui NE BLOQUENT PAS le mat
       NSMutableSet *movesBlockingMate = [[NSMutableSet alloc] init];
       
       for (Move *move in sortedMoves) {
          ChessBoard *testBoard = board.copy;
          [testBoard PerformMove:move];
          
-         /* Après ce coup, l'adversaire a-t-il toujours mat en 1 ? */
-         if (![self HasMateInOne:enemySide inBoard:testBoard]) {
-            [movesBlockingMate addObject:move];
-         }
+         // Après ce coup, l'adversaire a-t-il toujours mat en 1 ?
+         if (![self HasMateInOne:enemySide inBoard:testBoard]) [movesBlockingMate addObject:move];
       }
+      
       
       if (movesBlockingMate.count > 0) {
          NSLog(@"🛡️ %lu coups bloquent le mat", (unsigned long)movesBlockingMate.count);
@@ -167,6 +166,7 @@ static int cacheMisses = 0;
          NSLog(@"💀 Aucun coup ne peut empêcher le mat");
       }
    }
+    FIN de DÉTECTION DÉSACTIVÉE*/
    
    /* ========== ÉVALUATION DE CHAQUE COUP ========== */
    for (Move *moveEnCours in sortedMoves)
@@ -215,6 +215,7 @@ static int cacheMisses = 0;
    return bestMove;
 }
 
+
 //***************************************************************************************************
 // MÉTHODE 2 : NegamaxForSide - CÅ’UR DE L'ALGORITHME (VERSION OPTIMISÉE)
 // Implémentation de l'algorithme Negamax avec élagage alpha-beta et Quiescence Search
@@ -234,9 +235,7 @@ static int cacheMisses = 0;
    nodeCount++;
 
    /* Toutes les 10000 évaluations, vider les caches */
-   if (nodeCount % 10000 == 0) {
-      NSLog(@"⏱️ Negamax : %d nœuds explorés", nodeCount);
-   }
+   if (nodeCount % 10000 == 0) NSLog(@"⏱️ Negamax : %d nœuds explorés", nodeCount);
 
    /* Limite de sécurité : si trop de nœuds, arrêter la recherche */
    if (nodeCount > 500000) {
@@ -256,9 +255,7 @@ static int cacheMisses = 0;
    /* ÉTAPE 2 : DÉTECTION MAT/PAT
       Si aucun coup n'est possible, c'est soit mat soit pat */
    if (movesPossibles.count == 0) {
-      if ([self TestEchecRoiSide:otherSide inBoard:board]) {
-         return 100000;  // Mat favorable à  'side'
-      }
+      if ([self TestEchecRoiSide:otherSide inBoard:board]) return 100000;  // Mat favorable à  'side'
       return 0;  // Pat = nulle
    }
    
@@ -267,10 +264,10 @@ static int cacheMisses = 0;
    if (depth <= 0) {
       
       /* Évaluation du plateau */
-            NSDate *startEval = [NSDate date];                                // ✅ PROFIlage de L'ÉVALUATION
-            int eval = [self EvalBoardForSide:side board:board];              // Évaluation du plateau
-            evalTotalTime += [[NSDate date] timeIntervalSinceDate:startEval]; // ✅ PROFIlage de L'ÉVALUATION
-            evalCount++;                                                      // ✅ PROFIlage de L'ÉVALUATION
+      NSDate *startEval = [NSDate date];                                // ✅ PROFIlage de L'ÉVALUATION
+      int eval = [self EvalBoardForSide:side board:board];              // Évaluation du plateau
+      evalTotalTime += [[NSDate date] timeIntervalSinceDate:startEval]; // ✅ PROFIlage de L'ÉVALUATION
+      evalCount++;                                                      // ✅ PROFIlage de L'ÉVALUATION
        
       /* QUIESCENCE SEARCH (QS) : On continue à explorer les captures pour éviter "l'effet horizon" où l'IA
          ne voit pas une prise importante juste après depth=0
@@ -336,6 +333,7 @@ static int cacheMisses = 0;
    return alpha;
 }
 
+
 //***************************************************************************************************
 // MÉTHODE 3 : SortMovesByPriority - TRI DES COUPS PAR PRIORITÉ
 // NOUVELLE MÉTHODE pour améliorer l'efficacité de l'élagage alpha-beta
@@ -357,6 +355,7 @@ static int cacheMisses = 0;
       return NSOrderedSame;
    }];
 }
+
 
 //***************************************************************************************************
 // MÉTHODE 4 : ScoreMove - ÉVALUATION RAPIDE D'UN COUP
@@ -393,6 +392,7 @@ static int cacheMisses = 0;
    return score;
 }
 
+
 //***************************************************************************************************
 // MÉTHODE 5 : FilterCaptures - FILTRAGE DES CAPTURES POUR QUIESCENCE SEARCH
 // NOUVELLE MÉTHODE pour optimiser le QS
@@ -414,6 +414,7 @@ static int cacheMisses = 0;
    
    return captures;
 }
+
 
 //***************************************************************************************************
 // MÉTHODE : EvalBoardForSide - VERSION AMÉLIORÉE AVEC ÉVALUATION POSITIONNELLE
@@ -664,11 +665,12 @@ static int cacheMisses = 0;
             queensWhite, queensBlack);
    }
    
+   /* PARTIE 2 désactivée car la mobilité est déjà gérée par le nbre de coups explorés
    // ===========================================
    // PARTIE 2 : ÉVALUATION DE LA MOBILITÉ
-   /* La mobilité = nombre de coups possibles pour chaque camp
-      Un camp avec plus de coups possibles a généralement un meilleur contrôle du jeu
-      OPTIMISATION : On ne calcule ceci que tous les 2 niveaux pour économiser du temps */
+   // La mobilité = nombre de coups possibles pour chaque camp
+   // Un camp avec plus de coups possibles a généralement un meilleur contrôle du jeu
+   // OPTIMISATION : On ne calcule ceci que tous les 2 niveaux pour économiser du temps
    
    if (NUMBER_MOVES_AHEAD % 2 == 0) {  // Calcul partiel pour économiser du temps
       NSSet *movesWhite = [self PossibleMovesForSide:sideWhite board:board];
@@ -681,6 +683,7 @@ static int cacheMisses = 0;
       evalDisplay += mobilityDiff;
       evalWhitePOV += mobilityDiff;  // Toujours du point de vue des Blancs
    }
+   FIN de PARTIE 2 désactivée*/
    
    // ===========================================
    // PARTIE 3 : ÉVAL. DE LA STRUCTURE DE PIONS
@@ -773,10 +776,11 @@ static int cacheMisses = 0;
    // TODO : Implémenter détection pions protecteurs (complexe, à faire plus tard)
    
    
+   /* PARTIE 6 désactivée car redondante avec la vérification faite dans NegamaxForSide
    // ===========================================
    // PARTIE 6 : DÉTECTION MAT
-   /* Note : Cette section pourrait être optimisée en ne l'appelant que rarement
-      car elle est coûteuse en calcul */
+   // Note : Cette section pourrait être optimisée en ne l'appelant que rarement
+   // car elle est coûteuse en calcul
    if ([self TestEchecRoiSide:sideBlack inBoard:board]) {
       if ([self PossibleMovesForSide:sideBlack board:board].count == 0) {
          evalDisplay += +100000;
@@ -789,6 +793,7 @@ static int cacheMisses = 0;
          evalWhitePOV += -100000;  // Mat des Blancs = énorme avantage Noirs
       }
    }
+   FIN de PARTIE 6 désactivée*/
    
    // ===========================================
    // PARTIE 7 : PIONS EN AVANT-DERNIÈRE RANGÉE
@@ -844,6 +849,7 @@ static int cacheMisses = 0;
    return (side == sideWhite) ? evalWhitePOV : -evalWhitePOV;
 }
 
+
 //***************************************************************************************************
 // MÉTHODE 7 : PossibleMovesForSide - GÉNÉRATION DES COUPS LÉGAUX
 //***************************************************************************************************
@@ -874,6 +880,7 @@ static int cacheMisses = 0;
    
    return moves;
 }
+
 
 //***************************************************************************************************
 // MÉTHODE 8 : TestEchecFavSide - DÉTECTION ÉCHEC AVEC NOTIFICATION
@@ -913,6 +920,7 @@ static int cacheMisses = 0;
    return strEchec;
 }
 
+
 //***************************************************************************************************
 // MÉTHODE 9 : TestEchecRoiSide - VERSION RAPIDE DE LA DÉTECTION D'ÉCHEC
 //***************************************************************************************************
@@ -942,6 +950,7 @@ static int cacheMisses = 0;
    
    return NO;
 }
+
 
 //***************************************************************************************************
 // MÉTHODE 10 : NotifiePatMatDesSide - GESTION FIN DE PARTIE
@@ -1019,6 +1028,7 @@ static int cacheMisses = 0;
    }
 }
 
+
 //***************************************************************************************************
 // MÉTHODE HELPER :
 // Vérifie ... Retourne ...
@@ -1081,11 +1091,13 @@ static int cacheMisses = 0;
    return isAttacked ? cheapestValue : 0;
 }
 
-//***************************************************************************************************
+
+/* MÉTHODE DÉSACTIVÉE
+// ***************************************************************************************************
 // NOUVELLE MÉTHODE : DetectImmediateMateThreats
 // Détecte si l'adversaire a un coup qui donne mat au prochain tour
 // À ajouter dans Minimax.m, et à appeler dans BestMoveForSide
-//***************************************************************************************************
+// ***************************************************************************************************
 +(BOOL)HasMateInOne:(Side)attackingSide
             inBoard:(ChessBoard *)board
 {
@@ -1096,19 +1108,16 @@ static int cacheMisses = 0;
       ChessBoard *testBoard = board.copy;
       [testBoard PerformMove:move];
       
-      /* Vérifier si ce coup met mat */
+      // Vérifier si ce coup met mat
       if ([self TestEchecRoiSide:defendingSide inBoard:testBoard]) {
          NSSet *defenderMoves = [self PossibleMovesForSide:defendingSide board:testBoard];
-         
-         if (defenderMoves.count == 0) {
-            /* C'est mat ! */
-            return YES;
-         }
+         if (defenderMoves.count == 0) return YES; // C'est mat !
       }
    }
    
    return NO;
 }
+FIN DE MÉTHODE DÉSACTIVÉE */
 
 
 //***************************************************************************************************
@@ -1121,9 +1130,7 @@ static int cacheMisses = 0;
    for (int y = 0; y < 8; y++) {
       for (int x = 0; x < 8; x++) {
          Piece *p = [board piece_colX:x rangY:y];
-         if (p && p.type != Invalide) {
-            [hash appendFormat:@"%d%d%d", p.type, p.side, y*8+x];
-         }
+         if (p && p.type != Invalide) [hash appendFormat:@"%d%d%d", p.type, p.side, y*8+x];
       }
    }
    [hash appendFormat:@"_%d", side];
