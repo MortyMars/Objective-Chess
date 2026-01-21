@@ -103,6 +103,8 @@
                     </menu>
                 </menuItem>
                 <menuItem title="Diagramme" id="295">
+                    <attributedString key="attributedTitle"/>
+                    <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Diagramme" id="296">
                         <items>
                             <menuItem title="Charger un diagramme" id="rI1-Jc-YBr">
@@ -210,7 +212,7 @@ CA
                     </menu>
                 </menuItem>
             </items>
-            <point key="canvasLocation" x="-63" y="-1550"/>
+            <point key="canvasLocation" x="-1428" y="-6928"/>
         </menu>
         <window title="Objective-Chess" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="371">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>

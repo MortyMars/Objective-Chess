@@ -73,13 +73,13 @@
    - (IBAction)SetDifficulty5:(id)sender;
 
    // Création des Outlet MCN pour gestion du menu 'Partie->Difficulté'
-   @property (weak) IBOutlet NSMenuItem *menuRapide;
-   @property (weak) IBOutlet NSMenuItem *menuFacile;
-   @property (weak) IBOutlet NSMenuItem *menuSTD;
-   @property (weak) IBOutlet NSMenuItem *menuReflechi;
-   @property (weak) IBOutlet NSMenuItem *menuChampion;
+   @property (strong) IBOutlet NSMenuItem *menuRapide;
+   @property (strong) IBOutlet NSMenuItem *menuFacile;
+   @property (strong) IBOutlet NSMenuItem *menuSTD;
+   @property (strong) IBOutlet NSMenuItem *menuReflechi;
+   @property (strong) IBOutlet NSMenuItem *menuChampion;
 
-   @property (weak) IBOutlet NSMenuItem *menuPoursuivre;
+   @property (strong) IBOutlet NSMenuItem *menuPoursuivre;
 
    /* Déclaration des Méthodes gérant les NSAlert déléguées */
    -(void) AlerteEchecRoiSide:(Side) side;

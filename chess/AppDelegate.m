@@ -14,10 +14,22 @@
 
    
    //***************************************************************************************************
+   // Méthode système
+   // Le système macOS peut sauvegarder et restaurer automatiquement l’état d’une application quand elle est relancée
+   // (fenêtres ouvertes, contenu, etc.) et Apple demande au dev d'indiquer explicitement son choix vis-à-vis de cette
+   // fonctionnalité. On indique ici notre acceptation, afin de faire taire le Warning récurent dans Xcode
+   - (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app {
+       return YES;
+   }
+
+   
+   //***************************************************************************************************
    // Unique méthode (d'instance) de la classe ayant pour objectif d'initialiser l'application
    - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
    {
       // Insert code here to initialize your application
+      // AJOUT : Forcer la finalisation des menus
+      // [[NSApp mainMenu] update];
       
       /* L'appel ici, dans AppDelegate, de méthodes de la classe MCNconnecteur permet d'avoir l'assurance
       du chargement préalable de tous les objets de l'interface (instances de classes en particulier...)
@@ -55,8 +67,14 @@
       // Revoir finalité de cette commande...
       monMCNControleur.maChessView.delegate = monMCNControleur;
       
+      
+      // NSLog pour le fun...
+      NSLog(@"Welcome sur Objective-Chess\n");
+      NSLog(@"La taille de stockage pour un 'int' est de %li bits", sizeof(int));
+      NSLog(@"La valeur maxi pour un 'int' est ±%d \n",INT_MAX);
+      
       // MCN - NSLog de contrôle
-      NSLog(@"\nInterface chargée");
+      NSLog(@"Interface chargée\n");
       
    } // Fin de Méthode 'applicationDidFinishLaunching'
 

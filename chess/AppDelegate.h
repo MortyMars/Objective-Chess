@@ -16,7 +16,7 @@
    @property (assign) IBOutlet NSWindow *window;
    
    // MCN - Déclaration du MCNconnecteur instancié par AppDelegate
-   @property (weak) IBOutlet MCNconnecteur *monMCNconnecteur;
+   @property (strong) IBOutlet MCNconnecteur *monMCNconnecteur;
 
    // Déclaration de l'unique méthode d'instance
    - (void)applicationDidFinishLaunching:(NSNotification *)aNotification;

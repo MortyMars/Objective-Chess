@@ -6,11 +6,6 @@
 
 int main(int argc, const char * argv[])
 {
-   // NSLog pour le fun...
-   NSLog(@"Welcome sur Objective-Chess\n");
-   NSLog(@"La taille de stockage pour un 'int' est de %li bits\n", sizeof(int));
-   NSLog(@"La valeur maxi pour un 'int' est de %d \n",INT_MAX);
-   
-   // Seule ligne véritablement nécessaire
+   // Seule ligne nécessaire
    return NSApplicationMain(argc, argv);
 }
