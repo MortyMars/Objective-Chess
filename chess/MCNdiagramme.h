@@ -14,10 +14,13 @@
    {  /* Création d'une variable d'instance de type NSOperation
       permettant un déroulement séquentiel des coups successifs */
       NSOperationQueue *maFileSerie;
+      
+      // Variable d'instance qualifiant de code FEN saisi
+      bool codeFenOK;
    }
 
    -(IBAction)   SaisieCodeFEN:(id)sender;
-   -(IBAction)   ProposerDiagPourIA:(id)sender;
+   -(IBAction)   DiagrammeIAvsIA:(id)sender;
 
 
    -(NSString *) RecupCodeFEN;
@@ -28,13 +31,17 @@
 
    /* Définition de versions silencieuses (ou adaptées) de Méthodes d'autres classes permettant
    de rendre visibles les coups successifs d'une résolution de diagramme par l'IA contre l'IA */
-   -(void)       SilentMakeIAMoveForSide:(Side)side Board:(ChessBoard *)board;
-   +(NSString *) SilentTestEchecFavSide: (Side)side Board:(ChessBoard *)board;
-   -(void)       SilentMajStatusBarViaMove:(Move *)move PrecBoard:(ChessBoard *)precBoard
+   -(void)       SilentMakeIAMoveForSide:(Side)side
+                                   Board:(ChessBoard *)board;
+   
+   +(NSString *) SilentTestEchecFavSide: (Side)side
+                                  Board:(ChessBoard *)board;
+   
+   -(void)       SilentMajStatusBarViaMove:(Move *)move
+                                 PrecBoard:(ChessBoard *)precBoard
                                   StrCheck:(NSString *)strCheck;
-   +(void)       SilentNotifiePatMatDesSide:(Side)side onBoard:(ChessBoard*)board;
-
-
-   //+(NSTimer *)scheduledTimerWithTimeInterval:(NSTimeInterval)interval repeats:(BOOL)repeats block:(void (^)(NSTimer *timer))block;
+   
+   +(void)       SilentNotifiePatMatDesSide:(Side)side
+                                    onBoard:(ChessBoard*)board;
 
 @end

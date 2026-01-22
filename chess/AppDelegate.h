@@ -4,7 +4,6 @@
 //  Copyright (c) 2013 Andrew Wang. All rights reserved
 //  Updated by MCN in 2020
 
-
 #import "MCNconnecteur.h"
 
 //Rappel au compilateur que MCNconnecteur est une classe, définie ailleurs

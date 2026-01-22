@@ -4,33 +4,25 @@
 //  Copyright (c) 2013 Andrew Wang. All rights reserved
 //  Updated by MCN in 2020
 
-
 #import "AppDelegate.h"
 
 @implementation AppDelegate
 
    @synthesize monMCNconnecteur; // MCN
-   @synthesize window;           // MCN (plus de pertinence)
 
-   
    //***************************************************************************************************
-   // Méthode système
-   // Le système macOS peut sauvegarder et restaurer automatiquement l’état d’une application quand elle est relancée
-   // (fenêtres ouvertes, contenu, etc.) et Apple demande au dev d'indiquer explicitement son choix vis-à-vis de cette
-   // fonctionnalité. On indique ici notre acceptation, afin de faire taire le Warning récurent dans Xcode
+   // MÉTHODE SYSTÈME
+   // MacOS peut sauvegarder et restaurer automatiquement l’état d’une application quand elle est relancée
+   // (état fenêtres, contenu, etc.) et il est demandé au dev d'indiquer ses intentions vis-à-vis de cette
+   // fonctionnalité. On indique ici notre accord, afin de faire taire le Warning récurent dans Xcode.
    - (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app {
        return YES;
    }
 
-   
    //***************************************************************************************************
-   // Unique méthode (d'instance) de la classe ayant pour objectif d'initialiser l'application
+   // UNIQUE RÉELLE MÉTHODE (d'instance) de la classe ayant pour objectif d'initialiser l'application
    - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
    {
-      // Insert code here to initialize your application
-      // AJOUT : Forcer la finalisation des menus
-      // [[NSApp mainMenu] update];
-      
       /* L'appel ici, dans AppDelegate, de méthodes de la classe MCNconnecteur permet d'avoir l'assurance
       du chargement préalable de tous les objets de l'interface (instances de classes en particulier...)
       Un appel trop tôt dans le code, avec des objets encore 'nil' rendrait inefficace la mise à jour
@@ -70,14 +62,13 @@
       
       // NSLog pour le fun...
       NSLog(@"Welcome sur Objective-Chess\n");
-      NSLog(@"La taille de stockage pour un 'int' est de %li bits", sizeof(int));
-      NSLog(@"La valeur maxi pour un 'int' est ±%d \n",INT_MAX);
+      //NSLog(@"La taille de stockage pour un 'int' est de %li bits", sizeof(int));
+      //NSLog(@"La valeur maxi pour un 'int' est ±%d \n",INT_MAX);
       
       // MCN - NSLog de contrôle
-      NSLog(@"Interface chargée\n");
+      NSLog(@"Interface initialisée et chargée\n");
       
    } // Fin de Méthode 'applicationDidFinishLaunching'
-
 
 @end
 

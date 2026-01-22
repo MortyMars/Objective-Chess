@@ -829,11 +829,15 @@ static int cacheMisses = 0;
    }
    
    // ===========================================
+   
+   /* La mise à jour de l'interface est déplacée dans 'MakeIAMoveForSide' et sa variante 'Silent......'
+    pour limiter le nombre de mise à jour de l'interface pendant que l'IA décide de son coup
    // MISE À JOUR DE L'INTERFACE
    if (evalDisplay > 0)
       monMCNControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : +%d", evalDisplay];
    else
       monMCNControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : %d", evalDisplay];
+   */
    
    // Stocker dans le cache
       evalCache[key] = @(evalWhitePOV);

@@ -376,7 +376,7 @@
       }
       else monMCNControleur.lblEchec.cell.stringValue = @"Échec :"; */
       
-      NSLog(@"\n Le Move effectué par les %@ est : %@", (sideCourant == 2)? @"Blancs":@"Noirs ", aiMove);
+      NSLog(@"\nLe Move effectué par les %@ est : %@", (sideCourant == 2)? @"Blancs":@"Noirs ", aiMove);
       if (![strEchec isEqual:@""]) NSLog(@"\n La chaine d'échec est : '%@'", strEchec);
       
       // Restauration des indicateurs de roque pour utilisation dans 'ConvertEnStringMove'
@@ -395,6 +395,12 @@
       
       // MISE À JOUR 'STATUS BAR' HORS EVAL ET TRAIT
       [self MajStatusBarViaMove:aiMove PrecBoard:savedBoard StrCheck:strEchec];
+      
+      // Mise à jour eval
+      if (evalDisplay > 0)
+         monMCNControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : +%d", evalDisplay];
+      else
+         monMCNControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : %d", evalDisplay];
       
       // L'IA ayant joué on inverse sideCourant
       //sideCourant = (sideIA == sideWhite) ? sideBlack : sideWhite;

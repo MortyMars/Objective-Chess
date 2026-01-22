@@ -5,12 +5,19 @@
 
 #import "MCNdiagramme.h"
 
+
+//static NSString *strPieces;
+NSMutableString *strPiecesProv;
+NSString *strPieces;
+
 @implementation MCNdiagramme
 
+   // Initialisation des instances
    -(instancetype) init {
       self = [super init];
       maFileSerie = [[NSOperationQueue alloc] init];
       maFileSerie.maxConcurrentOperationCount = 1;   // limiter nb opés à 1 à la fois pour forcer une queue série
+      codeFenOK=false;
       return self;
    }
 
@@ -31,10 +38,13 @@
 
    // **************************************************************************************************
    // Implémentation du lien entre menu 'Proposer à l'IA' et code
-   - (IBAction)ProposerDiagPourIA:(id)sender {
+   - (IBAction)DiagrammeIAvsIA:(id)sender {
       
       // Boite de saisie du code FEN
       [self TradFenEnView:[self RecupCodeFEN]];
+      
+      // Si codeFenOK est false on sort (test nécessaire pour éviter un crash du jeu)
+      if (codeFenOK==false) return;
       
       // Initialisation des variables
       ChessView  *viewEC  = monMCNControleur.maChessView;
@@ -145,12 +155,15 @@
           
        } // Fin de if Trait aux Noirs
       
-   } // Fin de 'ProposerDiagPourIA'
+   } // Fin de 'DiagrammeIAvsIA'
 
 
    // **************************************************************************************************
    // Méthode de classe permettant de récupérer un code FEN valide
    -(NSString *)RecupCodeFEN {
+      
+      // Initialisation de codeFenOK
+      codeFenOK = false;
       
       /* Pour rappel du format d'un code FEN valide, voici celui de la position initiale d'un échiquier :
           'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq 0 1'   (notation internationale anglaise)
@@ -170,9 +183,11 @@
       
       [saisieFEN setAccessoryView:input];
       NSInteger button = [saisieFEN runModal];
+      // Bouton 'OK' choisi
       if (button == NSAlertFirstButtonReturn) {
          strFEN = [input stringValue];
       }
+      // Bouton 'Annuler' choisi
       else if (button == NSAlertSecondButtonReturn) return EXIT_SUCCESS;
       
       /* Vérification du code FEN fourni, sachant qu'on ne contrôle ici que les critères suivants :
@@ -185,9 +200,12 @@
       int nbSlash = 0;
       int nbCase = 0;
       char carLu;
+      long i;
+      strPiecesProv = [NSMutableString string];
       // le 'i' de la boucle est typé 'long' pour qu'il accepte la valeur '(strFEN.lenght)-1'
-      for (long i = 0; i < strFEN.length; i ++) {
+      for (i = 0; i < strFEN.length; i ++) {
          carLu = [strFEN characterAtIndex:i];
+         [strPiecesProv appendFormat:@"%c", carLu]; // au passage on créé 'strPièces' en lui ajoutant chaque 'carLu'
          switch (carLu) {
             case '/':   nbSlash += 1;           break;
             case '1':   nbCase +=1;             break;
@@ -220,12 +238,16 @@
       // autre cas d'invalidité de la chaine lue : il y a 8 rangée, il faut donc 7 slash
       if (nbSlash != 7) chainInvalide = YES;
       
+      // Commutation de la variable d'instance codeFenOK pour utilisation externe
+      if ((!chainInvalide) && (nbSlash = 7) && (nbCase = 64)) codeFenOK=true;
+      
       // On recommence si pas OK pour les 3 critères (appel récursif conditionnel ;-)
       if ((chainInvalide) || (nbSlash != 7) || (nbCase != 64)) {
          
+         codeFenOK=false;
          NSAlert *pasOK = [[NSAlert alloc] init];
-         [pasOK setMessageText:@"Chaine invalide"];
-         [pasOK setInformativeText:@"La chaine saisie n'est pas conforme au format attendu. Vérifiez et recommencez..."];
+         [pasOK setMessageText:@"Code FEN invalide"];
+         [pasOK setInformativeText:@"La chaîne saisie n'est pas conforme au format attendu. Vérifiez et recommencez..."];
          [pasOK addButtonWithTitle:@"OK"];
          [pasOK setAlertStyle:NSAlertStyleInformational];
          [pasOK runModal];
@@ -233,7 +255,11 @@
          [self RecupCodeFEN];
       }
       
-      NSLog(@"\n Rappel de la chaine lue : %@",strFEN);
+      // Détermination de la sous-chaine Pièces définitive en supprimant l'espace final
+      strPieces = [strPiecesProv substringToIndex:[strPiecesProv length]-1];
+      
+      
+      NSLog(@"\nCode FEN lu : %@",strFEN);
       monMCNControleur.lblInfo.cell.stringValue = @"Info : Diagramme correctement chargé !";
       return strFEN;
    }
@@ -244,6 +270,8 @@
    // Méthode d'instance traduisant une chaine FEN valide en Board et View
    // NOTER QUE COMME IL S'AGIT D'UN TRAITEMENT DE FEN, ON PLACE FORCÉMENT LES BLANCS EN BAS
    -(void)TradFenEnView:(NSString *) stringFEN {
+      
+      if (codeFenOK==false) return;
       
       // Effacement d'un éventuel précédent board déjà construit
       ChessBoard *fenBoard = monMCNControleur.maChessView->liveBoard;
@@ -306,9 +334,9 @@
       
       
       // NSLog de contrôle
-      NSLog(@"\nMatrice obtenue : \n%@",fenBoard);
-      NSLog(@"\n Rappel de la chaine complète FEN : '%@'",stringFEN);
-      NSLog(@"\n Chaine résultante pour le Trait et le Roque : '%@'",strTraitEtRoque);
+      NSLog(@"\nMatrice : \n%@",fenBoard);
+      NSLog(@"Sous-chaîne des Pièces            : '%@'",strPieces);
+      NSLog(@"Sous-chaîne de Partie             : '%@'",strTraitEtRoque);
       
       [self LireSecondPartStrFEN:strTraitEtRoque];
       
@@ -382,9 +410,10 @@
       NSString *sTrait;
       if ([secondStr characterAtIndex:0] == 'w') {sTrait = @"Trait : Blancs"; sideCourant = sideWhite;}
       else if ([secondStr characterAtIndex:0] == 'b') {sTrait = @"Trait : Noirs"; sideCourant = sideBlack;}
+      else {sTrait = @"Trait : incorrect, valeur par défaut retenue (Blancs)"; sideCourant = sideWhite;}
       // Il n'y a pas de variable d'instance pour le Trait...
       monMCNControleur.lblTrait.cell.stringValue = sTrait;
-      NSLog(@"\n Chaine pour le Trait : '%@'", sTrait);
+      NSLog(@"Phrase de la sous-chaîne du Trait : '%@'", sTrait);
       
       // Récupération de l'emplacement des espaces dans la chaine pour décrypter la suite
       int e[4];   int x = 0;
@@ -396,29 +425,29 @@
             x++;
          }
       }
-      NSLog(@"\n Position des espaces dans la chaine : %d, %d, %d, et %d", e[0],e[1],e[2],e[3]);
+      //NSLog(@"Espaces en sous-chaîne de Partie  : %d, %d, %d, et %d", e[0],e[1],e[2],e[3]);
       
       // Récupération des 4 chaines unitaires suivantes
       // Roque
       NSString *sRoque = [secondStr substringWithRange:NSMakeRange(e[0]+1, e[1]-(e[0]+1))];
       monMCNControleur.maChessView->liveBoard->strRoque = sRoque;
       monMCNControleur.lblRoque.cell.stringValue = [NSString stringWithFormat:@"Roque : %@", sRoque];;
-      NSLog(@"\n Chaine pour le Roque : '%@'", sRoque);
+      NSLog(@"Sous-chaîne du Roque              : '%@'", sRoque);
       // CibleEP
       NSString *sCibleEP = [secondStr substringWithRange:NSMakeRange(e[1]+1, e[2]-(e[1]+1))];
       monMCNControleur.maChessView->liveBoard->strCibleEP = sCibleEP;
       monMCNControleur.lblCibleEP.cell.stringValue = [NSString stringWithFormat:@"Cible e.p. : %@",sCibleEP];
-      NSLog(@"\n Chaine pour la CibleEP : '%@'", sCibleEP);
+      NSLog(@"Sous-chaîne de la CibleEP         : '%@'", sCibleEP);
       // Demis
       NSString *sDemis = [secondStr substringWithRange:NSMakeRange(e[2]+1, e[3]-(e[2]+1))];
       monMCNControleur.maChessView->liveBoard->nbDemis = [sDemis intValue];
       monMCNControleur.lbl50Coups.cell.stringValue = [NSString stringWithFormat:@"50 demis : %@", sDemis];
-      NSLog(@"\n Chaine pour les demis : '%@'", sDemis);
+      NSLog(@"Sous-chaîne du n° des Demis       : '%@'", sDemis);
       // Coup : tjs dernier caractère de la chaine
       NSString *sCoup = [secondStr substringWithRange:NSMakeRange(e[3]+1,secondStr.length-(e[3]+1))];
       monMCNControleur.maChessView->liveBoard->nbEntiers = [sCoup intValue];
       monMCNControleur.lblNumCoup.cell.stringValue = [NSString stringWithFormat:@"Coup n° : %@", sCoup];;
-      NSLog(@"\n Chaine pour le n° de Coup : '%@'", sCoup);
+      NSLog(@"Sous-chaîne du n° du Coup         : '%@'\n", sCoup);
    
    } // Fin de Méthode 'LireSecondPartStrFEN'
 
@@ -466,8 +495,8 @@
       Bizarrement 'TestEchecForSide' RAZ les indic de Roque et de Prise e.p., d'où la sauvegarde ci-avant */
       NSString *strEchec = [MCNdiagramme SilentTestEchecFavSide:side Board:board];
       
-      NSLog(@"\n Le Move effectué par les %@ est : %@", (sideCourant == 2)? @"Blancs":@"Noirs ", aiMove);
-      if (![strEchec isEqual:@""]) NSLog(@"\n La chaine d'échec est : '%@'", strEchec);
+      NSLog(@"\nLe Move effectué par les %@ est : %@", (sideCourant == 2)? @"Blancs":@"Noirs ", aiMove);
+      if (![strEchec isEqual:@""]) NSLog(@"\nLa chaîne d'échec est : '%@'", strEchec);
       
       // Restauration des indicateurs de roque pour utilisation dans 'ConvertEnStringMove'
       petitRoque = roque;           grandRoque = ROQUE;           enPassant = ENPASS;
@@ -475,25 +504,43 @@
       NSMutableString* bestMoveIA = [MCNmoveToStr ConvertEnStringMove:aiMove    PromPion:promPion
                                                              StrEchec:strEchec     Board:savedBoard];
       
-      [MCNmoveToStr MettreEnFormeChaine:bestMoveIA Protagoniste:(side == sideWhite)? @"B":@"N"];
+      /* Ligne déplacée dans le Thread Principal ci dessous
+      [MCNmoveToStr MettreEnFormeChaine:bestMoveIA Protagoniste:(side == sideWhite)? @"B":@"N"]; */
       
       // Test examinant si le coup IA met le Joueur Mat...
       Side otherSide = (side == sideWhite)? sideBlack : sideWhite;
       NSSet *movesPossibles = [Minimax PossibleMovesForSide:otherSide board:board];
-      if (movesPossibles.count == 0) [MCNdiagramme SilentNotifiePatMatDesSide:otherSide onBoard:board];
+      
+      /* Ligne déplacée dans le thread principal
+      if (movesPossibles.count == 0) [MCNdiagramme SilentNotifiePatMatDesSide:otherSide onBoard:board]; */
       
       
-      //dispatch_async(dispatch_get_main_queue(), ^{
-      // MISE À JOUR 'STATUS BAR' HORS EVAL ET TRAIT
-      [self SilentMajStatusBarViaMove:aiMove PrecBoard:savedBoard StrCheck:strEchec];
-      
-      // L'IA ayant joué on inverse sideCourant
-      //sideCourant = (sideIA == sideWhite) ? sideBlack : sideWhite;
-      sideCourant = (sideCourant == sideWhite) ? sideBlack : sideWhite;
-      monMCNControleur.lblTrait.cell.stringValue = (sideCourant == sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
-      
-      //self.needsDisplay = YES; // MàJ affichage board
-      //});
+      // MAIN THREAD POUR MàJ DE L'UI
+      dispatch_async(dispatch_get_main_queue(), ^{
+          
+         // 1) Mise en forme de la chaîne (appelle MaJtxtCoups)
+         [MCNmoveToStr MettreEnFormeChaine:bestMoveIA Protagoniste:(side == sideWhite)? @"B":@"N"];
+         
+         // 2) Notification Pat/Mat si nécessaire
+         if (movesPossibles.count == 0) {
+            [MCNdiagramme SilentNotifiePatMatDesSide:otherSide onBoard:board];
+         }
+         
+         // 3) MISE À JOUR 'STATUS BAR' HORS EVAL ET TRAIT
+         [self SilentMajStatusBarViaMove:aiMove PrecBoard:savedBoard StrCheck:strEchec];
+          
+         // 4) Mise à jour de l'évaluation du board APRÈS le coup
+         int finalEval = [Minimax EvalBoardForSide:sideWhite board:board];
+         if (finalEval > 0)
+            monMCNControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : +%d", finalEval];
+         else
+            monMCNControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : %d", finalEval];
+          
+         // 5) L'IA ayant joué on inverse sideCourant
+         sideCourant = (sideCourant == sideWhite) ? sideBlack : sideWhite;
+         monMCNControleur.lblTrait.cell.stringValue = (sideCourant == sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
+         
+      });
       
    } // Fin de SilentMakeIAMoveForSide
 
