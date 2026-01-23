@@ -1,10 +1,7 @@
-//
 //  ChessTests.h
 //  ChessTests
-//
-//  Created by Martial on 22/04/2022.
-//  Copyright © 2022 Andrew Wang. All rights reserved.
-//
+//  Created by MCN on 22/04/2022.
+//  Copyright © 2022 MCN - All rights reserved.
 
 #import <XCTest/XCTest.h>
 #import <Foundation/Foundation.h>

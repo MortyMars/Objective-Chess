@@ -65,7 +65,8 @@ NSString *strPieces;
          Tant que Blancs non Pat ou Mat ET Noirs non Pat ou Mat ET compteur inférieur à 10
          (mais dès que l'un des trois, on sort de la boucle)   */
          
-         // Bloc NSOpération
+         // BLOC NSOPERATION
+         /* Théorie à vérifier : on empile ici dans un thread dédié tous les coups blancs (et noirs) */
          [self->maFileSerie addOperationWithBlock:^{
             
             /* Boucle 'limitée' à 100 coups max */
@@ -117,7 +118,8 @@ NSString *strPieces;
           Tant que Noirs non Pat ou Mat ET Blancs non Pat ou Mat ET compteur inférieur à 10
           (mais dès que l'un des trois, on sort de la boucle)   */
           
-          // Bloc NSOpération
+         // BLOC NSOPERATION
+         /* Théorie à vérifier : on empile ici dans un thread dédié tous les coups noirs (et blancs) */
           [self->maFileSerie addOperationWithBlock:^{
              
              /* Boucle 'limitée' à 100 coups max */
@@ -190,11 +192,12 @@ NSString *strPieces;
       // Bouton 'Annuler' choisi
       else if (button == NSAlertSecondButtonReturn) return EXIT_SUCCESS;
       
-      /* Vérification du code FEN fourni, sachant qu'on ne contrôle ici que les critères suivants :
-       - les lettres correspondent bien à des types de pièces
-       - les slash séparant chaque rangée décrites sont bien au nombre de 7
-       - les 64 cases sont bien prises en compte, vides ou non
-       Au premier espace rencontré -ce qui se produit en fin de lecture des pièces- le contrôle s'interrompt
+      /* Vérification du code FEN fourni, sachant qu'on ne contrôle ici que la partie 'Pièces' du code
+       sur la base des critères suivants :
+       - les lettres correspondent à des types de pièces
+       - les slash séparant chaque rangée décrites sont au nombre de 7
+       - les 64 cases sont prises en compte, vides ou non
+       Au premier espace rencontré -ce qui se produit en fin de lecture des pièces- le contrôle s'interrompt.
        La vérification des indicateurs de roques, prise e.p.,... sera faite plus loin ou indiquée comme ignorée... */
       BOOL chainInvalide = NO;
       int nbSlash = 0;
@@ -205,7 +208,7 @@ NSString *strPieces;
       // le 'i' de la boucle est typé 'long' pour qu'il accepte la valeur '(strFEN.lenght)-1'
       for (i = 0; i < strFEN.length; i ++) {
          carLu = [strFEN characterAtIndex:i];
-         [strPiecesProv appendFormat:@"%c", carLu]; // au passage on créé 'strPièces' en lui ajoutant chaque 'carLu'
+         [strPiecesProv appendFormat:@"%c", carLu]; // au passage on créé 'strPieces' en lui ajoutant chaque 'carLu'
          switch (carLu) {
             case '/':   nbSlash += 1;           break;
             case '1':   nbCase +=1;             break;
@@ -255,7 +258,7 @@ NSString *strPieces;
          [self RecupCodeFEN];
       }
       
-      // Détermination de la sous-chaine Pièces définitive en supprimant l'espace final
+      // Création de la sous-chaine 'strPieces' définitive en supprimant l'espace final
       strPieces = [strPiecesProv substringToIndex:[strPiecesProv length]-1];
       
       
@@ -306,16 +309,16 @@ NSString *strPieces;
                case 'P': fenBoard->pieceCase[x][y] = [[Piece alloc] initWithType:Pion side:sideWhite];  i++;
                          fenBoard->pieceCase[x][y].numMoves = 1;                                             break;
                case '1': x += 0; i++; break; // ⋀
-               case '2': x += 1; i++; break; // |
+               case '2': x += 1; i++; break; // |                              2          1 +1
                case '3': x += 2; i++; break; // | on veut décaler l'abcisse de 3 ici, càd 2 +1 d'incrément
-               case '4': x += 3; i++; break; // |
+               case '4': x += 3; i++; break; // |                              4          3 +1
                case '5': x += 4; i++; break; // |
                case '6': x += 5; i++; break; // |
                case '7': x += 6; i++; break; // |
                case '8': x += 7; i++; break; // ⋁
                case '/': x=-1;   i++; break; // X forcé à -1 plus 1 d'incrément = 0, càd début de rangée
                case ' ':              break; // cas qui n'est jamais rencontré dans une chaine valide...
-               default:                break;
+               default :              break;
             } // sortie switch
          } // for x suivant jusqu'à 7
       } // for y suivant jusqu'à 0
@@ -406,7 +409,7 @@ NSString *strPieces;
    // Méthode d'instance effectuant la lecture des 5 derniers champs d'un code FEN
    -(void)LireSecondPartStrFEN:(NSString *)secondStr {
       
-      //récupération du Trait : tjs 1er caractère de la chaine
+      //récupération du Trait : tjs 1er caractère de la sous-chaine 'Partie'
       NSString *sTrait;
       if ([secondStr characterAtIndex:0] == 'w') {sTrait = @"Trait : Blancs"; sideCourant = sideWhite;}
       else if ([secondStr characterAtIndex:0] == 'b') {sTrait = @"Trait : Noirs"; sideCourant = sideBlack;}

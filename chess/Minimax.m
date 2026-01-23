@@ -462,7 +462,7 @@ static int cacheMisses = 0;
       Convention : les tableaux sont vus du point de vue des Blancs (rangée 0 = fond Blancs) */
    
    /* TABLE PIONS : Encourage l'avancée et le contrôle du centre */
-   static const int pawnTable[8][8] = {
+   /* static const int pawnTable[8][8] = {
       {  0,  0,  0,  0,  0,  0,  0,  0 },  // Rangée 0 (promotion, ne devrait pas arriver)
       { 10, 10, 10, 10, 10, 10, 10, 10 },  // Rangée 1 (avant-dernière, déjà  géré ailleurs)
       {  2,  2,  4,  6,  6,  4,  2,  2 },  // Rangée 2
@@ -471,10 +471,20 @@ static int cacheMisses = 0;
       {  1, -1, -2,  0,  0, -2, -1,  1 },  // Rangée 5
       {  1,  2,  2, -4, -4,  2,  2,  1 },  // Rangée 6
       {  0,  0,  0,  0,  0,  0,  0,  0 }   // Rangée 7 (départ)
+   }; */
+   static const int pawnTable[8][8] = {
+      {  0,  0,  0,  0,  0,  0,  0,  0 },
+      {  1,  1,  2,  2,  2,  2,  1,  1 },
+      {  1,  1,  2,  3,  3,  2,  1,  1 },
+      {  1,  1,  2,  4,  4,  2,  1,  1 },
+      {  0,  0,  1,  3,  3,  1,  0,  0 },
+      {  0,  0,  0,  0,  0,  0,  0,  0 },
+      {  1,  1, -1, -3, -3, -1,  1,  1 },
+      {  0,  0,  0,  0,  0,  0,  0,  0 }
    };
    
    /* TABLE CAVALIERS : Encourage position centrale et pénalise les bords */
-   static const int knightTable[8][8] = {
+   /* static const int knightTable[8][8] = {
       {-10, -8, -6, -6, -6, -6, -8,-10 },
       { -8, -4,  0,  0,  0,  0, -4, -8 },
       { -6,  0,  2,  3,  3,  2,  0, -6 },
@@ -483,10 +493,20 @@ static int cacheMisses = 0;
       { -6,  1,  2,  3,  3,  2,  1, -6 },
       { -8, -4,  0,  1,  1,  0, -4, -8 },
       {-10, -8, -6, -6, -6, -6, -8,-10 }
+   }; */
+   static const int knightTable[8][8] = {
+      { -8, -6, -4, -4, -4, -4, -6, -8 },
+      { -6, -2,  0,  1,  1,  0, -2, -6 },
+      { -4,  0,  2,  3,  3,  2,  0, -4 },
+      { -4,  1,  3,  4,  4,  3,  1, -4 },
+      { -4,  1,  3,  4,  4,  3,  1, -4 },
+      { -4,  0,  2,  3,  3,  2,  0, -4 },
+      { -6, -2,  0,  1,  1,  0, -2, -6 },
+      { -8, -6, -4, -4, -4, -4, -6, -8 }
    };
    
    /* TABLE FOUS : Encourage diagonales longues et centre */
-   static const int bishopTable[8][8] = {
+   /* static const int bishopTable[8][8] = {
       { -4, -2, -2, -2, -2, -2, -2, -4 },
       { -2,  0,  0,  0,  0,  0,  0, -2 },
       { -2,  0,  1,  2,  2,  1,  0, -2 },
@@ -495,10 +515,20 @@ static int cacheMisses = 0;
       { -2,  2,  2,  2,  2,  2,  2, -2 },
       { -2,  1,  0,  0,  0,  0,  1, -2 },
       { -4, -2, -2, -2, -2, -2, -2, -4 }
+   }; */
+   static const int bishopTable[8][8] = {
+      { -4, -2, -2, -2, -2, -2, -2, -4 },
+      { -2,  0,  0,  1,  1,  0,  0, -2 },
+      { -2,  0,  2,  2,  2,  2,  0, -2 },
+      { -2,  1,  2,  3,  3,  2,  1, -2 },
+      { -2,  1,  2,  3,  3,  2,  1, -2 },
+      { -2,  0,  2,  2,  2,  2,  0, -2 },
+      { -2,  0,  0,  1,  1,  0,  0, -2 },
+      { -4, -2, -2, -2, -2, -2, -2, -4 }
    };
    
    /* TABLE TOURS : Encourage 7ème rangée et colonnes ouvertes (approximatif) */
-   static const int rookTable[8][8] = {
+   /* static const int rookTable[8][8] = {
       {  0,  0,  0,  0,  0,  0,  0,  0 },
       {  1,  2,  2,  2,  2,  2,  2,  1 },
       { -1,  0,  0,  0,  0,  0,  0, -1 },
@@ -507,10 +537,20 @@ static int cacheMisses = 0;
       { -1,  0,  0,  0,  0,  0,  0, -1 },
       { -1,  0,  0,  0,  0,  0,  0, -1 },
       {  0,  0,  0,  1,  1,  0,  0,  0 }
+   }; */
+   static const int rookTable[8][8] = {
+      {  0,  0,  0,  0,  0,  0,  0,  0 },
+      {  2,  2,  2,  2,  2,  2,  2,  2 }, // 7e rangée
+      {  0,  0,  0,  0,  0,  0,  0,  0 },
+      {  0,  0,  0,  0,  0,  0,  0,  0 },
+      {  0,  0,  0,  0,  0,  0,  0,  0 },
+      {  0,  0,  0,  0,  0,  0,  0,  0 },
+      {  0,  0,  0,  0,  0,  0,  0,  0 },
+      {  0,  0,  0,  0,  0,  0,  0,  0 }
    };
    
    /* TABLE DAME : Légère préférence pour le centre, éviter l'exposition précoce */
-   static const int queenTable[8][8] = {
+   /* static const int queenTable[8][8] = {
       { -4, -2, -2, -1, -1, -2, -2, -4 },
       { -2,  0,  0,  0,  0,  0,  0, -2 },
       { -2,  0,  1,  1,  1,  1,  0, -2 },
@@ -519,10 +559,20 @@ static int cacheMisses = 0;
       { -2,  1,  1,  1,  1,  1,  0, -2 },
       { -2,  0,  1,  0,  0,  0,  0, -2 },
       { -4, -2, -2, -1, -1, -2, -2, -4 }
+   }; */
+   static const int queenTable[8][8] = {
+      { -4, -2, -2, -1, -1, -2, -2, -4 },
+      { -2,  0,  0,  0,  0,  0,  0, -2 },
+      { -2,  0,  1,  1,  1,  1,  0, -2 },
+      { -1,  0,  1,  2,  2,  1,  0, -1 },
+      { -1,  0,  1,  2,  2,  1,  0, -1 },
+      { -2,  0,  1,  1,  1,  1,  0, -2 },
+      { -2,  0,  0,  0,  0,  0,  0, -2 },
+      { -4, -2, -2, -1, -1, -2, -2, -4 }
    };
    
    /* TABLE ROI (milieu de partie) : Encourage roque et sécurité sur les côtés */
-   static const int kingMiddleGameTable[8][8] = {
+   /* static const int kingMiddleGameTable[8][8] = {
       { -6, -8, -8,-10,-10, -8, -8, -6 },
       { -6, -8, -8,-10,-10, -8, -8, -6 },
       { -6, -8, -8,-10,-10, -8, -8, -6 },
@@ -531,10 +581,20 @@ static int cacheMisses = 0;
       { -2, -4, -4, -4, -4, -4, -4, -2 },
       {  4,  4,  0,  0,  0,  0,  4,  4 },
       {  4,  6,  2,  0,  0,  2,  6,  4 }
+   }; */
+   static const int kingMiddleGameTable[8][8] = {
+      { -8,-10,-10,-12,-12,-10,-10, -8 },
+      { -8,-10,-10,-12,-12,-10,-10, -8 },
+      { -6, -8, -8,-10,-10, -8, -8, -6 },
+      { -6, -8, -8,-10,-10, -8, -8, -6 },
+      { -4, -6, -6, -8, -8, -6, -6, -4 },
+      { -2, -4, -4, -4, -4, -4, -4, -2 },
+      {  4,  4,  2,  0,  0,  2,  4,  4 },
+      {  6,  8,  4,  2,  2,  4,  8,  6 }
    };
    
    /* TABLE ROI (fin de partie) : Le roi devient actif au centre */
-   static const int kingEndGameTable[8][8] = {
+   /* static const int kingEndGameTable[8][8] = {
       {-10, -8, -6, -4, -4, -6, -8,-10 },
       { -6, -4, -2,  0,  0, -2, -4, -6 },
       { -6, -2,  4,  6,  6,  4, -2, -6 },
@@ -543,6 +603,16 @@ static int cacheMisses = 0;
       { -6, -2,  4,  6,  6,  4, -2, -6 },
       { -6, -6,  0,  0,  0,  0, -6, -6 },
       {-10, -6, -6, -6, -6, -6, -6,-10 }
+   }; */
+   static const int kingEndGameTable[8][8] = {
+      { -8, -6, -4, -2, -2, -4, -6, -8 },
+      { -6, -4, -2,  0,  0, -2, -4, -6 },
+      { -4, -2,  2,  4,  4,  2, -2, -4 },
+      { -4, -2,  4,  6,  6,  4, -2, -4 },
+      { -4, -2,  4,  6,  6,  4, -2, -4 },
+      { -4, -2,  2,  4,  4,  2, -2, -4 },
+      { -6, -4, -2,  0,  0, -2, -4, -6 },
+      { -8, -6, -4, -2, -2, -4, -6, -8 }
    };
    
    /* ========== PARCOURS DE L'ÉCHIQUIER ========== */
@@ -893,6 +963,7 @@ static int cacheMisses = 0;
 +(NSString *)TestEchecFavSide:(Side)side Board:(ChessBoard *)board
 {
    NSString *strEchec = @"";
+   NSString *strOtherSide = @"";
    checkCount = 0;
    Side otherSide = (side == sideWhite)? sideBlack:sideWhite;
    
@@ -917,9 +988,10 @@ static int cacheMisses = 0;
       }
    }
    
+   strOtherSide = (side == sideWhite)? @"Blanc":@"Noir";
    if ([strEchec isEqual:@"Echec"]) {
       [monMCNControleur.maChessView.delegate AlerteEchecRoiSide:otherSide];
-      NSLog(@"\n\t\t\t\t\t\t\tLa chaine strEchec est : %@", strEchec);
+      NSLog(@"\nLa situation du Roi %@ strEchec est : %@", strOtherSide, strEchec);
    }
    
    return strEchec;
