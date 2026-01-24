@@ -428,7 +428,7 @@ static int cacheMisses = 0;
 // - Mobilité : Combien de coups possibles ?
 // - Développement : Les pièces sont-elles actives ?
 // CONVENTION NEGAMAX STANDARD :
-// - L'évaluation est TOUJOURS du point de vue des BLANCS
+// - L'évaluation est TOUJOURS du Point Of View des BLANCS (White POV)
 // - Valeur positive = avantage Blancs, négative = avantage Noirs
 // - Negamax inversera le signe selon le camp qui joue
 //***************************************************************************************************
@@ -436,18 +436,16 @@ static int cacheMisses = 0;
                  board:(ChessBoard *)board
 {
    // Générer une clé unique pour cette position
-      NSString *key = [self BoardHashKey:board forSide:side];
-      
-      NSNumber *cached = evalCache[key];
-      if (cached) {
-         cacheHits++;
-         return [cached intValue];
-      }
-      cacheMisses++;
+   NSString *key = [self BoardHashKey:board forSide:side];
+   NSNumber *cached = evalCache[key];
+   if (cached) {
+      cacheHits++;
+      return [cached intValue];
+   }
+   cacheMisses++;
    
-   
-   int evalWhitePOV = 0;  /* Évaluation du point de vue des Blancs (convention Negamax) */
-   evalDisplay = 0;       /* Valeur affichée (convention : + = avantage Blancs) */
+   evalWhitePOV = 0;  /* Évaluation du point de vue des Blancs (convention Negamax) */
+   //evalDisplay  = 0;  /* Valeur affichée (convention : + = avantage Blancs) */
    
    /* Variables pour statistiques intermédiaires */
    int materialWhite = 0, materialBlack = 0;
@@ -462,38 +460,18 @@ static int cacheMisses = 0;
       Convention : les tableaux sont vus du point de vue des Blancs (rangée 0 = fond Blancs) */
    
    /* TABLE PIONS : Encourage l'avancée et le contrôle du centre */
-   /* static const int pawnTable[8][8] = {
-      {  0,  0,  0,  0,  0,  0,  0,  0 },  // Rangée 0 (promotion, ne devrait pas arriver)
-      { 10, 10, 10, 10, 10, 10, 10, 10 },  // Rangée 1 (avant-dernière, déjà  géré ailleurs)
-      {  2,  2,  4,  6,  6,  4,  2,  2 },  // Rangée 2
-      {  1,  1,  2,  5,  5,  2,  1,  1 },  // Rangée 3
-      {  0,  0,  0,  4,  4,  0,  0,  0 },  // Rangée 4 (centre)
-      {  1, -1, -2,  0,  0, -2, -1,  1 },  // Rangée 5
-      {  1,  2,  2, -4, -4,  2,  2,  1 },  // Rangée 6
-      {  0,  0,  0,  0,  0,  0,  0,  0 }   // Rangée 7 (départ)
-   }; */
    static const int pawnTable[8][8] = {
-      {  0,  0,  0,  0,  0,  0,  0,  0 },
-      {  1,  1,  2,  2,  2,  2,  1,  1 },
+      {  0,  0,  0,  0,  0,  0,  0,  0 }, // (x0,y0) à (x0,y7) Rangée de promotion
+      {  1,  1,  2,  2,  2,  2,  1,  1 }, // Avant-dernière rangée (au sens échiquéen)
       {  1,  1,  2,  3,  3,  2,  1,  1 },
       {  1,  1,  2,  4,  4,  2,  1,  1 },
-      {  0,  0,  1,  3,  3,  1,  0,  0 },
+      {  0,  0,  1,  3,  3,  1,  0,  0 }, // Rangée 'centrale'
       {  0,  0,  0,  0,  0,  0,  0,  0 },
       {  1,  1, -1, -3, -3, -1,  1,  1 },
-      {  0,  0,  0,  0,  0,  0,  0,  0 }
+      {  0,  0,  0,  0,  0,  0,  0,  0 }  // (x7,y0) à (x7,y7) Rangée de départ
    };
    
    /* TABLE CAVALIERS : Encourage position centrale et pénalise les bords */
-   /* static const int knightTable[8][8] = {
-      {-10, -8, -6, -6, -6, -6, -8,-10 },
-      { -8, -4,  0,  0,  0,  0, -4, -8 },
-      { -6,  0,  2,  3,  3,  2,  0, -6 },
-      { -6,  1,  3,  4,  4,  3,  1, -6 },
-      { -6,  0,  3,  4,  4,  3,  0, -6 },
-      { -6,  1,  2,  3,  3,  2,  1, -6 },
-      { -8, -4,  0,  1,  1,  0, -4, -8 },
-      {-10, -8, -6, -6, -6, -6, -8,-10 }
-   }; */
    static const int knightTable[8][8] = {
       { -8, -6, -4, -4, -4, -4, -6, -8 },
       { -6, -2,  0,  1,  1,  0, -2, -6 },
@@ -506,16 +484,6 @@ static int cacheMisses = 0;
    };
    
    /* TABLE FOUS : Encourage diagonales longues et centre */
-   /* static const int bishopTable[8][8] = {
-      { -4, -2, -2, -2, -2, -2, -2, -4 },
-      { -2,  0,  0,  0,  0,  0,  0, -2 },
-      { -2,  0,  1,  2,  2,  1,  0, -2 },
-      { -2,  1,  1,  2,  2,  1,  1, -2 },
-      { -2,  0,  2,  2,  2,  2,  0, -2 },
-      { -2,  2,  2,  2,  2,  2,  2, -2 },
-      { -2,  1,  0,  0,  0,  0,  1, -2 },
-      { -4, -2, -2, -2, -2, -2, -2, -4 }
-   }; */
    static const int bishopTable[8][8] = {
       { -4, -2, -2, -2, -2, -2, -2, -4 },
       { -2,  0,  0,  1,  1,  0,  0, -2 },
@@ -528,19 +496,9 @@ static int cacheMisses = 0;
    };
    
    /* TABLE TOURS : Encourage 7ème rangée et colonnes ouvertes (approximatif) */
-   /* static const int rookTable[8][8] = {
-      {  0,  0,  0,  0,  0,  0,  0,  0 },
-      {  1,  2,  2,  2,  2,  2,  2,  1 },
-      { -1,  0,  0,  0,  0,  0,  0, -1 },
-      { -1,  0,  0,  0,  0,  0,  0, -1 },
-      { -1,  0,  0,  0,  0,  0,  0, -1 },
-      { -1,  0,  0,  0,  0,  0,  0, -1 },
-      { -1,  0,  0,  0,  0,  0,  0, -1 },
-      {  0,  0,  0,  1,  1,  0,  0,  0 }
-   }; */
    static const int rookTable[8][8] = {
       {  0,  0,  0,  0,  0,  0,  0,  0 },
-      {  2,  2,  2,  2,  2,  2,  2,  2 }, // 7e rangée
+      {  2,  2,  2,  2,  2,  2,  2,  2 }, // '7e rangée' au sens échiquéen
       {  0,  0,  0,  0,  0,  0,  0,  0 },
       {  0,  0,  0,  0,  0,  0,  0,  0 },
       {  0,  0,  0,  0,  0,  0,  0,  0 },
@@ -550,16 +508,6 @@ static int cacheMisses = 0;
    };
    
    /* TABLE DAME : Légère préférence pour le centre, éviter l'exposition précoce */
-   /* static const int queenTable[8][8] = {
-      { -4, -2, -2, -1, -1, -2, -2, -4 },
-      { -2,  0,  0,  0,  0,  0,  0, -2 },
-      { -2,  0,  1,  1,  1,  1,  0, -2 },
-      { -1,  0,  1,  1,  1,  1,  0, -1 },
-      {  0,  0,  1,  1,  1,  1,  0, -1 },
-      { -2,  1,  1,  1,  1,  1,  0, -2 },
-      { -2,  0,  1,  0,  0,  0,  0, -2 },
-      { -4, -2, -2, -1, -1, -2, -2, -4 }
-   }; */
    static const int queenTable[8][8] = {
       { -4, -2, -2, -1, -1, -2, -2, -4 },
       { -2,  0,  0,  0,  0,  0,  0, -2 },
@@ -572,16 +520,6 @@ static int cacheMisses = 0;
    };
    
    /* TABLE ROI (milieu de partie) : Encourage roque et sécurité sur les côtés */
-   /* static const int kingMiddleGameTable[8][8] = {
-      { -6, -8, -8,-10,-10, -8, -8, -6 },
-      { -6, -8, -8,-10,-10, -8, -8, -6 },
-      { -6, -8, -8,-10,-10, -8, -8, -6 },
-      { -6, -8, -8,-10,-10, -8, -8, -6 },
-      { -4, -6, -6, -8, -8, -6, -6, -4 },
-      { -2, -4, -4, -4, -4, -4, -4, -2 },
-      {  4,  4,  0,  0,  0,  0,  4,  4 },
-      {  4,  6,  2,  0,  0,  2,  6,  4 }
-   }; */
    static const int kingMiddleGameTable[8][8] = {
       { -8,-10,-10,-12,-12,-10,-10, -8 },
       { -8,-10,-10,-12,-12,-10,-10, -8 },
@@ -594,16 +532,6 @@ static int cacheMisses = 0;
    };
    
    /* TABLE ROI (fin de partie) : Le roi devient actif au centre */
-   /* static const int kingEndGameTable[8][8] = {
-      {-10, -8, -6, -4, -4, -6, -8,-10 },
-      { -6, -4, -2,  0,  0, -2, -4, -6 },
-      { -6, -2,  4,  6,  6,  4, -2, -6 },
-      { -6, -2,  6,  8,  8,  6, -2, -6 },
-      { -6, -2,  6,  8,  8,  6, -2, -6 },
-      { -6, -2,  4,  6,  6,  4, -2, -6 },
-      { -6, -6,  0,  0,  0,  0, -6, -6 },
-      {-10, -6, -6, -6, -6, -6, -6,-10 }
-   }; */
    static const int kingEndGameTable[8][8] = {
       { -8, -6, -4, -2, -2, -4, -6, -8 },
       { -6, -4, -2,  0,  0, -2, -4, -6 },
@@ -617,14 +545,12 @@ static int cacheMisses = 0;
    
    /* ========== PARCOURS DE L'ÉCHIQUIER ========== */
    /* Comptage du matériel total pour déterminer si on est en fin de partie */
-   
    for (int x = 0; x < 8; x++) {
       for (int y = 0; y < 8; y++) {
          Piece *piece = [board piece_colX:x rangY:y];
          if (!piece) continue;
-         
-         int value = 0;              // Valeur matérielle
-         int positionBonus = 0;      // Bonus positionnel
+         int materialValue = 0;  // Valeur matérielle
+         int positionBonus = 0;  // Bonus positionnel
          
          /* Détermination de la valeur de base et du bonus positionnel */
          switch (piece.type) {
@@ -632,17 +558,14 @@ static int cacheMisses = 0;
                break;
                
             case Pion:
-               value = 100;
+               materialValue = 100;
                /* Pour les Noirs, on inverse la table (miroir vertical) */
-               if (piece.side == sideWhite) {
-                  positionBonus = pawnTable[y][x];
-               } else {
-                  positionBonus = pawnTable[7-y][x];
-               }
+               if (piece.side == sideWhite) positionBonus = pawnTable[y][x];
+               else positionBonus = pawnTable[7-y][x];
                break;
                
             case Cava:
-               value = 300;
+               materialValue = 300;
                positionBonus = knightTable[y][x];
                
                /* BONUS DÉVELOPPEMENT : Cavalier sorti de sa case de départ */
@@ -651,27 +574,22 @@ static int cacheMisses = 0;
                break;
                
             case Fou:
-               value = 300;
+               materialValue = 300;
                positionBonus = bishopTable[y][x];
-               
                /* BONUS DÉVELOPPEMENT : Fou sorti de sa case de départ */
                if (piece.side == sideWhite && y > 0) developmentWhite += 5;
                if (piece.side == sideBlack && y < 7) developmentBlack += 5;
                break;
                
             case Tour:
-               value = 500;
-               if (piece.side == sideWhite) {
-                  positionBonus = rookTable[y][x];
-               } else {
-                  positionBonus = rookTable[7-y][x];
-               }
+               materialValue = 500;
+               if (piece.side == sideWhite) positionBonus = rookTable[y][x];
+               else positionBonus = rookTable[7-y][x];
                break;
                
             case Dame:
-               value = 900;
+               materialValue = 900;
                positionBonus = queenTable[y][x];
-               
                /* MALUS SI DAME SORTIE TROP TÔT (avant coups 10-15) */
                if (board->nbEntiers < 10) {
                   if (piece.side == sideWhite && y > 1) positionBonus -= 10;
@@ -680,44 +598,37 @@ static int cacheMisses = 0;
                break;
                
             case Roi:
-               value = 100000;
-               
+               materialValue = 100000;
                /* Choix de la table selon la phase de jeu */
                /* Fin de partie si matériel total < 3000 (approximatif) */
                if (totalMaterial < 3000) {
-                  if (piece.side == sideWhite) {
-                     positionBonus = kingEndGameTable[y][x];
-                  } else {
-                     positionBonus = kingEndGameTable[7-y][x];
-                  }
+                  if (piece.side == sideWhite) positionBonus = kingEndGameTable[y][x];
+                  else positionBonus = kingEndGameTable[7-y][x];
                } else {
-                  if (piece.side == sideWhite) {
-                     positionBonus = kingMiddleGameTable[y][x];
-                  } else {
-                     positionBonus = kingMiddleGameTable[7-y][x];
-                  }
+                  if (piece.side == sideWhite) positionBonus = kingMiddleGameTable[y][x];
+                  else positionBonus = kingMiddleGameTable[7-y][x];
                }
                break;
          } // Fin de switch
          
          /* Accumulation du matériel total (pour détecter fin de partie) */
-         if (piece.type != Roi) totalMaterial += value;
+         if (piece.type != Roi) totalMaterial += materialValue;
          
          /* Ajout de la valeur + bonus positionnel selon la couleur */
-         int pieceValue = value + positionBonus;
+         int pieceValue = materialValue + positionBonus;
          
          if (piece.side == sideWhite) {
             materialWhite += pieceValue;
-            evalWhitePOV += pieceValue;   // Blancs = positif
+            evalWhitePOV  += pieceValue;   // Blancs = positif
          } else {
             materialBlack += pieceValue;
-            evalWhitePOV -= pieceValue;   // Noirs = négatif
+            evalWhitePOV  -= pieceValue;   // Noirs = négatif
          }
 
-         evalDisplay += pieceValue * ((piece.side == sideWhite) ? 1 : -1);
+         //evalDisplay += pieceValue * ((piece.side == sideWhite) ? 1 : -1);
          
-      } // fin de for 2
-   } // Fin de parcours de l'échiquier (for 1)
+      } // fin de for 'y'
+   } // fin de for 'x' et fin de parcours de l'échiquier
    
    /* Compter les dames pour vérifier les promotions */
    int queensWhite = 0, queensBlack = 0;
@@ -731,10 +642,9 @@ static int cacheMisses = 0;
       }
    }
 
-   if (queensWhite > 1 || queensBlack > 1) {
-      NSLog(@"🔍 PROMOTION DÉTECTÉE : Blancs=%d Dames, Noirs=%d Dames",
-            queensWhite, queensBlack);
-   }
+   if (queensWhite > 1 || queensBlack > 1) NSLog(@"🔍 PROMOTION DÉTECTÉE : Blancs=%d Dames, Noirs=%d Dames",
+                                           queensWhite, queensBlack);
+   
    
    /* PARTIE 2 désactivée car la mobilité est déjà gérée par le nbre de coups explorés
    // ===========================================
@@ -759,7 +669,6 @@ static int cacheMisses = 0;
    // ===========================================
    // PARTIE 3 : ÉVAL. DE LA STRUCTURE DE PIONS
    /* Détection des pions doublés (malus) et pions passés (bonus) */
-   
    for (int x = 0; x < 8; x++) {
       int whitePawnsInColumn = 0;
       int blackPawnsInColumn = 0;
@@ -783,12 +692,12 @@ static int cacheMisses = 0;
       /* MALUS PIONS DOUBLÉS : -10 par pion doublé */
       if (whitePawnsInColumn > 1) {
          int penalty = (whitePawnsInColumn - 1) * -10;
-         evalDisplay += penalty;
+         //evalDisplay += penalty;
          evalWhitePOV += penalty;  // Malus pour Blancs = négatif
       }
       if (blackPawnsInColumn > 1) {
          int penalty = (blackPawnsInColumn - 1) * -10;
-         evalDisplay -= penalty;      // Négatif car défavorable aux Blancs
+         //evalDisplay -= penalty;      // Négatif car défavorable aux Blancs
          evalWhitePOV -= penalty;     // Malus pour Noirs = positif pour Blancs
       }
       
@@ -808,7 +717,7 @@ static int cacheMisses = 0;
          }
          if (isPassed) {
             int bonus = 15 + (whiteMostAdvanced * 5);  // Bonus croissant mais réduit
-            evalDisplay += bonus;
+            //evalDisplay += bonus;
             evalWhitePOV += bonus;  // Bonus pour Blancs
          }
       }
@@ -826,7 +735,7 @@ static int cacheMisses = 0;
          }
          if (isPassed) {
             int bonus = 15 + ((7 - blackMostAdvanced) * 5);
-            evalDisplay -= bonus;
+            //evalDisplay -= bonus;
             evalWhitePOV -= bonus;  // Bonus pour Noirs = négatif pour Blancs
          }
       }
@@ -834,10 +743,10 @@ static int cacheMisses = 0;
    
    // ===========================================
    // PARTIE 4 : BONUS DÉVELOPPEMENT
-   /* Les pièces (cavaliers/fous) sorties de leur position de départ reà§oivent un bonus
+   /* Les pièces (cavaliers/fous) sorties de leur position de départ reçoivent un bonus
       Ceci a déjà  été calculé dans la boucle principale ci-dessus */
    int developmentDiff = developmentWhite - developmentBlack;
-   evalDisplay += developmentDiff;
+   //evalDisplay += developmentDiff;
    evalWhitePOV += developmentDiff;  // Toujours du point de vue des Blancs
    
    // ===========================================
@@ -845,7 +754,6 @@ static int cacheMisses = 0;
    /* Bonus si le roi a roqué (déjà  reflété dans les tables positionnelles)
       On peut ajouter un bonus supplémentaire pour les pions protecteurs devant le roi */
    // TODO : Implémenter détection pions protecteurs (complexe, à faire plus tard)
-   
    
    /* PARTIE 6 désactivée car redondante avec la vérification faite dans NegamaxForSide
    // ===========================================
@@ -873,12 +781,12 @@ static int cacheMisses = 0;
       for (int x = 0; x < 8; x++) {
          Piece *pionB = board->pieceCase[x][6];
          if ((pionB.type == Pion) && (pionB.side == sideWhite)) {
-            evalDisplay += +900;
+            //evalDisplay += +900;
             evalWhitePOV += +900;  // Pion Blanc proche promo
          }
          Piece *pionN = board->pieceCase[x][1];
          if ((pionN.type == Pion) && (pionN.side == sideBlack)) {
-            evalDisplay += -900;
+            //evalDisplay += -900;
             evalWhitePOV += -900;  // Pion Noir proche promo
          }
       }
@@ -887,12 +795,12 @@ static int cacheMisses = 0;
       for (int x = 0; x < 8; x++) {
          Piece *pionB = board->pieceCase[x][1];
          if ((pionB.type == Pion) && (pionB.side == sideWhite)) {
-            evalDisplay += +900;
+            //evalDisplay += +900;
             evalWhitePOV += +900;  // Pion Blanc proche promo
          }
          Piece *pionN = board->pieceCase[x][6];
          if ((pionN.type == Pion) && (pionN.side == sideBlack)) {
-            evalDisplay += -900;
+            //evalDisplay += -900;
             evalWhitePOV += -900;  // Pion Noir proche promo
          }
       }
@@ -910,18 +818,20 @@ static int cacheMisses = 0;
    */
    
    // Stocker dans le cache
-      evalCache[key] = @(evalWhitePOV);
-      
-      // Limiter la taille du cache
-      if (evalCache.count > 50000) {
-         [evalCache removeAllObjects];
-      }
+   evalCache[key] = @(evalWhitePOV);
+   // Limiter la taille du cache
+   if (evalCache.count > 50000) [evalCache removeAllObjects];
    
    /* CONVERSION FINALE POUR NEGAMAX :
       - Si 'side' = Blancs : retourner evalWhitePOV tel quel (positif = bon pour Blancs)
       - Si 'side' = Noirs  : retourner -evalWhitePOV (négatif devient positif)
-      Ainsi Negamax reà§oit toujours une évaluation positive = bon pour le camp qui joue */
+      Ainsi Negamax reçoit toujours une évaluation positive = bon pour le camp qui joue */
    return (side == sideWhite) ? evalWhitePOV : -evalWhitePOV;
+   //return evalWhitePOV;
+   /* Pour l'évaluation du board par contre, sachant que la convention -qui veut qu'une éval
+    positive indique un avantage aux Blancs et une éval négative l'inverse- se suffit à elle
+    même et n'a pas à être inversée pour sa version affichée en barre d'état. */
+   
 }
 
 
@@ -1121,19 +1031,15 @@ static int cacheMisses = 0;
       for (int y = 0; y < 8; y++) {
          Piece *piece = [board piece_colX:x rangY:y];
          
-         if (!piece || piece.type == Invalide || piece.side != attackingSide) {
-            continue;
-         }
+         if (!piece || piece.type == Invalide || piece.side != attackingSide) continue;
          
          Pos *piecePos = [Pos posWithX:x y:y];
          NSSet *moves = [RuleBook PosAccepteesForPiece:piece
                                                   atPos:piecePos
                                                 inBoard:board];
-         
          for (Pos *dest in moves) {
             if (dest.x == targetSquare.x && dest.y == targetSquare.y) {
                isAttacked = YES;
-               
                int attackerValue = 0;
                switch (piece.type) {
                   case Pion: attackerValue = 100; break;
@@ -1145,14 +1051,10 @@ static int cacheMisses = 0;
                   default: break;
                }
                
-               if (attackerValue < cheapestValue) {
-                  cheapestValue = attackerValue;
-               }
+               if (attackerValue < cheapestValue) cheapestValue = attackerValue;
                
                /* Optimisation : si on trouve un pion, inutile de chercher moins cher */
-               if (cheapestValue == 100) {
-                  return cheapestValue;
-               }
+               if (cheapestValue == 100) return cheapestValue;
                
                break;
             }

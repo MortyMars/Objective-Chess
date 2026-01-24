@@ -45,5 +45,7 @@
    // rappel des méthodes MCN
    -(void) MakeJoueurMoveVersDest:(Pos *) dest;
 
+   +(NSString *)VisualIndicator:(int)evalWhitePOV;
+
 
 @end

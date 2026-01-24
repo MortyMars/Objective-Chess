@@ -532,12 +532,14 @@ NSString *strPieces;
          // 3) MISE À JOUR 'STATUS BAR' HORS EVAL ET TRAIT
          [self SilentMajStatusBarViaMove:aiMove PrecBoard:savedBoard StrCheck:strEchec];
           
-         // 4) Mise à jour de l'évaluation du board APRÈS le coup
-         int finalEval = [Minimax EvalBoardForSide:sideWhite board:board];
+         // 4) MISE À JOUR DE L'AFFICHAGE DE L'ÉVAL DU BOARD APRÈS LE COUP
+         /* int finalEval = [Minimax EvalBoardForSide:sideWhite board:board];
          if (finalEval > 0)
             monMCNControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : +%d", finalEval];
          else
-            monMCNControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : %d", finalEval];
+            monMCNControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : %d", finalEval]; */
+         NSLog(@"EvalWhitePOV = %d, Indicator = %@", evalWhitePOV, [ChessView VisualIndicator:evalWhitePOV]);
+         monMCNControleur.lblEvalBoard.cell.title = [ChessView VisualIndicator:evalWhitePOV];
           
          // 5) L'IA ayant joué on inverse sideCourant
          sideCourant = (sideCourant == sideWhite) ? sideBlack : sideWhite;

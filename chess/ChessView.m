@@ -205,8 +205,18 @@
    // REALISATION DU DEPLACEMENT CALCULE PAR L'AI
    // Noter que dans la version initiale l'AI ne réalise que des mouvements du côté des Noirs et
    // que l'on ne peut jouer contre l'ordinateur qu'avec les Blancs...
-   -(void)MakeComputerMove // MCN nouvelle méthode permettant à l'AI de jouer des deux côté
+   -(void)MakeComputerMove // MCN nouvelle méthode permettant à l'AI de jouer des deux côtés
    {
+      // AVANT TOUT MVT ON MET À JOUR L'AFFICHAGE DE L'ÉVAL POUR VALORISER LE MOVE JOUEUR QUI VIENT D'ÊTRE RÉALISÉ
+      int liveEvalWhitePOV;
+      NSString *liveStrEvalBoard;
+      
+      liveEvalWhitePOV = [Minimax EvalBoardForSide:sideWhite board:liveBoard]; // Recalcul d'EvalBoard, base liveBoard
+      liveStrEvalBoard =[ChessView VisualIndicator:liveEvalWhitePOV];
+      monMCNControleur.lblEvalBoard.cell.title = liveStrEvalBoard;
+      NSLog(@"#### Coup Joueur -> liveEvalWhitePOV = %d, Indicator = %@\n", liveEvalWhitePOV, liveStrEvalBoard);
+      
+      // Véritable début de réalisation du move AI
       Move *aiMove = [Minimax BestMoveForSide:sideIA board:liveBoard];   // Version MCN
       ChessBoard* savedBoard = liveBoard.copy; // Sauvegardé pour ConvertEnStringMove avant PerformMove
       
@@ -246,7 +256,13 @@
       
       // MISE À JOUR 'STATUS BAR' HORS EVAL ET TRAIT
       [self MajStatusBarViaMove:aiMove PrecBoard:savedBoard StrCheck:strEchec];
-     
+      
+      // ON MET FINALEMENT À JOUR L'AFFICHAGE POUR VALORISER LE MOVE IA QUI VIENT D'ÊTRE RÉALISÉ
+      liveEvalWhitePOV = [Minimax EvalBoardForSide:sideWhite board:liveBoard]; // Recalcul de EvalBoard, base liveBoard
+      liveStrEvalBoard = [ChessView VisualIndicator:liveEvalWhitePOV];
+      monMCNControleur.lblEvalBoard.cell.title = liveStrEvalBoard;
+      NSLog(@"#### Coup IA     -> liveEvalWhitePOV = %d, Indicator = %@\n", liveEvalWhitePOV, liveStrEvalBoard);
+      
       // L'IA ayant joué on inverse sideCourant
       //sideCourant = (sideIA == sideWhite) ? sideBlack : sideWhite;
       sideCourant = (sideCourant == sideWhite) ? sideBlack : sideWhite;
@@ -257,16 +273,12 @@
       dispatch_async(dispatch_get_main_queue(), ^{
          self.needsDisplay = YES;
       });
-      
-      // Écriture dans fichier de Debugging
-      /* [stringDebugging writeToFile:@"/Users/Martial/ChessDeBuggingFile.txt  atomically:YES encoding:NSUTF8StringEncoding error:nil]; */
-      
    } // Fin de MakeComputerMove
 
     
    //***************************************************************************************************
    // MCN - Méthode d'instance
-   // Création d'une méthode Joueur symétrique à celle déjà existante pour pour réaliser le move de l'IA
+   // Création d'une méthode Joueur symétrique à celle déjà existante pour réaliser le move de l'IA
    // L'idée première est d'homogénéiser la structure du code et d'en simplifier la lecture...
    -(void) MakeJoueurMoveVersDest:(Pos *) dest
    {
@@ -396,11 +408,15 @@
       // MISE À JOUR 'STATUS BAR' HORS EVAL ET TRAIT
       [self MajStatusBarViaMove:aiMove PrecBoard:savedBoard StrCheck:strEchec];
       
-      // Mise à jour eval
-      if (evalDisplay > 0)
+      
+      // MISE À JOUR DE L'AFFICHAGE DE L'ÉVAL
+      /* if (evalDisplay > 0)
          monMCNControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : +%d", evalDisplay];
       else
-         monMCNControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : %d", evalDisplay];
+         monMCNControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : %d", evalDisplay]; */
+      NSLog(@"EvalWhitePOV = %d, Indicator = %@", evalWhitePOV, [ChessView VisualIndicator:evalWhitePOV]);
+      monMCNControleur.lblEvalBoard.cell.title = [ChessView VisualIndicator:evalWhitePOV];
+      
       
       // L'IA ayant joué on inverse sideCourant
       //sideCourant = (sideIA == sideWhite) ? sideBlack : sideWhite;
@@ -465,7 +481,42 @@
       [self drawBoard];
    }
 
-
-
+   //***************************************************************************************************
+   // Méthode pour détermination d'une NSString pour l'affichage de l'évaluation
+   +(NSString *)VisualIndicator:(int)evalWhitePOV
+   {
+      // Convertir en pions, arrondis au dixième le plus proche
+      float pawns = round(evalWhitePOV/10.0)/10.0;
+      
+      /* // Limiter entre -5 et +5
+      if (roundedPawns > 5) roundedPawns = 5;
+      if (roundedPawns < -5) roundedPawns = -5; */
+      
+      // Préparation de la NSString d'affichage
+      NSString *evalString;
+      if (pawns >=0)    evalString = [NSString stringWithFormat:@"Eval : +%.1f", pawns];
+      else              evalString = [NSString stringWithFormat:@"Eval : %.1f", pawns];
+      
+      /* // Construire la barre
+      NSMutableString *visual = [NSMutableString string];
+      if (roundedPawns >= 0) {
+         // Avantage Blancs : remplir de gauche
+         for (int i = 0; i < 5; i++) {
+            [visual appendString:(i < roundedPawns) ? @"●" : @"○"];
+         }
+         // Partie droite vide
+         [visual appendString:@"○○○○○"];
+      } else {
+         // Avantage Noirs : partie gauche vide
+         [visual appendString:@"○○○○○"];
+         // Remplir de droite
+         int filledRight = -roundedPawns;  // Convertir en positif
+         for (int i = 0; i < 5; i++) {
+            [visual appendString:(i < filledRight) ? @"●" : @"○"];
+         }
+      } */
+      
+      return evalString;
+   }
 
 @end
