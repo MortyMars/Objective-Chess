@@ -46,7 +46,7 @@ static int cacheMisses = 0;
    moveGenTotalTime = 0;
    
    // Réinit valeurs cache
-   evalCache = [[NSMutableDictionary alloc] initWithCapacity:10000];
+   evalCache = [[NSMutableDictionary alloc] initWithCapacity:100000];
    cacheHits = 0;
    cacheMisses = 0;
    
@@ -213,6 +213,9 @@ static int cacheMisses = 0;
    double percentMoveGen = moveGenTotalTime / elapsed * 100.0;
    NSLog(@"   Répartition : EvalBoard=%.0f%%, MoveGen=%.0f%%\n", percentEval, percentMoveGen);
    
+   // Profilling du nombre de coups élagué
+   NSLog(@"📊 Élagages : %d cutoffs sur %d nœuds (%.1f%%)", nbElag, nodeCount, (100.0 * nbElag / nodeCount));
+   
    return bestMove;
 }
 
@@ -272,8 +275,8 @@ static int cacheMisses = 0;
        
       /* QUIESCENCE SEARCH (QS) : On continue à explorer les captures pour éviter "l'effet horizon" où l'IA
          ne voit pas une prise importante juste après depth=0
-         OPTIMISATION : Limitation stricte à 3 niveaux supplémentaires maximum */
-      if (depth > -3) {
+         OPTIMISATION : Limitation stricte à 2 niveaux supplémentaires maximum */
+      if (depth > -1) {
          /* Élagage beta cutoff précoce */
          if (eval >= beta) return eval;
          
@@ -369,26 +372,51 @@ static int cacheMisses = 0;
 {
    int score = 0;
    
-   /* Vérifier s'il y a une capture */
+   Piece *movingPiece = [board pieceAtPos:move.start];
    Piece *captured = [board pieceAtPos:move.dest];
+   
+   // ========== 1. CAPTURES (priorité absolue) ==========
    if (captured && captured.type != Invalide) {
-      /* Priorité haute pour les captures : score de base + valeur de la pièce */
+      
+      int victimValue = 0;
+      int attackerValue = 0;
+      
       switch (captured.type) {
-         case Pion:  score = 1000 + 100;    break;
-         case Cava:  score = 1000 + 300;    break;
-         case Fou:   score = 1000 + 300;    break;
-         case Tour:  score = 1000 + 500;    break;
-         case Dame:  score = 1000 + 900;    break;
-         case Roi:   score = 1000 + 100000; break;  // Théorique
-         default:    break;
+         case Pion: victimValue = 100; break;
+         case Cava:
+         case Fou:  victimValue = 300; break;
+         case Tour: victimValue = 500; break;
+         case Dame: victimValue = 900; break;
+         case Roi:  victimValue = 100000; break;
+         default: break;
       }
+      
+      switch (movingPiece.type) {
+         case Pion: attackerValue = 100; break;
+         case Cava:
+         case Fou:  attackerValue = 300; break;
+         case Tour: attackerValue = 500; break;
+         case Dame: attackerValue = 900; break;
+         case Roi:  attackerValue = 100000; break;
+         default: break;
+      }
+      
+      // MVV-LVA : Most Valuable Victim - Least Valuable Attacker
+      // Capturer une Dame avec un Pion = meilleur score
+      score = 10000 + (victimValue * 10) - attackerValue;
+      
+      // Exemple : Pion prend Dame = 10000 + 9000 - 100 = 18900
+      //           Dame prend Pion = 10000 + 1000 - 900 = 10100
    }
    
-   /* AMÉLIORATION FUTURE : Ajouter d'autres heuristiques
-      - Coups vers le centre du plateau (bonus +10 à  +30)
-      - Développement des pièces (sortir cavaliers/fous)
-      - Contrôle des cases importantes
-      - Menaces sur le roi adverse */
+   // ========== 2. COUPS CENTRAUX (bonus modeste) ==========
+   else {
+      int centerBonus = 0;
+      int distFromCenter = abs(3 - move.dest.x) + abs(3 - move.dest.y);
+      centerBonus = (8 - distFromCenter) * 2;  // Max +16
+      
+      score = centerBonus;
+   }
    
    return score;
 }
@@ -445,7 +473,6 @@ static int cacheMisses = 0;
    cacheMisses++;
    
    evalWhitePOV = 0;  /* Évaluation du point de vue des Blancs (convention Negamax) */
-   //evalDisplay  = 0;  /* Valeur affichée (convention : + = avantage Blancs) */
    
    /* Variables pour statistiques intermédiaires */
    int materialWhite = 0, materialBlack = 0;
@@ -624,9 +651,6 @@ static int cacheMisses = 0;
             materialBlack += pieceValue;
             evalWhitePOV  -= pieceValue;   // Noirs = négatif
          }
-
-         //evalDisplay += pieceValue * ((piece.side == sideWhite) ? 1 : -1);
-         
       } // fin de for 'y'
    } // fin de for 'x' et fin de parcours de l'échiquier
    
@@ -661,7 +685,6 @@ static int cacheMisses = 0;
       mobilityBlack = (int)movesBlack.count * 2;
       
       int mobilityDiff = mobilityWhite - mobilityBlack;
-      evalDisplay += mobilityDiff;
       evalWhitePOV += mobilityDiff;  // Toujours du point de vue des Blancs
    }
    FIN de PARTIE 2 désactivée*/
@@ -692,12 +715,10 @@ static int cacheMisses = 0;
       /* MALUS PIONS DOUBLÉS : -10 par pion doublé */
       if (whitePawnsInColumn > 1) {
          int penalty = (whitePawnsInColumn - 1) * -10;
-         //evalDisplay += penalty;
          evalWhitePOV += penalty;  // Malus pour Blancs = négatif
       }
       if (blackPawnsInColumn > 1) {
          int penalty = (blackPawnsInColumn - 1) * -10;
-         //evalDisplay -= penalty;      // Négatif car défavorable aux Blancs
          evalWhitePOV -= penalty;     // Malus pour Noirs = positif pour Blancs
       }
       
@@ -717,7 +738,6 @@ static int cacheMisses = 0;
          }
          if (isPassed) {
             int bonus = 15 + (whiteMostAdvanced * 5);  // Bonus croissant mais réduit
-            //evalDisplay += bonus;
             evalWhitePOV += bonus;  // Bonus pour Blancs
          }
       }
@@ -735,7 +755,6 @@ static int cacheMisses = 0;
          }
          if (isPassed) {
             int bonus = 15 + ((7 - blackMostAdvanced) * 5);
-            //evalDisplay -= bonus;
             evalWhitePOV -= bonus;  // Bonus pour Noirs = négatif pour Blancs
          }
       }
@@ -746,14 +765,81 @@ static int cacheMisses = 0;
    /* Les pièces (cavaliers/fous) sorties de leur position de départ reçoivent un bonus
       Ceci a déjà  été calculé dans la boucle principale ci-dessus */
    int developmentDiff = developmentWhite - developmentBlack;
-   //evalDisplay += developmentDiff;
    evalWhitePOV += developmentDiff;  // Toujours du point de vue des Blancs
    
    // ===========================================
    // PARTIE 5 : SÉCURITÉ DU ROI
-   /* Bonus si le roi a roqué (déjà  reflété dans les tables positionnelles)
-      On peut ajouter un bonus supplémentaire pour les pions protecteurs devant le roi */
-   // TODO : Implémenter détection pions protecteurs (complexe, à faire plus tard)
+   // Détecter si le Roi est dangereusement exposé
+   for (int x = 0; x < 8; x++) {
+       for (int y = 0; y < 8; y++) {
+          Piece *piece = [board piece_colX:x rangY:y];
+          if (piece && piece.type == Roi) {
+             
+             // ✅ NOUVEAU : Pénalité si Roi au centre en milieu de partie
+             BOOL isEndGame = (totalMaterial < 2000);  // Peu de matériel
+             
+             if (!isEndGame) {
+                // En milieu de partie, le Roi DOIT être sur les bords
+                BOOL isOnEdge = (x == 0 || x == 7 || y == 0 || y == 7);
+                BOOL isInCorner = ((x <= 1 || x >= 6) && (y == 0 || y == 7));
+                
+                if (!isOnEdge) {
+                   // Roi au centre = TRÈS DANGEREUX
+                   int dangerPenalty = -200;  // Grosse pénalité
+                   
+                   if (piece.side == sideWhite) {
+                      evalWhitePOV += dangerPenalty;
+                   } else {
+                      evalWhitePOV -= dangerPenalty;
+                   }
+                } else if (!isInCorner) {
+                   // Roi sur le bord mais pas dans le coin
+                   int edgePenalty = -50;
+                   
+                   if (piece.side == sideWhite) {
+                      evalWhitePOV += edgePenalty;
+                   } else {
+                      evalWhitePOV -= edgePenalty;
+                   }
+                }
+             }
+             
+             // ✅ BONUS : Compter les pions protecteurs devant le Roi
+             if (piece.side == sideWhite && y == 0) {  // Roi Blanc sur rangée 0
+                int pawnShield = 0;
+                
+                // Vérifier les 3 colonnes devant le Roi
+                for (int dx = -1; dx <= 1; dx++) {
+                   int checkX = x + dx;
+                   if (checkX >= 0 && checkX < 8) {
+                      Piece *pawn = [board piece_colX:checkX rangY:1];
+                      if (pawn && pawn.type == Pion && pawn.side == sideWhite) {
+                         pawnShield += 20;  // Bonus par pion protecteur
+                      }
+                   }
+                }
+                
+                evalWhitePOV += pawnShield;
+             }
+             
+             if (piece.side == sideBlack && y == 7) {  // Roi Noir sur rangée 7
+                int pawnShield = 0;
+                
+                for (int dx = -1; dx <= 1; dx++) {
+                   int checkX = x + dx;
+                   if (checkX >= 0 && checkX < 8) {
+                      Piece *pawn = [board piece_colX:checkX rangY:6];
+                      if (pawn && pawn.type == Pion && pawn.side == sideBlack) {
+                         pawnShield += 20;
+                      }
+                   }
+                }
+                
+                evalWhitePOV -= pawnShield;
+             }
+          }
+       }
+   }
    
    /* PARTIE 6 désactivée car redondante avec la vérification faite dans NegamaxForSide
    // ===========================================
@@ -762,13 +848,11 @@ static int cacheMisses = 0;
    // car elle est coûteuse en calcul
    if ([self TestEchecRoiSide:sideBlack inBoard:board]) {
       if ([self PossibleMovesForSide:sideBlack board:board].count == 0) {
-         evalDisplay += +100000;
          evalWhitePOV += +100000;  // Mat des Noirs = énorme avantage Blancs
       }
    }
    else if ([self TestEchecRoiSide:sideWhite inBoard:board]) {
       if ([self PossibleMovesForSide:sideWhite board:board].count == 0) {
-         evalDisplay += -100000;
          evalWhitePOV += -100000;  // Mat des Blancs = énorme avantage Noirs
       }
    }
@@ -781,12 +865,10 @@ static int cacheMisses = 0;
       for (int x = 0; x < 8; x++) {
          Piece *pionB = board->pieceCase[x][6];
          if ((pionB.type == Pion) && (pionB.side == sideWhite)) {
-            //evalDisplay += +900;
             evalWhitePOV += +900;  // Pion Blanc proche promo
          }
          Piece *pionN = board->pieceCase[x][1];
          if ((pionN.type == Pion) && (pionN.side == sideBlack)) {
-            //evalDisplay += -900;
             evalWhitePOV += -900;  // Pion Noir proche promo
          }
       }
@@ -795,12 +877,10 @@ static int cacheMisses = 0;
       for (int x = 0; x < 8; x++) {
          Piece *pionB = board->pieceCase[x][1];
          if ((pionB.type == Pion) && (pionB.side == sideWhite)) {
-            //evalDisplay += +900;
             evalWhitePOV += +900;  // Pion Blanc proche promo
          }
          Piece *pionN = board->pieceCase[x][6];
          if ((pionN.type == Pion) && (pionN.side == sideBlack)) {
-            //evalDisplay += -900;
             evalWhitePOV += -900;  // Pion Noir proche promo
          }
       }
@@ -809,18 +889,12 @@ static int cacheMisses = 0;
    // ===========================================
    
    /* La mise à jour de l'interface est déplacée dans 'MakeIAMoveForSide' et sa variante 'Silent......'
-    pour limiter le nombre de mise à jour de l'interface pendant que l'IA décide de son coup
-   // MISE À JOUR DE L'INTERFACE
-   if (evalDisplay > 0)
-      monMCNControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : +%d", evalDisplay];
-   else
-      monMCNControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : %d", evalDisplay];
-   */
+    pour limiter le nombre de mise à jour de l'interface pendant que l'IA décide de son coup */
    
    // Stocker dans le cache
    evalCache[key] = @(evalWhitePOV);
    // Limiter la taille du cache
-   if (evalCache.count > 50000) [evalCache removeAllObjects];
+   if (evalCache.count > 200000) [evalCache removeAllObjects];
    
    /* CONVERSION FINALE POUR NEGAMAX :
       - Si 'side' = Blancs : retourner evalWhitePOV tel quel (positif = bon pour Blancs)
@@ -877,18 +951,22 @@ static int cacheMisses = 0;
    checkCount = 0;
    Side otherSide = (side == sideWhite)? sideBlack:sideWhite;
    
+   // Parcours de l'échiquier
    for (int x = 0; x < 8; x++) {
       for (int y = 0; y < 8; y++) {
          Pos *pos = [Pos posWithX:x y:y];
          Piece *piece = [board piece_colX:x rangY:y];
-         
+         // Si 'piece' existe et qu'elle est de la couleur 'side'
          if (piece && piece.side == side) {
+            // Création du jeu des destinations possibles pour la pièce
             NSSet *PosAcceptees = [RuleBook PosAccepteesForPiece:piece atPos:pos inBoard:board];
-            
+            // Parcours de toutes les destinations possibles
             for (Pos *possibleDest in PosAcceptees) {
+               // Création du move correspondant (on ne l'exécute pas)
                Move *moveSide = [[Move alloc] initWithStart:pos dest:possibleDest];
+               // Création d'une pièce adverse potentiellement présente à l'arrivée du move
                Piece *pieceAdv = [board piece_colX:moveSide.dest.x rangY:moveSide.dest.y];
-               
+               // Si cette pièce est le Roi adverse, alors ça signifie que celui-ci est en 'échec'
                if (pieceAdv.type == Roi && pieceAdv.side == otherSide) {
                   strEchec = @"Echec";
                   checkCount++;
@@ -898,10 +976,11 @@ static int cacheMisses = 0;
       }
    }
    
+   // Message en Log
    strOtherSide = (side == sideWhite)? @"Blanc":@"Noir";
    if ([strEchec isEqual:@"Echec"]) {
       [monMCNControleur.maChessView.delegate AlerteEchecRoiSide:otherSide];
-      NSLog(@"\nLa situation du Roi %@ strEchec est : %@", strOtherSide, strEchec);
+      NSLog(@"\nLe Roi %@ est en situation : %@", strOtherSide, strEchec);
    }
    
    return strEchec;
@@ -961,13 +1040,13 @@ static int cacheMisses = 0;
       
       if (side == sideBlack) {
          msgTitre = @"Les NOIRS sont Mat !";
-         msgInfo = @"Partie terminée, Les BLANCS gagnent !";
+         msgInfo  = @"Partie terminée, Les BLANCS gagnent !";
          stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t1-0"];
          [monMCNControleur MaJtxtCoups];
       }
       else if (side == sideWhite) {
          msgTitre = @"Les BLANCS sont Mat !";
-         msgInfo = @"Partie terminée, Les NOIRS gagnent !";
+         msgInfo  = @"Partie terminée, Les NOIRS gagnent !";
          stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t0-1"];
          [monMCNControleur MaJtxtCoups];
       }
@@ -982,6 +1061,10 @@ static int cacheMisses = 0;
       if (boutonChoisi == NSAlertFirstButtonReturn) {
          stopMatOuPat = YES;
       }
+      
+      // Message en Log
+      NSString *strRoiMat = (side == sideBlack)? @"\"Noirs\"":@"\"Blancs\"";
+      NSLog(@"\nLe Roi %@ est Mat\n", strRoiMat);
    }
    else {
       /* PAT DÉTECTÉ */
@@ -993,11 +1076,11 @@ static int cacheMisses = 0;
       
       if (side == sideBlack) {
          msgTitre = @"Les NOIRS sont Pat !";
-         msgInfo = @"Le Roi Noir est Pat, la partie est déclarée nulle !";
+         msgInfo  = @"Le Roi Noir est Pat, la partie est déclarée nulle !";
       }
       else if (side == sideWhite) {
          msgTitre = @"Les BLANCS sont Pat !";
-         msgInfo = @"Le Roi Blanc est Pat, la partie est déclarée nulle !";
+         msgInfo  = @"Le Roi Blanc est Pat, la partie est déclarée nulle !";
       }
       
       monMCNControleur.lblEchec.cell.stringValue = @"Pat !";
@@ -1012,13 +1095,17 @@ static int cacheMisses = 0;
       if (boutonChoisi == NSAlertFirstButtonReturn) {
          stopMatOuPat = YES;
       }
+      
+      // Message en Log
+      NSString *strRoiPat = (side == sideBlack)? @"\"Noirs\"":@"\"Blancs\"";
+      NSLog(@"\nLe Roi %@ est Pat\n", strRoiPat);
    }
 }
 
 
 //***************************************************************************************************
 // MÉTHODE HELPER :
-// Vérifie ... Retourne ...
+// Recherche et retourne le move d'attaque le moins couteux en matériel
 //***************************************************************************************************
 +(int)CheapestAttackerValue:(Pos *)targetSquare
                      bySide:(Side)attackingSide
@@ -1027,42 +1114,90 @@ static int cacheMisses = 0;
    int cheapestValue = INT_MAX;
    BOOL isAttacked = NO;
    
-   for (int x = 0; x < 8; x++) {
-      for (int y = 0; y < 8; y++) {
-         Piece *piece = [board piece_colX:x rangY:y];
-         
-         if (!piece || piece.type == Invalide || piece.side != attackingSide) continue;
-         
-         Pos *piecePos = [Pos posWithX:x y:y];
-         NSSet *moves = [RuleBook PosAccepteesForPiece:piece
-                                                  atPos:piecePos
-                                                inBoard:board];
-         for (Pos *dest in moves) {
-            if (dest.x == targetSquare.x && dest.y == targetSquare.y) {
-               isAttacked = YES;
-               int attackerValue = 0;
-               switch (piece.type) {
-                  case Pion: attackerValue = 100; break;
-                  case Cava:
-                  case Fou: attackerValue = 300; break;
-                  case Tour: attackerValue = 500; break;
-                  case Dame: attackerValue = 900; break;
-                  case Roi: attackerValue = 100000; break;
-                  default: break;
-               }
-               
-               if (attackerValue < cheapestValue) cheapestValue = attackerValue;
-               
-               /* Optimisation : si on trouve un pion, inutile de chercher moins cher */
-               if (cheapestValue == 100) return cheapestValue;
-               
-               break;
-            }
+   int targetX = targetSquare.x;
+   int targetY = targetSquare.y;
+   
+   // ✅ OPTIMISATION : Vérifier seulement les cases qui PEUVENT attaquer la cible
+   
+   // 1. PIONS (diagonales)
+   int pawnDir = (attackingSide == sideWhite) ? 1 : -1;
+   
+   for (int dx = -1; dx <= 1; dx += 2) {  // -1 et +1
+      int checkX = targetX + dx;
+      int checkY = targetY - pawnDir;  // Direction inverse (le pion vient d'où ?)
+      
+      if (checkX >= 0 && checkX < 8 && checkY >= 0 && checkY < 8) {
+         Piece *p = [board piece_colX:checkX rangY:checkY];
+         if (p && p.type == Pion && p.side == attackingSide) {
+            isAttacked = YES;
+            if (100 < cheapestValue) cheapestValue = 100;
          }
+      }
+   }
+   
+   // Optimisation : si pion trouvé, inutile de chercher plus cher
+   if (cheapestValue == 100) return 100;
+   
+   // 2. CAVALIERS (8 positions en L)
+   static const int knightMoves[8][2] = {
+      {-2, -1}, {-2, 1}, {-1, -2}, {-1, 2},
+      {1, -2}, {1, 2}, {2, -1}, {2, 1}
+   };
+   
+   for (int i = 0; i < 8; i++) {
+      int checkX = targetX + knightMoves[i][0];
+      int checkY = targetY + knightMoves[i][1];
+      
+      if (checkX >= 0 && checkX < 8 && checkY >= 0 && checkY < 8) {
+         Piece *p = [board piece_colX:checkX rangY:checkY];
+         if (p && p.type == Cava && p.side == attackingSide) {
+            isAttacked = YES;
+            if (300 < cheapestValue) cheapestValue = 300;
+         }
+      }
+   }
+   
+   // 3. FOUS, TOURS, DAME (directions rayonnantes)
+   static const int directions[8][2] = {
+      {-1, -1}, {-1, 0}, {-1, 1},
+      {0, -1},           {0, 1},
+      {1, -1},  {1, 0},  {1, 1}
+   };
+   
+   for (int d = 0; d < 8; d++) {
+      int dx = directions[d][0];
+      int dy = directions[d][1];
+      
+      BOOL isDiagonal = (dx != 0 && dy != 0);
+      BOOL isStraight = (dx == 0 || dy == 0);
+      
+      // Parcourir la direction jusqu'au bord ou une pièce
+      for (int dist = 1; dist < 8; dist++) {
+         int checkX = targetX + dx * dist;
+         int checkY = targetY + dy * dist;
          
-         /* Optimisation : si on a trouvé un pion attaquant */
-         if (cheapestValue == 100) {
-            return cheapestValue;
+         if (checkX < 0 || checkX >= 8 || checkY < 0 || checkY >= 8) break;
+         
+         Piece *p = [board piece_colX:checkX rangY:checkY];
+         
+         if (p) {
+            if (p.side == attackingSide) {
+               // Vérifier si cette pièce peut attaquer dans cette direction
+               if (p.type == Dame) {
+                  isAttacked = YES;
+                  if (900 < cheapestValue) cheapestValue = 900;
+               } else if (p.type == Tour && isStraight) {
+                  isAttacked = YES;
+                  if (500 < cheapestValue) cheapestValue = 500;
+               } else if (p.type == Fou && isDiagonal) {
+                  isAttacked = YES;
+                  if (300 < cheapestValue) cheapestValue = 300;
+               } else if (p.type == Roi && dist == 1) {
+                  isAttacked = YES;
+                  if (100000 < cheapestValue) cheapestValue = 100000;
+               }
+            }
+            break;  // Pièce bloque cette direction
          }
       }
    }
@@ -1114,6 +1249,60 @@ FIN DE MÉTHODE DÉSACTIVÉE */
    }
    [hash appendFormat:@"_%d", side];
    return hash;
+}
+
+// Dans SortMovesByPriority ou ScoreMove
++(int)StaticExchangeEvaluation:(Move *)capture
+                          board:(ChessBoard *)board
+{
+   Piece *attacker = [board pieceAtPos:capture.start];
+   Piece *victim = [board pieceAtPos:capture.dest];
+   
+   if (!victim || victim.type == Invalide) {
+      return 0;  // Pas une capture
+   }
+   
+   int attackerValue = [self PieceValue:attacker];
+   int victimValue = [self PieceValue:victim];
+   
+   // Simuler la capture
+   ChessBoard *afterCapture = board.copy;
+   [afterCapture PerformMove:capture];
+   
+   // Est-ce que l'adversaire peut reprendre ?
+   Side enemySide = (attacker.side == sideWhite) ? sideBlack : sideWhite;
+   int cheapestAttacker = [self CheapestAttackerValue:capture.dest
+                                               bySide:enemySide
+                                              inBoard:afterCapture];
+   
+   if (cheapestAttacker == 0) {
+      // Personne ne peut reprendre, gain net
+      return victimValue;
+   }
+   
+   // Quelqu'un peut reprendre
+   int netGain = victimValue - attackerValue;
+   
+   // Si on perd au change, mauvaise capture
+   if (netGain < 0) {
+      return netGain * 10;  // Pénalité forte
+   }
+   
+   return victimValue;  // Capture neutre ou bonne
+}
+
+// Helper pour obtenir la valeur d'une pièce
++(int)PieceValue:(Piece *)piece
+{
+   switch (piece.type) {
+      case Pion: return 100;
+      case Cava:
+      case Fou:  return 300;
+      case Tour: return 500;
+      case Dame: return 900;
+      case Roi:  return 100000;
+      default:   return 0;
+   }
 }
 
 @end

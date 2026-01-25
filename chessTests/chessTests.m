@@ -450,28 +450,28 @@
    -(void)testFonctEvaluation {
 
       ChessBoard *boardCas1 = [BoardsForTests ConfigBoardMatEn3Cas1];
-      NSLog(@"Evaluation du Board cas1 : %d\n",evalDisplay);
+      //NSLog(@"Evaluation du Board cas1 : %d\n",evalDisplay);
       /* XCTAssertTrue([Minimax EvalBoardForSide:sideWhite board:boardCas1] == +200);
       XCTAssertTrue(evalDisplay == +200);
       XCTAssertTrue([Minimax EvalBoardForSide:sideBlack board:boardCas1] == -200);
       XCTAssertTrue(evalDisplay == +200); */
       
       ChessBoard *boardCas2 = [BoardsForTests ConfigBoardMatEn3Cas2];
-      NSLog(@"Evaluation du Board cas2 : %d\n",evalDisplay);
+      //NSLog(@"Evaluation du Board cas2 : %d\n",evalDisplay);
       /* XCTAssertTrue([Minimax EvalBoardForSide:sideWhite board:boardCas2] == 0);
       XCTAssertTrue(evalDisplay == 0);
       XCTAssertTrue([Minimax EvalBoardForSide:sideBlack board:boardCas2] == 0);
       XCTAssertTrue(evalDisplay == 0); */
 
       ChessBoard *boardCas3 = [BoardsForTests ConfigBoardMatEn3Cas3];
-      NSLog(@"Evaluation du Board cas3 : %d\n",evalDisplay);
+      //NSLog(@"Evaluation du Board cas3 : %d\n",evalDisplay);
       /* XCTAssertTrue([Minimax EvalBoardForSide:sideWhite board:boardCas3] == -200);
       XCTAssertTrue(evalDisplay == -200);
       XCTAssertTrue([Minimax EvalBoardForSide:sideBlack board:boardCas3] == +200);
       XCTAssertTrue(evalDisplay == -200); */
       
       ChessBoard *boardCas4 = [BoardsForTests ConfigBoardMatEn3Cas4];
-      NSLog(@"Evaluation du Board cas4 : %d\n",evalDisplay);
+      //NSLog(@"Evaluation du Board cas4 : %d\n",evalDisplay);
       /* XCTAssertTrue([Minimax EvalBoardForSide:sideWhite board:boardCas4] == -300);
       XCTAssertTrue(evalDisplay == -300);
       XCTAssertTrue([Minimax EvalBoardForSide:sideBlack board:boardCas4] == +300);

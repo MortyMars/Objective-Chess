@@ -684,19 +684,8 @@ NSString *strPieces;
             [monMCNControleur MaJtxtCoups];
          }
          
-         stopMatOuPat = YES; // Remplace lignes commentées ci-dessous
-         // Affichage de la boite de dialogue
-         /* NSAlert *alertMat = [[NSAlert alloc] init];
-         [alertMat addButtonWithTitle:@"OK"];
-         [alertMat setMessageText:msgTitre];
-         [alertMat setInformativeText:msgInfo];
-         [alertMat setAlertStyle:NSAlertStyleInformational];
+         stopMatOuPat = YES;
          
-         // Attente 'OK' par le joueur
-         NSModalResponse boutonChoisi = [alertMat runModal];
-         if (boutonChoisi == NSAlertFirstButtonReturn) {
-            stopMatOuPat = YES;
-         } */
       } // fin if de niv 1 et de MAT
       
       // PAT - Mais si au contraire il n'y a pas situation d'échec, c'est que 'side' est simplement Pat
@@ -721,19 +710,8 @@ NSString *strPieces;
          // Mise à jour 'Status Bar'
          monMCNControleur.lblEchec.cell.stringValue = @"Pat !";
          
-         stopMatOuPat = YES; // Remplace lignes commentées ci-dessous
-         // Affichage boite de dialogue
-         /* NSAlert *alertPat = [[NSAlert alloc] init];
-         [alertPat addButtonWithTitle:@"OK"];
-         [alertPat setMessageText:msgTitre];
-         [alertPat setInformativeText:msgInfo];
-         [alertPat setAlertStyle:NSAlertStyleInformational];
+         stopMatOuPat = YES;
          
-         // Attente 'OK' par le joueur
-         NSModalResponse boutonChoisi = [alertPat runModal];
-         if (boutonChoisi == NSAlertFirstButtonReturn) {
-            stopMatOuPat = YES;
-         } */
       } // fin else de niv 1 et de PAT
    } // Fin de Méthode 'SilentNotifiePatMatDesSide'
 

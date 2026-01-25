@@ -23,7 +23,6 @@ BOOL stopMatOuPat = NO;
 BOOL enPassant = NO;
 
 int checkCount = 0;
-//int evalDisplay = 0;
 int evalWhitePOV = 0;
 
 int   numCoup = 2;

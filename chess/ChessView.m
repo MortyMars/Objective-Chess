@@ -216,6 +216,12 @@
       monMCNControleur.lblEvalBoard.cell.title = liveStrEvalBoard;
       NSLog(@"#### Coup Joueur -> liveEvalWhitePOV = %d, Indicator = %@\n", liveEvalWhitePOV, liveStrEvalBoard);
       
+      // Mise à jour de la Vue dans le thread ppal (si on n'y est pas déjà le cas) pour rendre visible la MàJ
+      // de la status barre
+      dispatch_async(dispatch_get_main_queue(), ^{
+         self.needsDisplay = YES;
+      });
+      
       // Véritable début de réalisation du move AI
       Move *aiMove = [Minimax BestMoveForSide:sideIA board:liveBoard];   // Version MCN
       ChessBoard* savedBoard = liveBoard.copy; // Sauvegardé pour ConvertEnStringMove avant PerformMove
@@ -409,11 +415,7 @@
       [self MajStatusBarViaMove:aiMove PrecBoard:savedBoard StrCheck:strEchec];
       
       
-      // MISE À JOUR DE L'AFFICHAGE DE L'ÉVAL
-      /* if (evalDisplay > 0)
-         monMCNControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : +%d", evalDisplay];
-      else
-         monMCNControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : %d", evalDisplay]; */
+      // REVOIR MISE À JOUR DE L'AFFICHAGE DE L'ÉVAL
       NSLog(@"EvalWhitePOV = %d, Indicator = %@", evalWhitePOV, [ChessView VisualIndicator:evalWhitePOV]);
       monMCNControleur.lblEvalBoard.cell.title = [ChessView VisualIndicator:evalWhitePOV];
       
@@ -466,7 +468,6 @@
    } // Fin de Méthode 'MajStatusBarViaMove'
 
 
-   
    //***************************************************************************************************
    // MÉTHODE D'INSTANCE GÉNÉRÉE À LA CREATION DE CHESSVIEW (CODE ET OBJET DE L'UI) QUI DÉRIVE DE NSVIEW
    // C'EST DONC LÀ QU'ON PLACE LE CODE DE TOUT CE QUI DÉFINIT NOTRE CUSTOM NSVIEW
@@ -481,6 +482,7 @@
       [self drawBoard];
    }
 
+   
    //***************************************************************************************************
    // Méthode pour détermination d'une NSString pour l'affichage de l'évaluation
    +(NSString *)VisualIndicator:(int)evalWhitePOV
@@ -494,7 +496,7 @@
       
       // Préparation de la NSString d'affichage
       NSString *evalString;
-      if (pawns >=0)    evalString = [NSString stringWithFormat:@"Eval : +%.1f", pawns];
+      if (pawns > 0)    evalString = [NSString stringWithFormat:@"Eval : +%.1f", pawns];
       else              evalString = [NSString stringWithFormat:@"Eval : %.1f", pawns];
       
       /* // Construire la barre

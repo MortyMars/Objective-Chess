@@ -165,7 +165,7 @@
    // Fin de gestion des items du menu 'Partie->Difficulté'
 
    //***************************************************************************************************
-   // Méthode d'affichage déléguée
+   // Méthode d'affichage DÉLÉGUÉE
    // d'une boite de dialogue signalant qu'un camp est en position d'échec
    -(void)AlerteEchecRoiSide:(Side)side {
       
@@ -183,7 +183,7 @@
       }
       
       NSAlert *alertEchec = [[NSAlert alloc] init];
-      [alertEchec addButtonWithTitle:@"OK (Méthode déléguée)"];
+      [alertEchec addButtonWithTitle:@"OK"];
       [alertEchec setMessageText:msgTitre];
       [alertEchec setInformativeText:msgInfo];
       [alertEchec setAlertStyle:NSAlertStyleInformational];

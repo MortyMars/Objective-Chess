@@ -67,7 +67,6 @@ extern int checkCount;     /* Nbre de mises en échec simultanées subies par un
 
 
 extern int evalWhitePOV; /* Valeur d'évaluation d'un Board, signée conformément à la convention */
-//extern int evalDisplay;  /* Valeur d'évaluation affichée */
 
 extern int  numCoup;             // Num apparaissant dans la liste des coups joués
 extern long numDebugLine;        // Num de ligne du fichier de déboggage (implémentation supprimée du code)
