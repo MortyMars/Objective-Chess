@@ -26,7 +26,7 @@ BOOL enPassant = NO;
 int checkCount = 0;
 int evalWhitePOV = 0;
 
-int   numCoup = 2;
+int   numCoup = 2; // Numéro du coup pour la liste des coups joés
 long  numDebugLine = 1;
 
 int NUMBER_MOVES_AHEAD = 3; /* Valeur arbitraire cohérente avec l'activation par défaut -tout aussi
@@ -36,8 +36,9 @@ car c'est dans AppDelegate que l'on initialise réellement NUMBER_MOVES_AHEAD pa
 
 MCNconnecteur *monMCNControleur = nil;
 
-Minimax *myMini = nil;
-//Minimax *myMini = [[Minimax alloc] init];
+// Pré initialisation de maMinimax
+Minimax *maMinimax = nil;
+
 
 /* Tableaux de char utilisés pour la @property 'description' de 'Pos' ... */
 int Absc1[8] = {'a','b','c','d','e','f','g','h'};  /* ici qd les BLANCS  sont en bas (colonnes de a à h) */

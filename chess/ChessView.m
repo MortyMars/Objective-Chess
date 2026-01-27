@@ -166,7 +166,7 @@
             if ([PosAcceptees containsObject:tilePos]) // le test ne marche pas sur un NSMutableSet...
             {
                [self MakeJoueurMoveVersDest:tilePos];
-               [myMini EvalBoardForSide:sideJoueur board:liveBoard];
+               [maMinimax EvalBoardForSide:sideJoueur board:liveBoard];
                self.needsDisplay = YES;
                
                // TODO REVOIR
@@ -211,7 +211,7 @@
       int liveEvalWhitePOV;
       NSString *liveStrEvalBoard;
       
-      liveEvalWhitePOV = [myMini EvalBoardForSide:sideWhite board:liveBoard]; // Recalcul d'EvalBoard, base liveBoard
+      liveEvalWhitePOV = [maMinimax EvalBoardForSide:sideWhite board:liveBoard]; // Recalcul d'EvalBoard, base liveBoard
       liveStrEvalBoard =[ChessView VisualIndicator:liveEvalWhitePOV];
       monMCNControleur.lblEvalBoard.cell.title = liveStrEvalBoard;
       NSLog(@"#### Coup Joueur => liveEvalWhitePOV = %d, Indicator = %@\n", liveEvalWhitePOV, liveStrEvalBoard);
@@ -223,7 +223,7 @@
       });
       
       // Véritable début de réalisation du move AI
-      Move *aiMove = [myMini BestMoveForSide:sideIA board:liveBoard];   // Version MCN
+      Move *aiMove = [maMinimax BestMoveForSide:sideIA board:liveBoard];   // Version MCN
       ChessBoard* savedBoard = liveBoard.copy; // Sauvegardé pour ConvertEnStringMove avant PerformMove
       
       // Réalisation du move - NOTER : c'est PerformMove qui positionne les indicateurs de roque
@@ -246,7 +246,7 @@
 
       /* Récup info d'une mise en échec éventuelle et de Prise e.p. pour renseigner 'ConvertEnStringMove'
       Bizarrement 'TestEchecForSide' RAZ les indic de Roque et de Prise e.p., d'où la sauvegarde ci-avant */
-      NSString * strEchec = [myMini TestEchecFavSide:sideCourant Board:liveBoard];
+      NSString * strEchec = [maMinimax TestEchecFavSide:sideCourant Board:liveBoard];
       
       // Restauration des indicateurs de roque pour utilisation dans 'ConvertEnStringMove'
       petitRoque = roque;        grandRoque = ROQUE;         enPassant = ENPASS;
@@ -257,14 +257,14 @@
       [MCNmoveToStr MettreEnFormeChaine:bestMoveIA Protagoniste:@"IA"];
       
       // Test examinant si le coup IA met le Joueur Mat...
-      NSSet *movesPossibles = [myMini PossibleMovesForSide:sideJoueur board:liveBoard];
-      if (movesPossibles.count == 0) [myMini NotifiePatMatDesSide:sideJoueur onBoard:liveBoard];
+      NSSet *movesPossibles = [maMinimax PossibleMovesForSide:sideJoueur board:liveBoard];
+      if (movesPossibles.count == 0) [maMinimax NotifiePatMatDesSide:sideJoueur onBoard:liveBoard];
       
       // MISE À JOUR 'STATUS BAR' HORS EVAL ET TRAIT
       [self MajStatusBarViaMove:aiMove PrecBoard:savedBoard StrCheck:strEchec];
       
       // ON MET FINALEMENT À JOUR L'AFFICHAGE POUR VALORISER LE MOVE IA QUI VIENT D'ÊTRE RÉALISÉ
-      liveEvalWhitePOV = [myMini EvalBoardForSide:sideWhite board:liveBoard]; // Recalcul de EvalBoard, base liveBoard
+      liveEvalWhitePOV = [maMinimax EvalBoardForSide:sideWhite board:liveBoard]; // Recalcul de EvalBoard, base liveBoard
       liveStrEvalBoard = [ChessView VisualIndicator:liveEvalWhitePOV];
       monMCNControleur.lblEvalBoard.cell.title = liveStrEvalBoard;
       NSLog(@"#### Coup IA     => liveEvalWhitePOV = %d, Indicator = %@\n", liveEvalWhitePOV, liveStrEvalBoard);
@@ -317,7 +317,7 @@
       }
       
       // Récup de l'info sur une mise en échec éventuelle pour renseigner ensuite ConvertEnStringMove
-      NSString *strEchecMat = [myMini TestEchecFavSide:sideCourant Board:liveBoard];
+      NSString *strEchecMat = [maMinimax TestEchecFavSide:sideCourant Board:liveBoard];
       
       /* // Mise à jour 'Status Bar'
       if ([strEchecMat isEqual:@"Echec"]) {
@@ -336,8 +336,8 @@
       [MCNmoveToStr MettreEnFormeChaine:myMoveMCN Protagoniste:@"J"];
       
       // Test examinant si le coup Joueur met l'IA Mat...
-      NSSet *movesPossibles = [myMini PossibleMovesForSide:sideIA board:liveBoard];
-      if (movesPossibles.count == 0) [myMini NotifiePatMatDesSide:sideIA onBoard:liveBoard];
+      NSSet *movesPossibles = [maMinimax PossibleMovesForSide:sideIA board:liveBoard];
+      if (movesPossibles.count == 0) [maMinimax NotifiePatMatDesSide:sideIA onBoard:liveBoard];
       
       // MISE À JOUR 'STATUS BAR' HORS EVAL ET TRAIT
       [self MajStatusBarViaMove:moveJoueur PrecBoard:savedBoard StrCheck:strEchecMat];
@@ -362,7 +362,7 @@
    -(void)MakeIAMoveForSide:(Side)side Board:(ChessBoard *)board
    {
       sideCourant = side; // affect nécessaire car MakeIAMoveFS peut être appelée à tout moment de la partie
-      Move *aiMove = [myMini BestMoveForSide:side board:board];
+      Move *aiMove = [maMinimax BestMoveForSide:side board:board];
       ChessBoard* savedBoard = board.copy; // Sauvegardé pour usage dans 'ConvertEnStringMove' avt le move
       
       // Réalisation du move - NOTER : c'est 'PerformMove' qui positionne les indicateurs de roque
@@ -385,7 +385,7 @@
       
       /* Récup info d'une mise en échec éventuelle et de Prise e.p. pour renseigner 'ConvertEnStringMove'
       Bizarrement 'TestEchecForSide' RAZ les indic de Roque et de Prise e.p., d'où la sauvegarde ci-avant */
-      NSString *strEchec = [myMini TestEchecFavSide:side Board:board];
+      NSString *strEchec = [maMinimax TestEchecFavSide:side Board:board];
       
       /* // Mise à jour 'Status Bar'
       if ([strEchec isEqual:@"Echec"]) {
@@ -407,8 +407,8 @@
       
       // Test examinant si le coup IA met le Joueur Mat...
       Side otherSide = (side == sideWhite)? sideBlack : sideWhite;
-      NSSet *movesPossibles = [myMini PossibleMovesForSide:otherSide board:board];
-      if (movesPossibles.count == 0) [myMini NotifiePatMatDesSide:otherSide onBoard:board];
+      NSSet *movesPossibles = [maMinimax PossibleMovesForSide:otherSide board:board];
+      if (movesPossibles.count == 0) [maMinimax NotifiePatMatDesSide:otherSide onBoard:board];
       
       
       // MISE À JOUR 'STATUS BAR' HORS EVAL ET TRAIT

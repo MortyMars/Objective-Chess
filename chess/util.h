@@ -4,6 +4,9 @@
 //  Copyright (c) 2013 Andrew Wang. All rights reserved
 //  Updated by MCN in 2020
 
+//#import "Pos.h"
+//#import "Piece.h"
+
 /* MCN - Macro permettant de supprimer les indications Date, Heure, Appli, ... des messages NSLog */
 #define NSLog(FORMAT, ...) printf("%s\n", [[NSString stringWithFormat:FORMAT, ##__VA_ARGS__] UTF8String]);
 
@@ -36,6 +39,21 @@ Chaque 'Side' ici défini prend la valeur de son indice dans l'enum
 Ainsi on peut écrire que sideInvalid = 0, sideBlack = 1, et sideWhite = 2, mais il est beaucoup
 plus efficace dans le code d'utiliser leur mnémonique plutôt que leur valeur intrinsèque */
 typedef enum {sideInvalid, sideBlack, sideWhite} Side;
+
+/*@class Piece, Move;
+typedef struct {
+   Piece *capturedPiece;
+
+   BOOL wasPromotion;
+   PieceType oldType;
+
+   // ÉTAT DU PLATEAU
+   __unsafe_unretained Move *lastMove;
+   __unsafe_unretained NSString *strRoque;
+   __unsafe_unretained NSString *strCibleEP;
+   int nbDemis;
+   int nbEntiers;
+} MoveState; */
 
 
 /* Modif. MCN - Ajout de variables globales (pardon aux puristes défenseurs du code)
@@ -83,7 +101,7 @@ NB : 'extern' -mot clé pour definir une variable globale obj-c- supporte les va
    /* Pour tests d'accès à méthodes d'instances de la classe Minimax
     création d'une variable globale permettant de garder le contrôle sur l'instance */
    @class Minimax;
-   extern Minimax *myMini;
+   extern Minimax *maMinimax;
 
 // Fin de Modif. MCN
 

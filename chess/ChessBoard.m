@@ -59,6 +59,7 @@
 
       // Réinitialisation de la liste des coups
       stringCoupsPartie = @"";
+      numCoup = 2; // N° des coups joués, initialisé à 2 car le n°1 est intégré au 1er coup
       [monMCNControleur MaJtxtCoups];
       
       // Définition Couleurs Joueur et IA et MàJ repères de cases
@@ -102,6 +103,7 @@
       
       // Réinitialisation de la liste des coups
       stringCoupsPartie = @"";
+      numCoup = 2; // N° des coups joués, initialisé à 2 car le n°1 est intégré au 1er coup
       [monMCNControleur MaJtxtCoups];
       
       // Définition Couleurs Joueur et IA et MàJ repères de cases
@@ -428,7 +430,7 @@
    {
       /* self fait référence à l'objet ChessBoard qui appelle la méthode PremCoupAIBlancs
       calcul du meilleur 1er coup IA  */
-      Move* firstAImove = [myMini BestMoveForSide:sideWhite board:self];
+      Move* firstAImove = [maMinimax BestMoveForSide:sideWhite board:self];
       ChessBoard* boardAvantMove = self.copy;   // sauvegardé pour ConvertEnStringMove avant PerformMove
       
       [self PerformMove:firstAImove];           // réalisation graphique du coup
@@ -671,76 +673,75 @@
    }
 
 
-   // GPT - makeMove
--(MoveState)makeMove:(Move *)m
-{
-   MoveState state;
-   
-   // Sauvegarde état global
-   state.lastMove   = self.lastMove;
-   state.strRoque   = self->strRoque;
-   state.strCibleEP = self->strCibleEP;
-   state.nbDemis    = self->nbDemis;
-   state.nbEntiers  = self->nbEntiers;
+   // **************************************************************************************************
+   // Méthode d'instance 'makeMove' permettant de réaliser un move de test
+   -(MoveState)makeMove:(Move *)m
+   {
+      MoveState state;
+      
+      // Sauvegarde état global
+      state.lastMove   = self.lastMove;
+      state.strRoque   = self->strRoque;
+      state.strCibleEP = self->strCibleEP;
+      state.nbDemis    = self->nbDemis;
+      state.nbEntiers  = self->nbEntiers;
 
-   int sx = m.start.x;
-   int sy = m.start.y;
-   int dx = m.dest.x;
-   int dy = m.dest.y;
+      int sx = m.start.x;
+      int sy = m.start.y;
+      int dx = m.dest.x;
+      int dy = m.dest.y;
 
-   Piece *moving = pieceCase[sx][sy];
-   Piece *captured = pieceCase[dx][dy];
+      Piece *moving = pieceCase[sx][sy];
+      Piece *captured = pieceCase[dx][dy];
 
-   state.capturedPiece = captured;
-   state.wasPromotion = NO;
+      state.capturedPiece = captured;
+      state.wasPromotion = NO;
 
-   pieceCase[dx][dy] = moving;
-   pieceCase[sx][sy] = nil;
+      pieceCase[dx][dy] = moving;
+      pieceCase[sx][sy] = nil;
 
-   if (moving.type == Pion &&
-      ((moving.side == sideWhite && dy == 7) ||
-       (moving.side == sideBlack && dy == 0))) {
+      if (moving.type == Pion &&
+         ((moving.side == sideWhite && dy == 7) ||
+          (moving.side == sideBlack && dy == 0))) {
 
-      state.wasPromotion = YES;
-      state.oldType = moving.type;
-      moving.type = Dame;
-   }
-   
-   self.lastMove = m;
+         state.wasPromotion = YES;
+         state.oldType = moving.type;
+         moving.type = Dame;
+      }
+      
+      self.lastMove = m;
 
-   return state;
-}
-
-
-
-   // GPT - unmakeMove
--(void)unmakeMove:(Move *)m state:(MoveState)state
-{
-   int sx = m.start.x;
-   int sy = m.start.y;
-   int dx = m.dest.x;
-   int dy = m.dest.y;
-
-   Piece *moving = pieceCase[dx][dy];
-
-   if (state.wasPromotion) {
-      moving.type = state.oldType;
+      return state;
    }
 
-   pieceCase[sx][sy] = moving;
-   pieceCase[dx][dy] = state.capturedPiece;
-   
-   // Restauration état global
-   self.lastMove    = state.lastMove;
-   self->strRoque   = state.strRoque;
-   self->strCibleEP = state.strCibleEP;
-   self->nbDemis    = state.nbDemis;
-   self->nbEntiers  = state.nbEntiers;
-   
-}
 
+   // **************************************************************************************************
+   // Méthode d'instance 'unmakeMove' permettant d'annuler un move de test et de rétablir le board
+   // initial en restaurant les positions et indicateurs d'avant move
+   -(void)unmakeMove:(Move *)m state:(MoveState)state
+   {
+      int sx = m.start.x;
+      int sy = m.start.y;
+      int dx = m.dest.x;
+      int dy = m.dest.y;
 
+      Piece *moving = pieceCase[dx][dy];
 
+      if (state.wasPromotion) {
+         moving.type = state.oldType;
+      }
+
+      pieceCase[sx][sy] = moving;
+      pieceCase[dx][dy] = state.capturedPiece;
+      
+      // Restauration état global
+      self.lastMove    = state.lastMove;
+      self->strRoque   = state.strRoque;
+      self->strCibleEP = state.strCibleEP;
+      self->nbDemis    = state.nbDemis;
+      self->nbEntiers  = state.nbEntiers;
+      
+   }
 
 
 @end

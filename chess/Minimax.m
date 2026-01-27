@@ -220,7 +220,8 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
 
 
 // ================================================================================================
-// GPT - negamax
+// Méthode d'instance NegamaxForSide
+// ================================================================================================
 -(int)NegamaxForSide:(Side)side
                board:(ChessBoard *)board
                depth:(int)depth
@@ -246,19 +247,19 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
    for (Move *m in moves) {
       
       // LIGNE 1 POUR DEBUG
-      ChessBoard *before = [board copy];
+      //ChessBoard *before = [board copy];
       
       MoveState state = [board makeMove:m];
 
       //if (![self kingInCheck:side board:board]) {
-         int score = -[self NegamaxForSide:otherSide
-                                     board:board
-                                     depth:depth-1
-                                     alpha:-beta
-                                      beta:-alpha];
+      // Appel récursif à Negamax
+      int score = -[self NegamaxForSide:otherSide
+                                  board:board
+                                  depth:depth-1
+                                  alpha:-beta
+                                   beta:-alpha];
 
-         if (score > alpha)
-            alpha = score;
+      if (score > alpha) alpha = score;
       //}
 
       [board unmakeMove:m state:state];

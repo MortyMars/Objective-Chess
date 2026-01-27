@@ -11,7 +11,7 @@
 #import "Minimax.h"
 
 
-@class Piece,Move, Pos;
+@class Piece, Move, Pos;
 
 typedef struct {
    Piece *capturedPiece;

@@ -63,8 +63,8 @@
       monMCNControleur.maChessView.delegate = monMCNControleur;
       
       /* Initialisation de la variable */
-      //myMini = maMinimax;
-      myMini = [[Minimax alloc] init];
+      //maMinimax = maMinimax;
+      maMinimax = [[Minimax alloc] init];
       
       
       // NSLog pour le fun...
