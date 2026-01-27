@@ -5,6 +5,7 @@
 //  Updated by MCN in 2020
 
 #import "MCNconnecteur.h"
+#import "Minimax.h"
 
 //Rappel au compilateur que MCNconnecteur est une classe, définie ailleurs
 @class MCNconnecteur;
@@ -17,8 +18,9 @@
    // MCN - Déclaration du MCNconnecteur instancié par AppDelegate
    @property (strong) IBOutlet MCNconnecteur *monMCNconnecteur;
 
+   //@property Minimax *maMinimax;
+
    // Déclaration de l'unique méthode d'instance
    - (void)applicationDidFinishLaunching:(NSNotification *)aNotification;
-
 
 @end

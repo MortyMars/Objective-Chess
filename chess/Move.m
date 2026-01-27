@@ -5,6 +5,7 @@
 //  Updated by MCN in 2020
 
 #import "Move.h"
+#import "Pos.h"
 
 
 @implementation Move
@@ -17,7 +18,7 @@
    {
       if (self = [super init]) {
          _start = start;
-         _dest = dest;
+         _dest  = dest;
       }
       return self;
    }
@@ -40,6 +41,28 @@
    {
       // la 'description' de Move est définie en tant que NSString au format 'Pos>Pos', par exemple : 'e2>e4'
       return [NSString stringWithFormat:@"%@>%@",self.start,self.dest];
+   }
+
+   
+   //***************************************************************************************************
+   // Méthode implémentée pour utilisation par les 'Killer Moves' dans Minimax
+   - (BOOL)isEqual:(id)object {
+      if (![object isKindOfClass:[Move class]]) {
+         return NO;
+      }
+      
+      Move *other = (Move *)object;
+      return (self.start.x == other.start.x &&
+              self.start.y == other.start.y &&
+              self.dest.x == other.dest.x &&
+              self.dest.y == other.dest.y);
+   }
+
+   
+//***************************************************************************************************
+   // Méthode implémentée pour utilisation par les 'Killer Moves' dans Minimax
+   -(NSUInteger)hash {
+      return self.start.x + self.start.y * 8 + self.dest.x * 64 + self.dest.y * 512;
    }
 
 

@@ -304,7 +304,7 @@
       // This is an example of a performance test case.
       [self measureBlock:^{
          // Put the code you want to measure the time of here.
-         [Minimax BestMoveForSide:sideWhite board:[BoardsForTests ConfigBoardMatEn3Cas2]];
+         [myMini BestMoveForSide:sideWhite board:[BoardsForTests ConfigBoardMatEn3Cas2]];
       }];
       
       /* Résultat du test réalisé le 28 mars :

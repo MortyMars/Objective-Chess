@@ -9,6 +9,7 @@
 @implementation AppDelegate
 
    @synthesize monMCNconnecteur; // MCN
+   //@synthesize maMinimax;
 
    //***************************************************************************************************
    // MÉTHODE SYSTÈME
@@ -44,20 +45,26 @@
       
       /* MCN - Initialisation du niveau de prospection de l'IA par appel de la méthode 'SetDifficulty' ad-hoc
       On note qu'ici c'est AppDelegate (self) qui envoi le message à SetDifficulty3 qui est une IBAction
-      ici on choisit le niveau 2... qui correspond à fixer NUMBER_MOVE_AHEAD à 2
+      ici on choisit le niveau 2... qui correspond à fixer NUMBER_MOVE_AHEAD à 3
       (le mini = Difficulty1 -> NUMBER_MOVE_AHEAD = 0, et le maxi = Difficulty5 -> NUMBER_MOVE_AHEAD = 4) */
-      [monMCNconnecteur SetDifficulty2:self];
+      [monMCNconnecteur SetDifficulty3:self];
       
-      /* MCN - INITIALISATION DE LA VARIABLE GLOBALE 'monMCNControleur' CRÉÉE DANS 'util.h'
-      La variable est identifiée comme étant l'objet 'monMCNconnecteur' instancié dans AppDelegate.
-      Elle en prend avantageusement la place puisque l'instance courante 'monMCNConnecteur' perdra le focus
-      sur l'UI dès que l'on sortira de 'applicationDidFinishLaunching' et n'aura plus d'utilité.
-      'monMCNControleur' devient dès lors le seul moyen efficace d'interagir ultérieurement et directement
-      avec l'interface  durant toute la durée de vie de l'application */
+      /* MCN - INITIALISATION DE LA VARIABLE GLOBALE 'monMCNcontroleur' DÉCLARÉE DANS 'UTIL.H'.
+      LA VARIABLE EST IDENTIFIÉE ICI COMME ÉTANT L'OBJET 'monMCNconnecteur' INSTANCIÉ DANS APPDELEGATE.
+      ELLE EN PREND AVANTAGEUSEMENT LA PLACE PUISQUE L'INSTANCE COURANTE 'monMCNconnecteur' PERDRA LE FOCUS
+      SUR L'UI DÈS QUE L'ON SORTIRA DE 'APPLICATIONDIDFINISHLAUNCHING' ET N'AURA PLUS D'UTILITÉ.
+      'monMCNcontroleur' DEVIENT DÈS LORS LE SEUL MOYEN EFFICACE D'INTERAGIR ULTÉRIEUREMENT ET DIRECTEMENT
+      AVEC L'INTERFACE  DURANT TOUTE LA DURÉE DE VIE DE L'APPLICATION.
+      (J'imagine qu'il doit exister un moyen plus élégant de parvenir aux mêmes fins, mais à ce stade de mes
+      essais c'est le seul trouvé qui fonctionne efficacement, et c'est tout ce qui m'importe finalement.) */
       monMCNControleur = monMCNconnecteur;
       
-      // Revoir finalité de cette commande...
+      // Revoir finalité de cette commande car je ne me rappelle plus...
       monMCNControleur.maChessView.delegate = monMCNControleur;
+      
+      /* Initialisation de la variable */
+      //myMini = maMinimax;
+      myMini = [[Minimax alloc] init];
       
       
       // NSLog pour le fun...

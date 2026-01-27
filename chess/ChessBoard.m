@@ -52,6 +52,11 @@
          self->pieceCase[x][7] = nil;   // effacement rangée 7
       }
       
+      // RAZ indicateurs
+      nbDemis   = 0;
+      nbEntiers = 1;
+      lastMove  = nil;
+
       // Réinitialisation de la liste des coups
       stringCoupsPartie = @"";
       [monMCNControleur MaJtxtCoups];
@@ -89,6 +94,11 @@
          self->pieceCase[x][6] = nil;   // effacement rangée 6
          self->pieceCase[x][7] = nil;   // effacement rangée 7
       }
+      
+      // RAZ indicateurs
+      nbDemis   = 0;
+      nbEntiers = 1;
+      lastMove  = nil;
       
       // Réinitialisation de la liste des coups
       stringCoupsPartie = @"";
@@ -418,7 +428,7 @@
    {
       /* self fait référence à l'objet ChessBoard qui appelle la méthode PremCoupAIBlancs
       calcul du meilleur 1er coup IA  */
-      Move* firstAImove = [Minimax BestMoveForSide:sideWhite board:self];
+      Move* firstAImove = [myMini BestMoveForSide:sideWhite board:self];
       ChessBoard* boardAvantMove = self.copy;   // sauvegardé pour ConvertEnStringMove avant PerformMove
       
       [self PerformMove:firstAImove];           // réalisation graphique du coup
@@ -659,6 +669,78 @@
       [partieNulle setAlertStyle:NSAlertStyleInformational];
       [partieNulle runModal];
    }
+
+
+   // GPT - makeMove
+-(MoveState)makeMove:(Move *)m
+{
+   MoveState state;
+   
+   // Sauvegarde état global
+   state.lastMove   = self.lastMove;
+   state.strRoque   = self->strRoque;
+   state.strCibleEP = self->strCibleEP;
+   state.nbDemis    = self->nbDemis;
+   state.nbEntiers  = self->nbEntiers;
+
+   int sx = m.start.x;
+   int sy = m.start.y;
+   int dx = m.dest.x;
+   int dy = m.dest.y;
+
+   Piece *moving = pieceCase[sx][sy];
+   Piece *captured = pieceCase[dx][dy];
+
+   state.capturedPiece = captured;
+   state.wasPromotion = NO;
+
+   pieceCase[dx][dy] = moving;
+   pieceCase[sx][sy] = nil;
+
+   if (moving.type == Pion &&
+      ((moving.side == sideWhite && dy == 7) ||
+       (moving.side == sideBlack && dy == 0))) {
+
+      state.wasPromotion = YES;
+      state.oldType = moving.type;
+      moving.type = Dame;
+   }
+   
+   self.lastMove = m;
+
+   return state;
+}
+
+
+
+   // GPT - unmakeMove
+-(void)unmakeMove:(Move *)m state:(MoveState)state
+{
+   int sx = m.start.x;
+   int sy = m.start.y;
+   int dx = m.dest.x;
+   int dy = m.dest.y;
+
+   Piece *moving = pieceCase[dx][dy];
+
+   if (state.wasPromotion) {
+      moving.type = state.oldType;
+   }
+
+   pieceCase[sx][sy] = moving;
+   pieceCase[dx][dy] = state.capturedPiece;
+   
+   // Restauration état global
+   self.lastMove    = state.lastMove;
+   self->strRoque   = state.strRoque;
+   self->strCibleEP = state.strCibleEP;
+   self->nbDemis    = state.nbDemis;
+   self->nbEntiers  = state.nbEntiers;
+   
+}
+
+
+
 
 
 @end

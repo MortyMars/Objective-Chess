@@ -76,7 +76,7 @@ NSString *strPieces;
                //sideIA = sideWhite; sideJoueur = sideBlack; /* pour éval cohérente */
                [self SilentMakeIAMoveForSide:sideWhite Board:boardEC];
                /* Test pour provoquer une sortie de boucle si nécessaire */
-               if ([Minimax PossibleMovesForSide:sideBlack board:boardEC].count == 0) compteur = 101;
+               if ([myMini PossibleMovesForSide:sideBlack board:boardEC].count == 0) compteur = 101;
                /* Forcement du thread principal pour MàJ ChessView et liste coups */
                dispatch_async(dispatch_get_main_queue(), ^{
                   [viewEC setNeedsDisplay:YES];
@@ -84,13 +84,13 @@ NSString *strPieces;
                }); // Fin Dispatch
             
                /* Si les Noirs ne se retrouvent pas Pat ou Mat après le coup Blancs ci-dessus... */
-               if ([Minimax PossibleMovesForSide:sideBlack board:boardEC].count!=0) {
+               if ([myMini PossibleMovesForSide:sideBlack board:boardEC].count!=0) {
                   sleep(1);
                   /* ...alors on joue un coup Noirs */
                   //sideIA = sideBlack; sideJoueur = sideWhite; /* pour éval cohérente */
                   [self SilentMakeIAMoveForSide:sideBlack Board:boardEC];
                   /* Test pour provoquer une sortie de boucle si nécessaire */
-                  if ([Minimax PossibleMovesForSide:sideWhite board:boardEC].count == 0) compteur = 101;
+                  if ([myMini PossibleMovesForSide:sideWhite board:boardEC].count == 0) compteur = 101;
                   /* Forcement du thread principal pour MàJ ChessView et liste coups */
                   dispatch_async(dispatch_get_main_queue(), ^{
                      [viewEC setNeedsDisplay:YES];
@@ -129,7 +129,7 @@ NSString *strPieces;
                 //sideIA = sideWhite; sideJoueur = sideBlack; /* pour éval cohérente */
                 [self SilentMakeIAMoveForSide:sideBlack Board:boardEC];
                 /* Test pour provoquer une sortie de boucle si nécessaire */
-                if ([Minimax PossibleMovesForSide:sideWhite board:boardEC].count == 0) compteur = 101;
+                if ([myMini PossibleMovesForSide:sideWhite board:boardEC].count == 0) compteur = 101;
                 /* Forcement du thread principal pour MàJ ChessView et liste coups */
                 dispatch_async(dispatch_get_main_queue(), ^{
                    [viewEC setNeedsDisplay:YES];
@@ -137,13 +137,13 @@ NSString *strPieces;
                 }); // Fin Dispatch
              
                 /* Si les Blancs ne se retrouvent pas Pat ou Mat après le coup Noirs ci-dessus... */
-                if ([Minimax PossibleMovesForSide:sideWhite board:boardEC].count!=0) {
+                if ([myMini PossibleMovesForSide:sideWhite board:boardEC].count!=0) {
                    sleep(1);
                    /* ...alors on joue un coup Blancs */
                    //sideIA = sideWhite; sideJoueur = sideBlack; /* pour éval cohérente */
                    [self SilentMakeIAMoveForSide:sideWhite Board:boardEC];
                    /* Test pour provoquer une sortie de boucle si nécessaire */
-                   if ([Minimax PossibleMovesForSide:sideBlack board:boardEC].count == 0) compteur = 101;
+                   if ([myMini PossibleMovesForSide:sideBlack board:boardEC].count == 0) compteur = 101;
                    /* Forcement du thread principal pour MàJ ChessView et liste coups */
                    dispatch_async(dispatch_get_main_queue(), ^{
                       [viewEC setNeedsDisplay:YES];
@@ -348,7 +348,7 @@ NSString *strPieces;
       
       // Calcul d'EvalBoard
       monMCNControleur.lblEvalBoard.cell.stringValue = [NSString stringWithFormat:@"Éval : %d",
-                                                       [Minimax EvalBoardForSide:sideWhite board:fenBoard]];
+                                                       [myMini EvalBoardForSide:sideWhite board:fenBoard]];
       
       // Récupération du 'focus' sur le ChessView instancié par l'application
       ChessView *fenView = monMCNControleur.maChessView;
@@ -473,7 +473,7 @@ NSString *strPieces;
    -(void)SilentMakeIAMoveForSide:(Side)side Board:(ChessBoard *)board
    {
       sideCourant = side; // affectation nécessaire car MakeIAMoveFS peut être appelée à tout moment
-      Move *aiMove = [Minimax BestMoveForSide:side board:board];
+      Move *aiMove = [myMini BestMoveForSide:side board:board];
       ChessBoard* savedBoard = board.copy; // Sauvegardé pour usage dans 'ConvertEnStringMove' avt 'PerformMove'
       
       // Réalisation du move - NOTER : c'est 'PerformMove' qui positionne les indicateurs de roque
@@ -512,7 +512,7 @@ NSString *strPieces;
       
       // Test examinant si le coup IA met le Joueur Mat...
       Side otherSide = (side == sideWhite)? sideBlack : sideWhite;
-      NSSet *movesPossibles = [Minimax PossibleMovesForSide:otherSide board:board];
+      NSSet *movesPossibles = [myMini PossibleMovesForSide:otherSide board:board];
       
       /* Ligne déplacée dans le thread principal
       if (movesPossibles.count == 0) [MCNdiagramme SilentNotifiePatMatDesSide:otherSide onBoard:board]; */
@@ -648,7 +648,7 @@ NSString *strPieces;
    {
       // MAT - Par définition, si on est ici c'est que 'side' n'a plus de move possible...
       // ...et si en plus 'side' est Échec sur le board actuel, c'est que 'side' est Mat
-      if ([Minimax TestEchecRoiSide:side inBoard:board])
+      if ([myMini TestEchecRoiSide:side inBoard:board])
       {
          // Traitement des chaines : liste des coups et messages
          NSString *msgTitre;

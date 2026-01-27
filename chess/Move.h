@@ -4,6 +4,8 @@
 //  Copyright (c) 2013 Andrew Wang. All rights reserved
 //  Updated by MCN in 2020
 
+#import "Piece.h"
+
 @class Piece,Pos;  /* @class permet d'indiquer au compilateur que les classes "Piece" et "Pos" existent et
                    sont déclarées ailleurs, ce qui permet d'éviter des #import bouclant sur eux-mêmes, en
                    particulier en cas de classe en appelant une autre, comme ici Move qui utilise Pos
@@ -17,11 +19,16 @@ de faire des copies d'objets Move, ...ce dont nous avons besoin            */
    @property (nonatomic, strong) Pos *start;
    @property (nonatomic, strong) Pos *dest;
 
+   // GPT : Infos pour undo
+   @property Piece *capturedPiece;
+   @property BOOL wasPromotion;
+   @property PieceType oldType;
+
 
    // ...et une méthode initWithStart permettant d'en initialiser les valeurs
-   -(id)         initWithStart:(Pos *)start dest:(Pos *)dest;
+   -(id) initWithStart:(Pos *)start dest:(Pos *)dest;
    
-   -(id)         copyWithZone:(NSZone *)zone;
+   -(id) copyWithZone:(NSZone *)zone;
    -(NSString *) description;
 
 

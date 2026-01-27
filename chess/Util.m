@@ -4,6 +4,7 @@
 //  Copyright © 2019 MCN - All rights reserved
 
 #import "Util.h"
+#import "Minimax.h"
 
 
 /* Initialisation des variables globales déclarées en .h */
@@ -34,6 +35,9 @@ car c'est dans AppDelegate que l'on initialise réellement NUMBER_MOVES_AHEAD pa
 [MCNconnecteur SetDifficulty1, 2, 3, 4, ou 5] qui positionne au passage le menu ad-hoc */
 
 MCNconnecteur *monMCNControleur = nil;
+
+Minimax *myMini = nil;
+//Minimax *myMini = [[Minimax alloc] init];
 
 /* Tableaux de char utilisés pour la @property 'description' de 'Pos' ... */
 int Absc1[8] = {'a','b','c','d','e','f','g','h'};  /* ici qd les BLANCS  sont en bas (colonnes de a à h) */

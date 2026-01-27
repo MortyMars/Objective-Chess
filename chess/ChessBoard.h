@@ -7,9 +7,26 @@
 
 #import "MCNmoveToStr.h"
 #import "Pos.h"
+#import "Util.h"
+#import "Minimax.h"
 
 
 @class Piece,Move, Pos;
+
+typedef struct {
+   Piece *capturedPiece;
+
+   BOOL wasPromotion;
+   PieceType oldType;
+
+   // ÉTAT DU PLATEAU
+   __unsafe_unretained Move *lastMove;
+   __unsafe_unretained NSString *strRoque;
+   __unsafe_unretained NSString *strCibleEP;
+   int nbDemis;
+   int nbEntiers;
+} MoveState;
+
 
 /* Déclaration de la Classe ChessBoard qui dérive de NSObject et qui adopte le protocole <NSCopying>,
 ce qui permettra notamment de faire des copies d'objets ChessBoard, ...ce dont nous avons besoin  */
@@ -58,5 +75,9 @@ ce qui permettra notamment de faire des copies d'objets ChessBoard, ...ce dont n
    -(void)       CompterDemiCoups:(Move *)move;
    -(void)       ProposerNulle50Coups;
    -(void)       AlertePartieNulle;
+
+   // GPT
+   -(MoveState)makeMove:(Move *)m ;
+   -(void)unmakeMove:(Move *)m state:(MoveState)state;
 
 @end
