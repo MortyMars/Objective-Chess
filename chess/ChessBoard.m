@@ -11,6 +11,9 @@
 #import "ChessBoard.h"
 
 
+//static int depthCounter = 0;
+
+
 @implementation ChessBoard
 
 
@@ -677,71 +680,54 @@
    // Méthode d'instance 'makeMove' permettant de réaliser un move de test
    -(MoveState)makeMove:(Move *)m
    {
-      MoveState state;
-      
-      // Sauvegarde état global
-      state.lastMove   = self.lastMove;
-      state.strRoque   = self->strRoque;
-      state.strCibleEP = self->strCibleEP;
-      state.nbDemis    = self->nbDemis;
-      state.nbEntiers  = self->nbEntiers;
+       MoveState st;
+       st.captured = pieceCase[m.dest.x][m.dest.y];
+       st.wasPromotion = NO;
+       st.oldType = 0;
 
-      int sx = m.start.x;
-      int sy = m.start.y;
-      int dx = m.dest.x;
-      int dy = m.dest.y;
+       Piece *moving = pieceCase[m.start.x][m.start.y];
 
-      Piece *moving = pieceCase[sx][sy];
-      Piece *captured = pieceCase[dx][dy];
+       // Invariants
+       NSAssert(moving != nil, @"makeMove: pas de pièce à déplacer");
 
-      state.capturedPiece = captured;
-      state.wasPromotion = NO;
+       // Déplacement
+       pieceCase[m.dest.x][m.dest.y] = moving;
+       pieceCase[m.start.x][m.start.y] = nil;
 
-      pieceCase[dx][dy] = moving;
-      pieceCase[sx][sy] = nil;
+       // Promotion simple
+       if (moving.type == Pion &&
+           ((moving.side == sideWhite && m.dest.y == 7) ||
+            (moving.side == sideBlack && m.dest.y == 0))) {
 
-      if (moving.type == Pion &&
-         ((moving.side == sideWhite && dy == 7) ||
-          (moving.side == sideBlack && dy == 0))) {
+           st.wasPromotion = YES;
+           st.oldType = moving.type;
+           moving.type = Dame;
+       }
 
-         state.wasPromotion = YES;
-         state.oldType = moving.type;
-         moving.type = Dame;
-      }
-      
-      self.lastMove = m;
-
-      return state;
+       return st;
    }
+
 
 
    // **************************************************************************************************
    // Méthode d'instance 'unmakeMove' permettant d'annuler un move de test et de rétablir le board
    // initial en restaurant les positions et indicateurs d'avant move
-   -(void)unmakeMove:(Move *)m state:(MoveState)state
+   -(void)unmakeMove:(Move *)m state:(MoveState)st
    {
-      int sx = m.start.x;
-      int sy = m.start.y;
-      int dx = m.dest.x;
-      int dy = m.dest.y;
+       Piece *moving = pieceCase[m.dest.x][m.dest.y];
 
-      Piece *moving = pieceCase[dx][dy];
+       NSAssert(moving != nil, @"unmakeMove: case dest vide");
 
-      if (state.wasPromotion) {
-         moving.type = state.oldType;
-      }
+       // Annuler promotion
+       if (st.wasPromotion) {
+           moving.type = st.oldType;
+       }
 
-      pieceCase[sx][sy] = moving;
-      pieceCase[dx][dy] = state.capturedPiece;
-      
-      // Restauration état global
-      self.lastMove    = state.lastMove;
-      self->strRoque   = state.strRoque;
-      self->strCibleEP = state.strCibleEP;
-      self->nbDemis    = state.nbDemis;
-      self->nbEntiers  = state.nbEntiers;
-      
+       pieceCase[m.start.x][m.start.y] = moving;
+       pieceCase[m.dest.x][m.dest.y]  = st.captured;
    }
+
+
 
 
 @end

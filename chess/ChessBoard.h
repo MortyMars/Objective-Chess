@@ -13,7 +13,7 @@
 
 @class Piece, Move, Pos;
 
-typedef struct {
+/*typedef struct {
    Piece *capturedPiece;
 
    BOOL wasPromotion;
@@ -25,7 +25,28 @@ typedef struct {
    __unsafe_unretained NSString *strCibleEP;
    int nbDemis;
    int nbEntiers;
+} MoveState;*/
+
+/*typedef struct {
+    Piece *captured;
+    int oldType;
+    BOOL wasPromotion;
+} MoveState;*/
+
+/*typedef struct {
+    __unsafe_unretained Piece *captured;
+    BOOL wasPromotion;
+    PieceType oldType;
+} MoveState;*/
+
+typedef struct {
+    Piece *captured;      // pièce capturée (ou nil)
+    PieceType oldType;    // pour promotion
+    BOOL wasPromotion;
 } MoveState;
+
+
+
 
 
 /* Déclaration de la Classe ChessBoard qui dérive de NSObject et qui adopte le protocole <NSCopying>,

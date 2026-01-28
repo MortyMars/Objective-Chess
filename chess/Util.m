@@ -43,3 +43,5 @@ Minimax *maMinimax = nil;
 /* Tableaux de char utilisés pour la @property 'description' de 'Pos' ... */
 int Absc1[8] = {'a','b','c','d','e','f','g','h'};  /* ici qd les BLANCS  sont en bas (colonnes de a à h) */
 int Absc2[8] = {'h','g','f','e','d','c','b','a'};  /* et là qd les NOIRS sont en bas (colonnes de h à a) */
+
+int depthCounter = 0;

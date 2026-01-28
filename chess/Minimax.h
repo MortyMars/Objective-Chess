@@ -33,8 +33,13 @@
 
       // Tableau pour Heuristic History
       int historyTable[2][8][8][8][8];  // [side][fromX][fromY][toX][toY]
+      
+      // Compteur de profondeur de pile make/unmake
+      //int depthCounter;
 
    }
+
+   @property int depthCounter;
 
    // DÉCLARATION DE MÉTHODES AFIN QU'ELLES SOIENT VISIBLES POUR LES TESTS
    -(int)NegamaxForSide:(Side)side
@@ -44,12 +49,18 @@
                    beta:(int)beta;
 
 
-   // GPT
+   // MÉTHODES AJOUTÉES POUR LE REFACTORING DU MOTEUR
    -(void)generatePseudoMovesForSide:(Side)side
                                board:(ChessBoard *)board
                                 into:(NSMutableArray<Move *> *)moves;
 
-   // DÉCLARATION DES MÉTHODES DE CLASSE
+   -(void)generateCaptureMovesForSide:(Side)side
+                              board:(ChessBoard *)board
+                              into:(NSMutableArray<Move *> *)moves;
+   -(BOOL)kingInCheck:(Side)side board:(ChessBoard *)board;
+
+   
+// DÉCLARATION DES MÉTHODES D'INSTANCE
    // Méthode de classe déterminant le meilleur coup pour 'side''
    -(Move *)   BestMoveForSide:(Side)side             // côté blanc ou côté noir
                          board:(ChessBoard *)board;   // et selon la configuration de l'échiquier courant

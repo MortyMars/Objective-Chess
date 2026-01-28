@@ -16,7 +16,10 @@ static const int rookDirs[4][2] = {{-1,0},{1,0},{0,-1},{0,1}};
 static const int queenDirs[8][2] = {{-1,-1},{-1,1},{1,-1},{1,1},{-1,0},{1,0},{0,-1},{0,1}};
 static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,2},{2,-1},{2,1}};
 
+
+
 @implementation Minimax
+
 
 - (instancetype)init
 {
@@ -37,6 +40,8 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
 -(Move *)BestMoveForSide:(Side)side
                    board:(ChessBoard *)board
 {
+   maMinimax.depthCounter = 0;   // 🔴 OBLIGATOIRE
+   
    // Init des iVars
    nbLoop = 0;
    nbElag = 0;
@@ -53,7 +58,7 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
    memset(historyTable, 0, sizeof(historyTable));
    
    // LOG DE CTRL
-   NSLog(@"BestMoveForSide: side=%@ board=%@",
+   NSLog(@"BestMoveForSide: side=%@ board=\n%@",
          side == sideWhite ? @"WHITE" : @"BLACK",
          board);
    
@@ -233,44 +238,39 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
          depth);
 
    if (depth == 0) {
+      return [self QuiescenceForSide:side
+                               board:board
+                               alpha:alpha
+                                beta:beta];
       
-      // DEBUG TEMPORAIRE
-      int eval = [self EvalBoardForSide:side board:board];
-      NSLog(@"Eval leaf = %d", eval);
-      
-      return eval;
+      /*return [self EvalBoardForSide:(Side)side
+                              board:(ChessBoard *)board];*/
    }
+   
    NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:64];
    [self generatePseudoMovesForSide:side board:board into:moves];
 
    Side otherSide = (side == sideWhite)? sideBlack:sideWhite;
+   
    for (Move *m in moves) {
-      
-      // LIGNE 1 POUR DEBUG
-      //ChessBoard *before = [board copy];
-      
-      MoveState state = [board makeMove:m];
 
-      //if (![self kingInCheck:side board:board]) {
-      // Appel récursif à Negamax
-      int score = -[self NegamaxForSide:otherSide
-                                  board:board
-                                  depth:depth-1
-                                  alpha:-beta
-                                   beta:-alpha];
+       MoveState st = [board makeMove:m];
 
-      if (score > alpha) alpha = score;
-      //}
+       int score = -[self NegamaxForSide:otherSide
+                                   board:board
+                                   depth:depth-1
+                                   alpha:-beta
+                                    beta:-alpha];
 
-      [board unmakeMove:m state:state];
-      
-      // LIGNE 2 POUR DEBUG
-      //NSAssert([board isEqual:before], @"💥 Plateau corrompu après unmakeMove");
+       [board unmakeMove:m state:st];
 
+       if (score > alpha)
+           alpha = score;
 
-      if (alpha >= beta)
-         break;
+       if (alpha >= beta)
+           break;
    }
+
 
    return alpha;
 }
@@ -620,7 +620,7 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
    }
 
    if (queensWhite > 1 || queensBlack > 1)
-      NSLog(@"🔍 PROMOTION DÉTECTÉE : Blancs=%d Dames, Noirs=%d Dames", queensWhite, queensBlack);
+      NSLog(@"🔍 EvalBoardForSide - PROMOTION DÉTECTÉE : Blancs= %d Dames, Noirs= %d Dames", queensWhite, queensBlack);
    
    
    /* PARTIE 2 désactivée car la mobilité est déjà gérée par le nbre de coups explorés
@@ -1234,52 +1234,55 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
 }
 
 
-// GPT
+// GPT Génère tous les coups contrairement à 'generateCaptures...'
 -(void)generatePseudoMovesForSide:(Side)side
                             board:(ChessBoard *)board
                              into:(NSMutableArray<Move *> *)moves
 {
-   // ⚠️ IMPORTANT
-   [moves removeAllObjects];
+    // 1️⃣ On vide la liste existante
+    [moves removeAllObjects];
 
-   for (int x = 0; x < 8; x++) {
-      for (int y = 0; y < 8; y++) {
-         Piece *p = board->pieceCase[x][y];
-         if (!p || p.side != side) continue;
-         // NSLog de debug
-         if (p && p.side != side) {
-            NSLog(@"💥 Coup généré pour MAUVAISE couleur : %@ (%d,%d)",
-                  p.side == sideWhite ? @"White" : @"Black", x, y);
-         }
-         
+    // 2️⃣ On parcourt l’échiquier
+    for (int x = 0; x < 8; x++) {
+        for (int y = 0; y < 8; y++) {
 
-         switch (p.type) {
-            case Pion:
-               [self genPawnMovesFromX:x y:y piece:p board:board into:moves];
-               break;
-            case Cava:
-               [self genKnightMovesFromX:x y:y piece:p board:board into:moves];
-               break;
-            case Fou:
-               [self genSlidingMovesFromX:x y:y piece:p board:board
-                                     dirs:bishopDirs dirCount:4 into:moves];
-               break;
-            case Tour:
-               [self genSlidingMovesFromX:x y:y piece:p board:board
-                                     dirs:rookDirs dirCount:4 into:moves];
-               break;
-            case Dame:
-               [self genSlidingMovesFromX:x y:y piece:p board:board
-                                     dirs:queenDirs dirCount:8 into:moves];
-               break;
-            case Roi:
-               [self genKingMovesFromX:x y:y piece:p board:board into:moves];
-               break;
-            default:
-               break;
-         }
-      }
-   }
+            Piece *p = board->pieceCase[x][y];
+            if (!p || p.side != side) continue;
+
+            switch (p.type) {
+
+                case Pion:
+                    [self genPawnMovesFromX:x y:y piece:p board:board into:moves];
+                    break;
+
+                case Cava:
+                    [self genKnightMovesFromX:x y:y piece:p board:board into:moves];
+                    break;
+
+                case Fou:
+                    [self genSlidingMovesFromX:x y:y piece:p board:board
+                                          dirs:bishopDirs dirCount:4 into:moves];
+                    break;
+
+                case Tour:
+                    [self genSlidingMovesFromX:x y:y piece:p board:board
+                                          dirs:rookDirs dirCount:4 into:moves];
+                    break;
+
+                case Dame:
+                    [self genSlidingMovesFromX:x y:y piece:p board:board
+                                          dirs:queenDirs dirCount:8 into:moves];
+                    break;
+
+                case Roi:
+                    [self genKingMovesFromX:x y:y piece:p board:board into:moves];
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    }
 }
 
 
@@ -1366,8 +1369,8 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
       if (y == startRank) {
          int ny2 = y + 2 * dir;
          if (board->pieceCase[x][ny2] == nil) {
-            Pos *dest2 = [Pos posWithX:x y:ny2];
-            [moves addObject:[[Move alloc] initWithStart:start dest:dest2]];
+         Pos *dest2 = [Pos posWithX:x y:ny2];
+         [moves addObject:[[Move alloc] initWithStart:start dest:dest2]];
          }
       }
    }
@@ -1379,9 +1382,9 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
 
       Piece *target = board->pieceCase[nx][ny];
       if (target && target.side != p.side) {
-         Pos *start = [Pos posWithX:x y:y];
-         Pos *dest  = [Pos posWithX:nx y:ny];
-         [moves addObject:[[Move alloc] initWithStart:start dest:dest]];
+      Pos *start = [Pos posWithX:x y:y];
+      Pos *dest  = [Pos posWithX:nx y:ny];
+      [moves addObject:[[Move alloc] initWithStart:start dest:dest]];
       }
    }
 }
@@ -1404,14 +1407,334 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
 
          Piece *target = board->pieceCase[nx][ny];
          if (!target || target.side != p.side) {
-            Pos *start = [Pos posWithX:x y:y];
-            Pos *dest  = [Pos posWithX:nx y:ny];
-            [moves addObject:[[Move alloc] initWithStart:start dest:dest]];
+         Pos *start = [Pos posWithX:x y:y];
+         Pos *dest  = [Pos posWithX:nx y:ny];
+         [moves addObject:[[Move alloc] initWithStart:start dest:dest]];
          }
       }
    }
 }
 
+
+// ===========================================================================================
+// Méthode de Quiescence
+-(int)QuiescenceForSide:(Side)side
+                  board:(ChessBoard *)board
+                   alpha:(int)alpha
+                    beta:(int)beta
+{
+    int standPat = [self EvalBoardForSide:side board:board];
+
+    if (standPat >= beta)
+        return beta;
+    if (standPat > alpha)
+        alpha = standPat;
+
+    NSMutableArray<Move *> *captures = [NSMutableArray arrayWithCapacity:16];
+    [self generateCaptureMovesForSide:side board:board into:captures];
+
+    Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
+
+    for (Move *m in captures) {
+
+        MoveState st = [board makeMove:m];
+
+        int score = -[self QuiescenceForSide:otherSide
+                                       board:board
+                                       alpha:-beta
+                                        beta:-alpha];
+
+        [board unmakeMove:m state:st];
+
+        if (score >= beta)
+            return beta;
+        if (score > alpha)
+            alpha = score;
+    }
+
+    return alpha;
+}
+
+
+
+// Génère uniquement les coups 'bruyants' (captures) contrairement à 'generatePseudo...'
+- (void)generateCaptureMovesForSide:(Side)side
+                              board:(ChessBoard *)board
+                               into:(NSMutableArray<Move *> *)moves
+{
+   [moves removeAllObjects];
+
+   for (int x = 0; x < 8; x++) {
+      for (int y = 0; y < 8; y++) {
+         Piece *p = board->pieceCase[x][y];
+         if (!p || p.side != side)
+            continue;
+
+         switch (p.type) {
+
+            case Pion:
+               [self genPawnCapturesFromX:x y:y piece:p board:board into:moves];
+               break;
+
+            case Cava:
+               [self genKnightCapturesFromX:x y:y piece:p board:board into:moves];
+               break;
+
+            case Fou:
+               [self genSlidingCapturesFromX:x y:y piece:p board:board
+                                       dirs:bishopDirs dirCount:4 into:moves];
+               break;
+
+            case Tour:
+               [self genSlidingCapturesFromX:x y:y piece:p board:board
+                                       dirs:rookDirs dirCount:4 into:moves];
+               break;
+
+            case Dame:
+               [self genSlidingCapturesFromX:x y:y piece:p board:board
+                                       dirs:queenDirs dirCount:8 into:moves];
+               break;
+
+            case Roi:
+               [self genKingCapturesFromX:x y:y piece:p board:board into:moves];
+               break;
+               
+            default:
+                    break;   // Pièce invalide ou futur type
+               
+         }
+      }
+   }
+}
+
+
+// Capture pions
+-(void)genPawnCapturesFromX:(int)x y:(int)y
+                      piece:(Piece *)p
+                      board:(ChessBoard *)board
+                       into:(NSMutableArray<Move *> *)moves
+{
+    int dir = (p.side == sideWhite) ? 1 : -1;
+    int ny = y + dir;
+
+    if (ny < 0 || ny >= 8) return;
+
+    for (int dx = -1; dx <= 1; dx += 2) {
+        int nx = x + dx;
+        if (nx < 0 || nx >= 8) continue;
+
+        Piece *target = board->pieceCase[nx][ny];
+        if (target && target.side != p.side) {
+        // Création d'un move neuf
+        Pos *start = [Pos posWithX:x y:y];
+        Pos *dest  = [Pos posWithX:nx y:ny];
+        Move *m = [[Move alloc] initWithStart:start dest:dest];
+
+        [moves addObject:m];
+        }
+    }
+}
+
+
+// Capture cavalier
+-(void)genKnightCapturesFromX:(int)x y:(int)y
+                        piece:(Piece *)p
+                        board:(ChessBoard *)board
+                         into:(NSMutableArray<Move *> *)moves
+{
+    static const int kMoves[8][2] = {
+        {-2,-1},{-2,1},{-1,-2},{-1,2},
+        {1,-2},{1,2},{2,-1},{2,1}
+    };
+
+    for (int i = 0; i < 8; i++) {
+        int nx = x + kMoves[i][0];
+        int ny = y + kMoves[i][1];
+
+        if (nx < 0 || nx >= 8 || ny < 0 || ny >= 8) continue;
+
+        Piece *target = board->pieceCase[nx][ny];
+        if (target && target.side != p.side) {
+        // Création d'un move neuf
+        Pos *start = [Pos posWithX:x y:y];
+        Pos *dest  = [Pos posWithX:nx y:ny];
+        Move *m = [[Move alloc] initWithStart:start dest:dest];
+
+        [moves addObject:m];
+        }
+    }
+}
+
+
+// Capture Fou, Tour, Dame
+-(void)genSlidingCapturesFromX:(int)x y:(int)y
+                         piece:(Piece *)p
+                         board:(ChessBoard *)board
+                          dirs:(const int (*)[2])dirs
+                      dirCount:(int)dirCount
+                          into:(NSMutableArray<Move *> *)moves
+{
+    for (int d = 0; d < dirCount; d++) {
+        int dx = dirs[d][0];
+        int dy = dirs[d][1];
+
+        for (int dist = 1; dist < 8; dist++) {
+            int nx = x + dx * dist;
+            int ny = y + dy * dist;
+
+            if (nx < 0 || nx >= 8 || ny < 0 || ny >= 8) break;
+
+            Piece *target = board->pieceCase[nx][ny];
+            if (!target) continue;
+
+            if (target.side != p.side) {
+            // Création d'un move neuf
+            Pos *start = [Pos posWithX:x y:y];
+            Pos *dest  = [Pos posWithX:nx y:ny];
+            Move *m = [[Move alloc] initWithStart:start dest:dest];
+
+            [moves addObject:m];
+            }
+            break; // pièce rencontrée → stop rayon
+        }
+    }
+}
+
+   // Capture Roi
+   -(void)genKingCapturesFromX:(int)x y:(int)y
+                         piece:(Piece *)p
+                         board:(ChessBoard *)board
+                          into:(NSMutableArray<Move *> *)moves
+   {
+       for (int dx = -1; dx <= 1; dx++) {
+           for (int dy = -1; dy <= 1; dy++) {
+               if (dx == 0 && dy == 0) continue;
+
+               int nx = x + dx;
+               int ny = y + dy;
+
+               if (nx < 0 || nx >= 8 || ny < 0 || ny >= 8) continue;
+
+               Piece *target = board->pieceCase[nx][ny];
+               if (target && target.side != p.side) {
+               // Création d'un move neuf
+               Pos *start = [Pos posWithX:x y:y];
+               Pos *dest  = [Pos posWithX:nx y:ny];
+               Move *m = [[Move alloc] initWithStart:start dest:dest];
+
+               [moves addObject:m];
+               }
+           }
+       }
+   }
+
+
+   // ===========================================================================================
+   // Méthode pour détection du roi en échec
+   -(BOOL)kingInCheck:(Side)side board:(ChessBoard *)board
+   {
+       int kingX = -1, kingY = -1;
+
+       // 1️⃣ Trouver le roi
+       for (int x = 0; x < 8; x++) {
+           for (int y = 0; y < 8; y++) {
+               Piece *p = board->pieceCase[x][y];
+               if (p && p.type == Roi && p.side == side) {
+                   kingX = x;
+                   kingY = y;
+                   break;
+               }
+           }
+       }
+
+       NSAssert(kingX != -1, @"kingInCheck: roi introuvable");
+
+       Side enemy = (side == sideWhite) ? sideBlack : sideWhite;
+
+       // 2️⃣ Cavaliers
+       static const int knightMoves[8][2] = {
+           {1,2},{2,1},{-1,2},{-2,1},
+           {1,-2},{2,-1},{-1,-2},{-2,-1}
+       };
+
+       for (int i = 0; i < 8; i++) {
+           int nx = kingX + knightMoves[i][0];
+           int ny = kingY + knightMoves[i][1];
+           if (nx < 0 || nx > 7 || ny < 0 || ny > 7) continue;
+
+           Piece *p = board->pieceCase[nx][ny];
+           if (p && p.side == enemy && p.type == Cava)
+               return YES;
+       }
+
+       // 3️⃣ Pions
+       int pawnDir = (enemy == sideWhite) ? 1 : -1;
+       for (int dx = -1; dx <= 1; dx += 2) {
+           int px = kingX + dx;
+           int py = kingY - pawnDir;
+           if (px < 0 || px > 7 || py < 0 || py > 7) continue;
+
+           Piece *p = board->pieceCase[px][py];
+           if (p && p.side == enemy && p.type == Pion)
+               return YES;
+       }
+
+       // 4️⃣ Fous / Dames (diagonales)
+       for (int d = 0; d < 4; d++) {
+           int dx = bishopDirs[d][0];
+           int dy = bishopDirs[d][1];
+           int x = kingX + dx;
+           int y = kingY + dy;
+
+           while (x >= 0 && x < 8 && y >= 0 && y < 8) {
+               Piece *p = board->pieceCase[x][y];
+               if (p) {
+                   if (p.side == enemy &&
+                       (p.type == Fou || p.type == Dame))
+                       return YES;
+                   break;
+               }
+               x += dx;
+               y += dy;
+           }
+       }
+
+       // 5️⃣ Tours / Dames (lignes droites)
+       for (int d = 0; d < 4; d++) {
+           int dx = rookDirs[d][0];
+           int dy = rookDirs[d][1];
+           int x = kingX + dx;
+           int y = kingY + dy;
+
+           while (x >= 0 && x < 8 && y >= 0 && y < 8) {
+               Piece *p = board->pieceCase[x][y];
+               if (p) {
+                   if (p.side == enemy &&
+                       (p.type == Tour || p.type == Dame))
+                       return YES;
+                   break;
+               }
+               x += dx;
+               y += dy;
+           }
+       }
+
+       // 6️⃣ Roi adverse (cases adjacentes)
+       for (int dx = -1; dx <= 1; dx++) {
+           for (int dy = -1; dy <= 1; dy++) {
+               if (dx == 0 && dy == 0) continue;
+               int x = kingX + dx;
+               int y = kingY + dy;
+               if (x < 0 || x > 7 || y < 0 || y > 7) continue;
+
+               Piece *p = board->pieceCase[x][y];
+               if (p && p.side == enemy && p.type == Roi)
+                   return YES;
+           }
+       }
+
+       return NO;
+   }
 
 
 
