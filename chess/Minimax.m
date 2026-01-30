@@ -8,6 +8,7 @@
 #import "Minimax.h"
 #import "Util.h"
 
+#define DELTA_MARGIN 100   // sécurité = un pion
 
 // Variables globales déterminant les directions empruntées par les pièces
 static const int bishopDirs[4][2]    = {{-1,-1},{-1,1},{1,-1},{1,1}};
@@ -17,7 +18,7 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
 
 // Valeur des pièces (même ordre que le TypeDef pieceType dans Util.h)
 //                        inv pion cava fou  tour dame roi
-const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
+// const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
 
 
 @implementation Minimax
@@ -38,13 +39,9 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
    // ================================================================================================
    // MÉTHODE 1 : BestMoveForSide - Point d'entrée du moteur IA
    // Cette méthode trouve le meilleur coup pour l'IA en explorant l'arbre des possibilités
-   // ================================================================================================
    -(Move *)BestMoveForSide:(Side)side
                       board:(ChessBoard *)board
    {
-      NSLog(@"BestMoveForSide - Entrée dans le code: %@",
-            (side == sideWhite)? @"Side Blancs": @"Side Noirs");
-      
       maMinimax.depthCounter = 0;   // 🔴 OBLIGATOIRE
       
       // Init des iVars
@@ -61,11 +58,6 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
       
       // Réinitialisation Heuristic History
       memset(historyTable, 0, sizeof(historyTable));
-      
-      // LOG DE CTRL
-      NSLog(@"BestMoveForSide: side: %@, board:\n%@",
-            side == sideWhite ? @"WHITE" : @"BLACK",
-            board);
       
       /* ========== DÉMARRAGE DU TIMER ========== */
       NSDate *startTime = [NSDate date];
@@ -96,7 +88,7 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
       /* Initialisation des variables de recherche */
       int bestScore  = -INT_MAX;
       Move *bestMove = nil;
-      Side otherSide = (side == sideWhite)? sideBlack:sideWhite;
+      //Side otherSide = (side == sideWhite)? sideBlack:sideWhite;
       
       /* ========== FILTRAGE SÉCURITÉ ========== */
       NSMutableSet *safeMovesOnly = [[NSMutableSet alloc] init];
@@ -163,7 +155,7 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
       if (safeMovesOnly.count == 0) {
          safeMovesOnly = [NSMutableSet setWithArray:[movesPossibles allObjects]];
       } else if (dangerousMovesFiltered > 0) {
-         NSLog(@"BestMoveForSide - 🛡️ Filtrage : %d coups dangereux bloqués, %lu gardés",
+         NSLog(@"🛡️ BMFS - Filtrage : %d coups dangereux bloqués, %lu gardés",
                dangerousMovesFiltered, (unsigned long)safeMovesOnly.count);
       }
       /* ======= FIN DE FILTRAGE SÉCURITÉ ======= */
@@ -197,7 +189,6 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
           } */
          
          /* Appel à Negamax */
-         NSLog(@"BestMoveForSide: Appel à NegamaxForSide");
          int negaMax = [self NegamaxForSide:side
                                       board:newBoard
                                       depth:NUMBER_MOVES_AHEAD
@@ -237,7 +228,6 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
    // ================================================================================================
    // MÉTHODE 2 : NegamaxForSide
    // Moteur récursif du jeu, explorant l'arbre des possibilités de coups réalisables
-   // ================================================================================================
    -(int)NegamaxForSide:(Side)side
                   board:(ChessBoard *)board
                   depth:(int)depth
@@ -260,19 +250,27 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
       Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
       
       for (Move *m in moves) {
-         MoveState st = [board makeMove:m];
-         
-         int score = -[self NegamaxForSide:otherSide
-                                     board:board
-                                     depth:depth-1
-                                     alpha:-beta
-                                      beta:-alpha];
-         
-         [board unmakeMove:m state:st];
-         
-         if (score > alpha) alpha = score;
-         if (alpha >= beta) break;
+
+          MoveState st = [board makeMove:m];
+
+          // 🔴 FILTRE LÉGALITÉ — MANQUANT JUSQU’ICI
+          if (![self kingInCheck:side board:board]) {
+
+              int score = -[self NegamaxForSide:otherSide
+                                          board:board
+                                          depth:depth-1
+                                          alpha:-beta
+                                           beta:-alpha];
+
+              if (score > alpha) alpha = score;
+          }
+
+          [board unmakeMove:m state:st];
+
+          if (alpha >= beta)
+              break;
       }
+
       
       return alpha;
    } // !NegamaxForSide
@@ -283,7 +281,6 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
    // TRI DES COUPS PAR PRIORITÉ pour améliorer l'efficacité de l'élagage alpha-beta
    // Principe : Les meilleurs coups sont examinés en premier, ce qui provoque plus de cutoffs
    // et réduit donc le nombre de branches à explorer
-   // ================================================================================================
    -(NSArray *)SortMovesByPriority:(NSSet *)moves
                              board:(ChessBoard *)board
                               side:(Side)side
@@ -308,7 +305,6 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
    // Attribution d'un score heuristique rapide basé sur :
    // - La valeur de la pièce capturée (si capture)
    // - D'autres critères possibles (coups centraux, développement, etc.)
-   // ================================================================================================
    -(int)ScoreMove:(Move *)move
              board:(ChessBoard *)board
               side:(Side)side
@@ -381,7 +377,6 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
    // NOUVELLE MÉTHODE pour optimiser le QS
    // Ne conserve que les coups qui sont des captures, car ce sont les coups "tactiques"
    // qui peuvent changer drastiquement l'évaluation d'une position
-   // ================================================================================================
    -(NSSet *)FilterCaptures:(NSSet *)moves from:(Side)side board:(ChessBoard *)board
    {
       NSMutableSet *captures = [[NSMutableSet alloc] init];
@@ -413,7 +408,6 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
    // - L'évaluation est TOUJOURS du Point Of View des BLANCS (White POV)
    // - Valeur positive = avantage Blancs, négative = avantage Noirs
    // - Negamax inversera le signe selon le camp qui joue
-   // ================================================================================================
    -(int)EvalBoardForSide:(Side)side
                     board:(ChessBoard *)board
    {
@@ -836,7 +830,6 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
 
    // ================================================================================================
    // MÉTHODE 7 : PossibleMovesForSide - GÉNÉRATION DES COUPS LÉGAUX
-   // ================================================================================================
    -(NSSet *)PossibleMovesForSide:(Side)side
                             board:(ChessBoard *)board
    {
@@ -868,7 +861,6 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
 
    // ================================================================================================
    // MÉTHODE 8 : TestEchecFavSide - DÉTECTION ÉCHEC AVEC NOTIFICATION
-   // ================================================================================================
    -(NSString *)TestEchecFavSide:(Side)side Board:(ChessBoard *)board
    {
       NSString *strEchec = @"";
@@ -914,7 +906,6 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
 
    // ================================================================================================
    // MÉTHODE 9 : TestEchecRoiSide - VERSION RAPIDE DE LA DÉTECTION D'ÉCHEC
-   // ================================================================================================
    -(BOOL)TestEchecRoiSide:(Side)side inBoard:(ChessBoard *)board
    {
       Side otherSide = (side == sideWhite)? sideBlack:sideWhite;
@@ -943,7 +934,6 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
 
    // ================================================================================================
    // MÉTHODE 10 : NotifiePatMatDesSide - GESTION FIN DE PARTIE
-   // ================================================================================================
    -(void)NotifiePatMatDesSide:(Side)side
                        onBoard:(ChessBoard*)board
    {
@@ -1029,7 +1019,6 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
    // ================================================================================================
    // MÉTHODE HELPER :
    // Recherche et retourne le move d'attaque le moins couteux en matériel
-   // ================================================================================================
    -(int)CheapestAttackerValue:(Pos *)targetSquare
                         bySide:(Side)attackingSide
                        inBoard:(ChessBoard *)board
@@ -1130,7 +1119,6 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
 
    // ================================================================================================
    // Nouvelle méthode pour générer une clé de hachage
-   // ================================================================================================
    -(NSString *)BoardHashKey:(ChessBoard *)board forSide:(Side)side
    {
       NSMutableString *hash = [NSMutableString stringWithCapacity:128];
@@ -1147,51 +1135,42 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
 
 
    // ================================================================================================
-   // Méthode SSE
-   // ================================================================================================
-   -(int)StaticExchangeEvaluation:(Move *)capture
-                            board:(ChessBoard *)board
+   // Méthode SEE Static Exchange Evaluation
+   - (int)SEEForMove:(Move *)move board:(ChessBoard *)board
    {
-      Piece *attacker = [board pieceAtPos:capture.start];
-      Piece *victim = [board pieceAtPos:capture.dest];
-      
-      if (!victim || victim.type == Invalide) {
-         return 0;  // Pas une capture
-      }
-      
-      int attackerValue = [self PieceValue:attacker];
-      int victimValue = [self PieceValue:victim];
-      
-      // Simuler la capture
-      ChessBoard *afterCapture = board.copy;
-      [afterCapture PerformMove:capture];
-      
-      // Est-ce que l'adversaire peut reprendre ?
-      Side enemySide = (attacker.side == sideWhite) ? sideBlack : sideWhite;
-      int cheapestAttacker = [self CheapestAttackerValue:capture.dest
-                                                  bySide:enemySide
-                                                 inBoard:afterCapture];
-      
-      if (cheapestAttacker == 0) {
-         // Personne ne peut reprendre, gain net
-         return victimValue;
-      }
-      
-      // Quelqu'un peut reprendre
-      int netGain = victimValue - attackerValue;
-      
-      // Si on perd au change, mauvaise capture
-      if (netGain < 0) {
-         return netGain * 10;  // Pénalité forte
-      }
-      
-      return victimValue;  // Capture neutre ou bonne
+       // Valeur gagnée
+       int gain = [self valueOfPiece:move.capturedPiece.type];
+
+       // Coût : pièce qui capture
+       int attackerValue = [self valueOfPiece:move.movingPiece.type];
+
+       MoveState st = [board makeMove:move];
+
+       Side side = move.movingPiece.side;
+       Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
+
+       NSMutableArray<Move *> *recaptures = [NSMutableArray arrayWithCapacity:8];
+       [self generateCaptureMovesForSide:otherSide board:board into:recaptures];
+
+       int worstRecapture = 0;
+
+       for (Move *rm in recaptures) {
+           if (rm.toSquare == move.toSquare) {
+               int v = [self valueOfPiece:rm.movingPiece.type];
+               worstRecapture = MAX(worstRecapture, v);
+           }
+       }
+
+       [board unmakeMove:move state:st];
+
+       // 👉 BILAN MATÉRIEL RÉEL
+       return gain - attackerValue - worstRecapture;
    }
 
 
    // ================================================================================================
-   // Helper pour obtenir la valeur d'une pièce
-   -(int)PieceValue:(Piece *)piece
+   // Méthode retournant la valeur d'une pièce
+   /*-(int)PieceValue:(Piece *)piece
    {
       switch (piece.type) {
          case Pion: return 100;
@@ -1202,7 +1181,21 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
          case Roi:  return 100000;
          default:   return 0;
       }
+   } */
+   - (int)valueOfPiece:(PieceType)p
+   {
+       switch (p) {
+           case Pion       : return 100;
+           case Cava       : return 320;
+           case Fou        : return 330;
+           case Tour       : return 500;
+           case Dame       : return 900;
+           case Roi        : return 20000;
+           case Invalide   : return 0;
+           default         : return 0;
+       }
    }
+
 
 
    // ================================================================================================
@@ -1210,66 +1203,93 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
    // La quiescence est utilisée pour étendre la recherche sur les nœuds instables dans les arbres Minimax.
    // Elle permet de reporter l'évaluation jusqu'à ce que la position soit suffisamment stable pour être
    // évaluée statiquement, c'est-à-dire sans tenir compte de l'historique de la position ou des futurs moves.
-   -(int)QuiescenceForSide:(Side)side
-                     board:(ChessBoard *)board
-                     alpha:(int)alpha
-                      beta:(int)beta
-                   qsDepth:(int)qsDepth
-   {
-      static int qsCalls = 0;
-      qsCalls++;
-      //if (qsCalls % 100000 == 0)
-      NSLog(@"QS calls = %d (depth %d)", qsCalls, qsDepth);
-      
-      BOOL inCheck = [self kingInCheck:side board:board];
-      
-      int standPat = inCheck ? -INF
-      : [self EvalBoardForSide:side board:board];
-      
-      if (!inCheck) {
-         if (standPat >= beta)
+- (int)QuiescenceForSide:(Side)side
+                   board:(ChessBoard *)board
+                   alpha:(int)alpha
+                    beta:(int)beta
+                 qsDepth:(int)qsDepth
+{
+    Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
+    BOOL inCheck = [self kingInCheck:side board:board];
+
+    int standPat = -INF;
+
+    // 1️⃣ Stand-pat uniquement hors échec
+    if (!inCheck) {
+        standPat = [self EvalBoardForSide:side board:board];
+
+        if (standPat >= beta)
             return beta;
-         if (standPat > alpha)
+
+        if (standPat > alpha)
             alpha = standPat;
-      }
-      
-      if (qsDepth >= QS_MAX_DEPTH)
-         return standPat;
-      
-      NSMutableArray<Move *> *captures = [NSMutableArray arrayWithCapacity:16];
-      [self generateCaptureMovesForSide:side board:board into:captures];
-      
-      Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
-      
-      for (Move *m in captures) {
-         
-         MoveState st = [board makeMove:m];
-         
-         // 🔴 ICI : on vérifie le ROI DE side (celui qui vient de jouer)
-         if (![self kingInCheck:side board:board]) {
-            
-            // Appel récursif
+    }
+
+    // 2️⃣ Limite QS (mais jamais en échec)
+    if (qsDepth >= QS_MAX_DEPTH && !inCheck)
+        return alpha;
+
+    // 3️⃣ Génération des coups
+    NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:32];
+
+    if (inCheck) {
+        [self generatePseudoMovesForSide:side board:board into:moves];
+    } else {
+        [self generateCaptureMovesForSide:side board:board into:moves];
+    }
+
+    // 4️⃣ Boucle QS
+    for (Move *m in moves) {
+
+        // 🔹 DELTA PRUNING
+        if (!inCheck) {
+            int gain = [self valueOfPiece:m.capturedPiece.type];
+            if (standPat + gain + DELTA_MARGIN < alpha)
+                continue;
+        }
+
+        // 🔹 SEE FILTER
+        if (!inCheck) {
+            int see = [self SEEForMove:m board:board];
+            if (see < 0)
+                continue;
+        }
+       
+        // 🔴 INTERDICTION DES SUICIDES DE DAME
+        if (!inCheck &&
+           m.movingPiece.type == Dame &&
+           ![self isSquareDefended:m.toSquare
+                            bySide:side
+                             board:board]) {
+           continue;
+        }
+
+        // On peut y aller
+        MoveState st = [board makeMove:m];
+
+        if (![self kingInCheck:side board:board]) {
+
             int score = -[self QuiescenceForSide:otherSide
                                            board:board
                                            alpha:-beta
                                             beta:-alpha
                                          qsDepth:qsDepth + 1];
-            
+
             [board unmakeMove:m state:st];
-            
+
             if (score >= beta)
-               return beta;
+                return beta;
+
             if (score > alpha)
-               alpha = score;
-            
-         } else {
-            // coup illégal → on annule immédiatement
+                alpha = score;
+
+        } else {
             [board unmakeMove:m state:st];
-         }
-      }
-      
-      return alpha;
-   } // !QuiescenceForSide
+        }
+    }
+
+    return alpha;
+}
 
 
    // ================================================================================================
@@ -1755,6 +1775,22 @@ const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
          }
       }
    }
+
+
+   // ================================================================================================
+   // Méthode détectant si une pièce est défendue
+   - (BOOL)isSquareDefended:(Square)sq bySide:(Side)side board:(ChessBoard *)board
+   {
+       NSMutableArray<Move *> *caps = [NSMutableArray arrayWithCapacity:8];
+       [self generateCaptureMovesForSide:side board:board into:caps];
+
+       for (Move *m in caps) {
+           if (m.toSquare == sq)
+               return YES;
+       }
+       return NO;
+   }
+
 
 
 @end

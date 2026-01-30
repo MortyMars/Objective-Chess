@@ -55,6 +55,8 @@ typedef struct {
    int nbEntiers;
 } MoveState; */
 
+typedef int Square;
+
 
 /* Modif. MCN - Ajout de variables globales (pardon aux puristes défenseurs du code)
 Chacune de ces variables ont des implantations dans le code de plusieurs Classes.

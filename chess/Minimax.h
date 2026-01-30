@@ -12,7 +12,7 @@
 #define INF 1000000     // Définit le score infini pour limiter sans contraindre
 #define QS_MAX_DEPTH 4  // Profondeur choisie pour la Quiescence
 
-extern const int pieceValue[];   // Valeur des pièces, définie dans Minimax.m
+// extern const int pieceValue[];   // Valeur des pièces, définie dans Minimax.m
 
 
 @class Move, ChessBoard; // compte tenu de l'appel de ces 2 classes dans la classe Minimax

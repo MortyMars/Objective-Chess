@@ -19,10 +19,16 @@ de faire des copies d'objets Move, ...ce dont nous avons besoin            */
    @property (nonatomic, strong) Pos *start;
    @property (nonatomic, strong) Pos *dest;
 
-   // GPT : Infos pour undo
-   @property Piece *capturedPiece;
+   // Propriétés ajoutées pour undo
+   @property (nonatomic, strong) Piece *capturedPiece;
    @property BOOL wasPromotion;
    @property PieceType oldType;
+
+   // Propriétés ajoutées pour méthode SEE
+   @property (nonatomic, strong) Piece *movingPiece;
+   @property (nonatomic) Square fromSquare;
+   @property (nonatomic) Square toSquare;
+
 
 
    // ...et une méthode initWithStart permettant d'en initialiser les valeurs
