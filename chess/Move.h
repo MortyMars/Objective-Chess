@@ -29,6 +29,9 @@ de faire des copies d'objets Move, ...ce dont nous avons besoin            */
    @property (nonatomic) Square fromSquare;
    @property (nonatomic) Square toSquare;
 
+   // Propriété pour le Move Ordering
+   @property (nonatomic) int orderingScore;
+   @property (nonatomic) BOOL isCapture;
 
 
    // ...et une méthode initWithStart permettant d'en initialiser les valeurs

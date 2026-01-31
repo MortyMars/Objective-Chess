@@ -245,7 +245,17 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
       // ⚠️ tableau LOCAL, neuf à chaque appel
       NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:64];
       
+      // Génération des coups
       [self generatePseudoMovesForSide:side board:board into:moves];
+      
+      // Move Ordering
+      [self scoreMoves:moves board:board side:side];
+
+      [moves sortUsingComparator:^NSComparisonResult(Move *a, Move *b) {
+          return (a.orderingScore < b.orderingScore);
+      }];
+      // Fin de Move Ordering
+      
       
       Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
       
@@ -286,7 +296,7 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
                               side:(Side)side
                              depth:(int)depth
    {
-      /* Conversion du NSSet en NSArray pour pouvoir le trier */
+      // Conversion du NSSet en NSArray pour pouvoir le trier
       NSArray *movesArray = [moves allObjects];
       
       return [movesArray sortedArrayUsingComparator:^NSComparisonResult(Move *m1, Move *m2) {
@@ -298,10 +308,10 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
          return NSOrderedSame;
       }];
    }
-
+   
 
    // ================================================================================================
-   // MÉTHODE 4 : ScoreMove - ÉVALUATION RAPIDE D'UN COUP
+   // MÉTHODE 4 : ScoreMove - ÉVALUATION D'UN COUP (Ne pas confondre avec 'scoreMoves'
    // Attribution d'un score heuristique rapide basé sur :
    // - La valeur de la pièce capturée (si capture)
    // - D'autres critères possibles (coups centraux, développement, etc.)
@@ -373,6 +383,31 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
 
 
    // ================================================================================================
+   // MÉTHODE 4bis : scoreMoves - ÉVALUATION D'UNE LISTE DE COUPS (Ne pas confondre avec ScoreMove)
+   - (void)scoreMoves:(NSArray<Move *> *)moves
+                board:(ChessBoard *)board
+                 side:(Side)side
+   {
+       for (Move *m in moves) {
+
+           int score = 0;
+
+           if (m.isCapture) {
+               int see = [self SEEForMove:m board:board];
+
+               if (see >= 0)
+                   score = 10000 + see;
+               else
+                   score = 5000 + see;
+           }
+
+           m.orderingScore = score;
+       }
+   }
+
+
+
+   // ================================================================================================
    // MÉTHODE 5 : FilterCaptures - FILTRAGE DES CAPTURES POUR QUIESCENCE SEARCH
    // NOUVELLE MÉTHODE pour optimiser le QS
    // Ne conserve que les coups qui sont des captures, car ce sont les coups "tactiques"
@@ -411,8 +446,6 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
    -(int)EvalBoardForSide:(Side)side
                     board:(ChessBoard *)board
    {
-      NSLog(@"EvalBoardForSide - Entrée dans le code");
-      
       // Générer une clé unique pour cette position
       NSString *key = [self BoardHashKey:board forSide:side];
       NSNumber *cached = evalCache[key];
@@ -617,7 +650,7 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
       }
       
       if (queensWhite > 1 || queensBlack > 1)
-         NSLog(@"🔍 EvalBoardForSide - PROMOTION DÉTECTÉE : Blancs= %d Dames, Noirs= %d Dames", queensWhite, queensBlack);
+         NSLog(@"🔍 EvalBFS - PROMOTION DÉTECTÉE : Blancs= %d Dames, Noirs= %d Dames", queensWhite, queensBlack);
       
       
       // PARTIE 2 désactivée
@@ -818,7 +851,6 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
        - Si 'side' = Blancs : retourner evalWhitePOV tel quel (positif = bon pour Blancs)
        - Si 'side' = Noirs  : retourner -evalWhitePOV (négatif devient positif)
        Ainsi Negamax reçoit toujours une évaluation positive = bon pour le camp qui joue */
-      NSLog(@"EvalBoardForSide - Sortie de la Méthode, evalWhitePOV=%d",(side == sideWhite) ? evalWhitePOV : -evalWhitePOV);
       return (side == sideWhite) ? evalWhitePOV : -evalWhitePOV;
       //return evalWhitePOV;
       /* Pour l'évaluation du board par contre, sachant que la convention -qui veut qu'une éval
@@ -1170,18 +1202,6 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
 
    // ================================================================================================
    // Méthode retournant la valeur d'une pièce
-   /*-(int)PieceValue:(Piece *)piece
-   {
-      switch (piece.type) {
-         case Pion: return 100;
-         case Cava:
-         case Fou:  return 300;
-         case Tour: return 500;
-         case Dame: return 900;
-         case Roi:  return 100000;
-         default:   return 0;
-      }
-   } */
    - (int)valueOfPiece:(PieceType)p
    {
        switch (p) {
@@ -1195,6 +1215,19 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
            default         : return 0;
        }
    }
+   /* Ancien code
+   -(int)PieceValue:(Piece *)piece
+   {
+      switch (piece.type) {
+         case Pion: return 100;
+         case Cava:
+         case Fou:  return 300;
+         case Tour: return 500;
+         case Dame: return 900;
+         case Roi:  return 100000;
+         default:   return 0;
+      }
+   } */
 
 
 
@@ -1203,93 +1236,86 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
    // La quiescence est utilisée pour étendre la recherche sur les nœuds instables dans les arbres Minimax.
    // Elle permet de reporter l'évaluation jusqu'à ce que la position soit suffisamment stable pour être
    // évaluée statiquement, c'est-à-dire sans tenir compte de l'historique de la position ou des futurs moves.
-- (int)QuiescenceForSide:(Side)side
-                   board:(ChessBoard *)board
-                   alpha:(int)alpha
-                    beta:(int)beta
-                 qsDepth:(int)qsDepth
-{
-    Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
-    BOOL inCheck = [self kingInCheck:side board:board];
+   - (int)QuiescenceForSide:(Side)side
+                      board:(ChessBoard *)board
+                      alpha:(int)alpha
+                       beta:(int)beta
+                    qsDepth:(int)qsDepth
+   {
+       Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
+       BOOL inCheck = [self kingInCheck:side board:board];
 
-    int standPat = -INF;
+       int standPat = -INF;
 
-    // 1️⃣ Stand-pat uniquement hors échec
-    if (!inCheck) {
-        standPat = [self EvalBoardForSide:side board:board];
+       // 1️⃣ Stand-pat uniquement hors échec
+       if (!inCheck) {
+           standPat = [self EvalBoardForSide:side board:board];
 
-        if (standPat >= beta)
-            return beta;
+           if (standPat >= beta) return beta;
 
-        if (standPat > alpha)
-            alpha = standPat;
-    }
+           if (standPat > alpha) alpha = standPat;
+       }
 
-    // 2️⃣ Limite QS (mais jamais en échec)
-    if (qsDepth >= QS_MAX_DEPTH && !inCheck)
-        return alpha;
+       // 2️⃣ Limite QS (mais jamais en échec)
+       if (qsDepth >= QS_MAX_DEPTH && !inCheck) return alpha;
 
-    // 3️⃣ Génération des coups
-    NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:32];
+       // 3️⃣ Génération des coups
+       NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:32];
 
-    if (inCheck) {
-        [self generatePseudoMovesForSide:side board:board into:moves];
-    } else {
-        [self generateCaptureMovesForSide:side board:board into:moves];
-    }
+       if (inCheck) {
+           [self generatePseudoMovesForSide:side board:board into:moves];
+       } else {
+           [self generateCaptureMovesForSide:side board:board into:moves];
+       }
 
-    // 4️⃣ Boucle QS
-    for (Move *m in moves) {
+       // 4️⃣ Boucle QS
+       for (Move *m in moves) {
 
-        // 🔹 DELTA PRUNING
-        if (!inCheck) {
-            int gain = [self valueOfPiece:m.capturedPiece.type];
-            if (standPat + gain + DELTA_MARGIN < alpha)
-                continue;
-        }
+           // 🔹 DELTA PRUNING
+           if (!inCheck) {
+               int gain = [self valueOfPiece:m.capturedPiece.type];
+               if (standPat + gain + DELTA_MARGIN < alpha)
+                   continue;
+           }
 
-        // 🔹 SEE FILTER
-        if (!inCheck) {
-            int see = [self SEEForMove:m board:board];
-            if (see < 0)
-                continue;
-        }
-       
-        // 🔴 INTERDICTION DES SUICIDES DE DAME
-        if (!inCheck &&
-           m.movingPiece.type == Dame &&
-           ![self isSquareDefended:m.toSquare
-                            bySide:side
-                             board:board]) {
-           continue;
-        }
+           // 🔹 SEE FILTER
+           if (!inCheck) {
+               int see = [self SEEForMove:m board:board];
+               if (see < 0)
+                   continue;
+           }
+          
+           // 🔴 INTERDICTION DES SUICIDES DE DAME
+           if (!inCheck && m.movingPiece.type == Dame && ![self isSquareDefended:m.toSquare
+                                                                          bySide:side
+                                                                           board:board]) {
+              continue;
+           }
 
-        // On peut y aller
-        MoveState st = [board makeMove:m];
+           // On peut y aller
+           MoveState st = [board makeMove:m];
 
-        if (![self kingInCheck:side board:board]) {
+           if (![self kingInCheck:side board:board]) {
 
-            int score = -[self QuiescenceForSide:otherSide
-                                           board:board
-                                           alpha:-beta
-                                            beta:-alpha
-                                         qsDepth:qsDepth + 1];
+               int score = -[self QuiescenceForSide:otherSide
+                                              board:board
+                                              alpha:-beta
+                                               beta:-alpha
+                                            qsDepth:qsDepth + 1];
 
-            [board unmakeMove:m state:st];
+               [board unmakeMove:m state:st];
 
-            if (score >= beta)
-                return beta;
+               if (score >= beta) return beta;
 
-            if (score > alpha)
-                alpha = score;
+               if (score > alpha) alpha = score;
 
-        } else {
-            [board unmakeMove:m state:st];
-        }
-    }
+           }
+           else [board unmakeMove:m state:st];
+       }
 
-    return alpha;
-}
+       return alpha;
+      
+   } // !QuiescenceForSide
 
 
    // ================================================================================================
