@@ -34,7 +34,7 @@
    -(void)       SilentMakeIAMoveForSide:(Side)side
                                    Board:(ChessBoard *)board;
    
-   +(NSString *) SilentTestEchecFavSide: (Side)side
+   +(NSString *) SilentTestEchecFavSide:(Side)side
                                   Board:(ChessBoard *)board;
    
    -(void)       SilentMajStatusBarViaMove:(Move *)move

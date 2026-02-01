@@ -17,8 +17,8 @@
    @synthesize delegate;
 
 
-   //***************************************************************************************************
-   // MÉTHODE D'INSTANCE AUTO GÉNÉRÉE À LA CREATION DE CHESSVIEW
+   // ==================================================================================================
+   // MÉTHODE AUTO EXÉCUTÉE À LA CREATION DE CHESSVIEW
    // Elle en initialise une instance, allouant la mémoire et initialisant des variables
    /* Pour rappel, le type 'id' représente un pointeur sur un objet générique, un type Objective-C
    représentant "tout objet". Une instance de n'importe quelle classe Objective-C peut être stockée dans
@@ -43,7 +43,7 @@
    } // Fin de méthode
 
     
-   //***************************************************************************************************
+   // ==================================================================================================
    // MÉTHODE DE CLASSE - DESSIN DE L'ÉCHIQUIER - APPELÉE PAR 'drawRect'
    // La Méthode est appelée automatiquement (en fait c'est 'drawRect' qui est appelée...) dès que notre
    // ChessView nécessite d'être dessinée ou mise à jour...
@@ -118,7 +118,7 @@
 
     
 
-   //***************************************************************************************************
+   // ==================================================================================================
    // Méthode d'instance
    // LE JOUEUR JOUE, EN DESIGNANT (LA CASE DE) LA PIECE SELECTIONNEE ET LA CASE DESTINATION
    // GESTION DES CLICS DE SOURIS DESIGNANT LES CASES ORIGINE ET DESTINATION SUR L'ECHIQUIER
@@ -154,7 +154,7 @@
             isThereTileSelected = YES; // le BOOL notant la sélection de case est placé sur YES pour la suite
             
             // puis on calcule les position acceptées pour la pièce à partir de son emplacement
-            PosAcceptees = [RuleBook PosAccepteesForPiece:selPiece atPos:tilePos inBoard:liveBoard];
+            PosAcceptees = [RuleBook PosLegalesForPiece:selPiece atPos:tilePos inBoard:liveBoard];
          }
       } // Fin de if --> on file sur 'self.needsDisplay=YES' en ligne 258
       
@@ -201,7 +201,7 @@
     
     
 
-   //***************************************************************************************************
+   // ==================================================================================================
    // REALISATION DU DEPLACEMENT CALCULE PAR L'AI
    // Noter que dans la version initiale l'AI ne réalise que des mouvements du côté des Noirs et
    // que l'on ne peut jouer contre l'ordinateur qu'avec les Blancs...
@@ -223,7 +223,7 @@
       });
       
       // Véritable début de réalisation du move AI
-      Move *aiMove = [maMinimax BestMoveForSide:sideIA board:liveBoard];   // Version MCN
+      Move *aiMove = [maMinimax BestMoveForSide:sideIA Board:liveBoard];   // Version MCN
       ChessBoard* savedBoard = liveBoard.copy; // Sauvegardé pour ConvertEnStringMove avant PerformMove
       
       // Réalisation du move - NOTER : c'est PerformMove qui positionne les indicateurs de roque
@@ -282,7 +282,7 @@
    } // Fin de MakeComputerMove
 
     
-   //***************************************************************************************************
+   // ==================================================================================================
    // MCN - Méthode d'instance
    // Création d'une méthode Joueur symétrique à celle déjà existante pour réaliser le move de l'IA
    // L'idée première est d'homogénéiser la structure du code et d'en simplifier la lecture...
@@ -291,7 +291,7 @@
       /* Le paramètre attendu par la méthode est la case sélectionnée par le second clic
       Elle a été controlée comme appartenant ou non aux déplacements autorisés
       Si OK on peut alors préparer et réaliser le 'Move' Joueur */
-      Move *moveJoueur = [[Move alloc] initWithStart:selTile dest:dest];
+      Move *moveJoueur = [[Move alloc] initWithStart:selTile Dest:dest];
       
       /* Sauvegarde du board avant PerformMove, pour que ConvertEnStringMove (Modif00EnA1 en fait) puisse
       déterminer la pièce jouée et la pièce éventuellement prise */
@@ -343,7 +343,6 @@
       [self MajStatusBarViaMove:moveJoueur PrecBoard:savedBoard StrCheck:strEchecMat];
    
       // Joueur ayant joué, on inverse sideCourant avant de sortir de la méthode et de passer la main à l'IA
-      //sideCourant = (sideJoueur == sideWhite) ? sideBlack : sideWhite;
       sideCourant = (sideCourant == sideWhite) ? sideBlack : sideWhite;
       monMCNControleur.lblTrait.cell.stringValue = (sideCourant == sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
       
@@ -352,17 +351,16 @@
          self.needsDisplay = YES;
       });
       
-   
    } // Fin de MakeJoueurMoveVersDest
 
 
-   //***************************************************************************************************
+   // ==================================================================================================
    // REALISATION DES DEPLACEMENTS CALCULÉS PAR L'IA  -  Méthode, directement dérivée de 'MakeComputerMove'
    // permettant à l'IA de jouer des deux côtés alternativement, et de tester le 'moteur' dans son ensemble
    -(void)MakeIAMoveForSide:(Side)side Board:(ChessBoard *)board
    {
       sideCourant = side; // affect nécessaire car MakeIAMoveFS peut être appelée à tout moment de la partie
-      Move *aiMove = [maMinimax BestMoveForSide:side board:board];
+      Move *aiMove = [maMinimax BestMoveForSide:side Board:board];
       ChessBoard* savedBoard = board.copy; // Sauvegardé pour usage dans 'ConvertEnStringMove' avt le move
       
       // Réalisation du move - NOTER : c'est 'PerformMove' qui positionne les indicateurs de roque
@@ -430,7 +428,7 @@
    } // Fin de MakeIAMoveForSide
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // MCN Méthode d'instance mettant à jour la majorité des champs de la 'Barre d'état'
    // lblTrait et lblInfo font l'objet d'un traitement spécifique hors de la présent méthode
    -(void) MajStatusBarViaMove:(Move *)move PrecBoard:(ChessBoard *)precBoard StrCheck:(NSString *)strCheck {
@@ -468,7 +466,7 @@
    } // Fin de Méthode 'MajStatusBarViaMove'
 
 
-   //***************************************************************************************************
+   // ==================================================================================================
    // MÉTHODE D'INSTANCE GÉNÉRÉE À LA CREATION DE CHESSVIEW (CODE ET OBJET DE L'UI) QUI DÉRIVE DE NSVIEW
    // C'EST DONC LÀ QU'ON PLACE LE CODE DE TOUT CE QUI DÉFINIT NOTRE CUSTOM NSVIEW
    // La méthode est appelée automatiquement dès que la vue nécessite d'être dessinée ou mise à jour
@@ -483,7 +481,7 @@
    }
 
    
-   //***************************************************************************************************
+   // ==================================================================================================
    // Méthode pour détermination d'une NSString pour l'affichage de l'évaluation
    +(NSString *)VisualIndicator:(int)evalWhitePOV
    {

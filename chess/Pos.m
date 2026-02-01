@@ -10,7 +10,7 @@
 
 @implementation Pos
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode d'instance ATTRIBUANT des coordonnées sur l'échiquier à un objet Pos
    -(id)initWithX:(int)x // méthode à 2 paramètres x et y
                 y:(int)y // correspondant à la position de la pièce sur l'échiquier
@@ -22,7 +22,8 @@
       return self;
    }
 
-   // **************************************************************************************************
+   
+   // ==================================================================================================
    // Méthode de classe RETOURNANT la position correspondant à des coordonnées sur l'échiquier
    +(Pos *)posWithX:(int)x // même construction que la méthode
                   y:(int)y // d'instance initWithX:y:
@@ -30,7 +31,8 @@
       return [[self alloc] initWithX:x y:y];
    }
 
-   //***************************************************************************************************
+   
+   // ==================================================================================================
    // Méthode d'instance définissant ce qu'est l'égalité entre deux positions (self et une autre pos)
    -(BOOL)isEqual:(id)object
    {
@@ -40,23 +42,25 @@
    }
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode d'instance définissant un identifiant numérique unique pour chaque Pos de l'échiquier
    -(NSUInteger)hash
    {
       return self.y * 8 + self.x;
    }
 
-   // **************************************************************************************************
+   
+   // ==================================================================================================
    // Méthode exigée par le protocole NSCopying dont hérite la classe Pos
-   // Elle n'est pas directement appelée dans le code, mais est utilisée dès qu'on envoie un message copy sur un objet
+   // Elle n'est pas appelée dans le code, mais est exécutée dès l'envoi d'un message copy sur un objet
    -(id)copyWithZone:(NSZone *)zone
    {
       Pos *pos = [[Pos allocWithZone:zone] initWithX:self.x y:self.y];
       return pos;
    }
 
-   // **************************************************************************************************
+   
+   // ==================================================================================================
    // 'description' est une @property de NSObject, dont l'appel est implicite
    // Elle est surdéfinie ici pour nos besoins de notation des coups joués
    -(NSString *)description

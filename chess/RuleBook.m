@@ -13,30 +13,30 @@
 
 @implementation RuleBook
 
-   //***************************************************************************************************
+   // ==================================================================================================
    // Méthode de Classe - DÉFINITION DU JEU DES DÉPLACEMENTS ADMIS POUR CHAQUE TYPE DE PIÈCE
    // Le principe de la méthode est de créer un objet NSSet et de le "remplir", si nécessaire en plusieurs
    // étapes, avec les déplacements autorisés pour la pièce concernée
-   // Contrairement à son quasi clone 'PosAccepteesForPieceSAR' cette méthode intègre la suppression des
+   // Contrairement à son quasi clone 'PosLegalesForPieceSAR' cette méthode intègre la suppression des
    // positions générant la mise en échec de son Roi
-   +(NSSet *)PosAccepteesForPiece:(Piece *)piece atPos:(Pos *)pos inBoard:(ChessBoard *)board
+   +(NSSet *)PosLegalesForPiece:(Piece *)piece atPos:(Pos *)pos inBoard:(ChessBoard *)board
    {
       NSMutableSet *PosAcceptees = [[NSMutableSet alloc] init];
       
       // direction du déplacement d'une TOUR ou de la DAME --------------------------------------------------
       if (piece.type == Tour || piece.type == Dame) {
-         [PosAcceptees unionSet:[self RechercheEnDirection:pos dx:1 dy:0 board:board]];    // à droite
-         [PosAcceptees unionSet:[self RechercheEnDirection:pos dx:-1 dy:0 board:board]];   // à gauche
-         [PosAcceptees unionSet:[self RechercheEnDirection:pos dx:0 dy:1 board:board]];    // devant
-         [PosAcceptees unionSet:[self RechercheEnDirection:pos dx:0 dy:-1 board:board]];   // derrière
+         [PosAcceptees unionSet:[self SearchInDirection:pos dx:1 dy:0 board:board]];    // à droite
+         [PosAcceptees unionSet:[self SearchInDirection:pos dx:-1 dy:0 board:board]];   // à gauche
+         [PosAcceptees unionSet:[self SearchInDirection:pos dx:0 dy:1 board:board]];    // devant
+         [PosAcceptees unionSet:[self SearchInDirection:pos dx:0 dy:-1 board:board]];   // derrière
       }
       
       // direction du déplacement d'un FOU ou de la DAME ----------------------------------------------------
       if (piece.type == Fou || piece.type == Dame) {
-         [PosAcceptees unionSet:[self RechercheEnDirection:pos dx:1 dy:1 board:board]];    // au NE
-         [PosAcceptees unionSet:[self RechercheEnDirection:pos dx:-1 dy:1 board:board]];   // au NO
-         [PosAcceptees unionSet:[self RechercheEnDirection:pos dx:1 dy:-1 board:board]];   // au SE
-         [PosAcceptees unionSet:[self RechercheEnDirection:pos dx:-1 dy:-1 board:board]];  // au SO
+         [PosAcceptees unionSet:[self SearchInDirection:pos dx:1 dy:1 board:board]];    // au NE
+         [PosAcceptees unionSet:[self SearchInDirection:pos dx:-1 dy:1 board:board]];   // au NO
+         [PosAcceptees unionSet:[self SearchInDirection:pos dx:1 dy:-1 board:board]];   // au SE
+         [PosAcceptees unionSet:[self SearchInDirection:pos dx:-1 dy:-1 board:board]];  // au SO
       }
       
       // déplacement du ROI ---------------------------------------------------------------------------------
@@ -226,7 +226,7 @@
       NSMutableSet *aSupprimer2 = [[NSMutableSet alloc] init];
       for (Pos *posTest2 in PosAcceptees)
       {
-         Move *movTest2 = [[Move alloc]initWithStart:pos dest:posTest2];
+         Move *movTest2 = [[Move alloc]initWithStart:pos Dest:posTest2];
          ChessBoard * boardForTest = board.copy;
          [boardForTest PerformMove:movTest2];
          if ([self TestEchecRoiSideSAR:piece.side inBoard:boardForTest] == YES)
@@ -239,36 +239,36 @@
       
       // Finalement, après traitement complet, on retourne le jeu de toutes les positions possibles
       return PosAcceptees;
-   }  // FIN de 'PosAccepteesForPiece'
+   }  // FIN de 'PosLegalesForPiece'
 
 
 
-   // **************************************************************************************************
-   // MCN - Méthode de Classe Quasi-Clone de 'PosAccepteesForPiece' en version SAR, càd sans appel récursif
+   // ==================================================================================================
+   // MCN - Méthode de Classe Quasi-Clone de 'PosLegalesForPiece' en version SAR, càd sans appel récursif
    // Elle est appelée PAR 'TestEchecRoiSideSAR' pour y déterminer le jeu des position acceptées nécessaire
    // au test de mise en échec
    // Plutôt que de faire appel à cette version renommée on aurait pu copier le code dans TestEchecRoiSide,
    // mais le code est un peu plus aéré et la façon, peu glorieuse, est plus transparente
    // Cette présente version, utilisée pour obtenir le jeu PosAcceptee brut, n'intègre pas la supp des pos
    // créant une mise en échec de son propre roi (elle intègre 'aSupprimer1' mais pas 'aSupprimer2')
-   +(NSSet *)PosAccepteesForPieceSAR:(Piece *)piece atPos:(Pos *)pos inBoard:(ChessBoard *)board
+   +(NSSet *)PosLegalesForPieceSAR:(Piece *)piece atPos:(Pos *)pos inBoard:(ChessBoard *)board
    {
       NSMutableSet *PosAcceptees = [[NSMutableSet alloc] init];
       
       // direction du déplacement d'une TOUR ou de la DAME --------------------------------------------------
       if (piece.type == Tour || piece.type == Dame) {
-         [PosAcceptees unionSet:[self RechercheEnDirection:pos dx:1 dy:0 board:board]];    // à droite
-         [PosAcceptees unionSet:[self RechercheEnDirection:pos dx:-1 dy:0 board:board]];   // à gauche
-         [PosAcceptees unionSet:[self RechercheEnDirection:pos dx:0 dy:1 board:board]];    // devant
-         [PosAcceptees unionSet:[self RechercheEnDirection:pos dx:0 dy:-1 board:board]];   // derrière
+         [PosAcceptees unionSet:[self SearchInDirection:pos dx:1 dy:0 board:board]];    // à droite
+         [PosAcceptees unionSet:[self SearchInDirection:pos dx:-1 dy:0 board:board]];   // à gauche
+         [PosAcceptees unionSet:[self SearchInDirection:pos dx:0 dy:1 board:board]];    // devant
+         [PosAcceptees unionSet:[self SearchInDirection:pos dx:0 dy:-1 board:board]];   // derrière
       }
       
       // direction du déplacement d'un FOU ou de la DAME ----------------------------------------------------
       if (piece.type == Fou || piece.type == Dame) {
-         [PosAcceptees unionSet:[self RechercheEnDirection:pos dx:1 dy:1 board:board]];    // au NE
-         [PosAcceptees unionSet:[self RechercheEnDirection:pos dx:-1 dy:1 board:board]];   // au NO
-         [PosAcceptees unionSet:[self RechercheEnDirection:pos dx:1 dy:-1 board:board]];   // au SE
-         [PosAcceptees unionSet:[self RechercheEnDirection:pos dx:-1 dy:-1 board:board]];  // au SO
+         [PosAcceptees unionSet:[self SearchInDirection:pos dx:1 dy:1 board:board]];    // au NE
+         [PosAcceptees unionSet:[self SearchInDirection:pos dx:-1 dy:1 board:board]];   // au NO
+         [PosAcceptees unionSet:[self SearchInDirection:pos dx:1 dy:-1 board:board]];   // au SE
+         [PosAcceptees unionSet:[self SearchInDirection:pos dx:-1 dy:-1 board:board]];  // au SO
       }
       
       // déplacement du ROI ---------------------------------------------------------------------------------
@@ -409,20 +409,19 @@
       
       // Finalement, après traitement complet, on retourne le jeu de toutes les positions possibles
       return PosAcceptees;
-   }  // FIN de 'PosAccepteesForPieceSAR'
+   }  // FIN de 'PosLegalesForPieceSAR'
 
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Création d'un jeu de cases acceptées dans une direction donnée, dénommé "ligneDeCases"
-   // Cette méthode n'est utile que pour les pièces à grands déplacements
-   // et n'est appelée (cf. plus haut) que dans le présent fichier RuleBook.m
-   // Elle allège le code de détermination des déplacements acceptés
-   // pour la Dame, la Tour, et le Fou
-   +(NSSet *)RechercheEnDirection:(Pos *)start
-                               dx:(int)dx
-                               dy:(int)dy
-                            board:(ChessBoard *)board
+   // Cette méthode n'est utile que pour les pièces à grands déplacements et n'est appelée (cf. plus haut)
+   // que dans le présent fichier RuleBook.m
+   // Elle allège le code de détermination des déplacements acceptés pour la Dame, la Tour, et le Fou
+   +(NSSet *)SearchInDirection:(Pos *)start
+                            dx:(int)dx
+                            dy:(int)dy
+                         board:(ChessBoard *)board
    {
       NSMutableSet *ligneDeCases = [[NSMutableSet alloc] initWithCapacity:8];
       
@@ -441,12 +440,12 @@
       
       // On retourne la ligne de cases autorisées, ligne qui sera ajoutée au jeu des pos possibles
       return ligneDeCases;
-   } // FIN de 'rechercheEnDirection'
+   } // FIN de 'SearchInDirection'
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // MCN - Méthode de Classe Quasi-Clone de [Minimax TestEchecRoiSide] en version SAR (sans appel récursif)
-   // Elle est appelée dans 'PosAccepteesForPiece' et appelle une version renommée 'PosAccepteesForPieceSAR'
+   // Elle est appelée dans 'PosLegalesForPiece' et appelle une version renommée 'PosLegalesForPieceSAR'
    // pour éviter l'appel récursif qui plante le programme
    +(BOOL)TestEchecRoiSideSAR:(Side)side inBoard:(ChessBoard *)board
    {
@@ -466,10 +465,10 @@
             {
                if (pieceAdv.side == otherSide)
                {
-                  NSSet *PosAcceptees = [RuleBook PosAccepteesForPieceSAR:pieceAdv atPos:pos inBoard:board];
+                  NSSet *PosAcceptees = [RuleBook PosLegalesForPieceSAR:pieceAdv atPos:pos inBoard:board];
                   for (Pos *possibleDest in PosAcceptees)
                   {
-                     Move *moveSideAdv = [[Move alloc] initWithStart:pos dest:possibleDest];
+                     Move *moveSideAdv = [[Move alloc] initWithStart:pos Dest:possibleDest];
                      //[movesSideAdv addObject:moveSideAdv];
                      
                      // DÉTECTION MISE EN ÉCHEC  >>et sur chacune de ces cases destinations on regarde
@@ -484,12 +483,11 @@
                            return roiSideEnEchec;
                         } // fin if
                      } // fin if
-                       //else {sideEstEnEchec = NO; NSLog(@"\nLes %@ NE SONT PAS Échec",(side==1)?@"Noirs":@"Blancs");}
                   }  // fin for
                }  // fin if
-            }
-         } // fin for
-      } // Sortie du for
+            } // fin if
+         } // fin for y
+      } // fin for x
       return roiSideEnEchec;
    } // Fin de Méthode 'TestEchecRoiSideSAR'
 

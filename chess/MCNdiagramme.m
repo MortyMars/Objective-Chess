@@ -22,7 +22,7 @@ NSString *strPieces;
    }
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Implémentation du lien entre menu 'Diagramme' et code
    - (IBAction)SaisieCodeFEN:(id)sender {
       
@@ -36,7 +36,7 @@ NSString *strPieces;
    } // Fin de 'SaisieCodeFen'
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Implémentation du lien entre menu 'Proposer à l'IA' et code
    - (IBAction)DiagrammeIAvsIA:(id)sender {
       
@@ -160,7 +160,7 @@ NSString *strPieces;
    } // Fin de 'DiagrammeIAvsIA'
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode de classe permettant de récupérer un code FEN valide
    -(NSString *)RecupCodeFEN {
       
@@ -269,7 +269,7 @@ NSString *strPieces;
 
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode d'instance traduisant une chaine FEN valide en Board et View
    // NOTER QUE COMME IL S'AGIT D'UN TRAITEMENT DE FEN, ON PLACE FORCÉMENT LES BLANCS EN BAS
    -(void)TradFenEnView:(NSString *) stringFEN {
@@ -359,7 +359,7 @@ NSString *strPieces;
 
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode d'instance effaçant un ancien Diagramme et repositionnant les Blancs en bas,
    // ce qui implique que sideJoueur = sideWhite
    -(void)EffaceBoardBlancsEnBas:(ChessBoard *) board {
@@ -387,7 +387,7 @@ NSString *strPieces;
 
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode d'instance repositionnant l'indicateur de 1er déplacement pour les pions d'un board qui
    // n'ont pas encore été joués, ce qui les autorise donc à avancer de 2 cases pour leur premier coup
    // ATTENTION LA MÉTHODE EST IMPLÉMENTÉE POUR ÊTRE UTILISÉE EXCLUSIVEMENT SUR DES DIAGRAMMES,
@@ -405,7 +405,7 @@ NSString *strPieces;
    } // Fin de Méthode OkDeuxCasesPionsBoard
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode d'instance effectuant la lecture des 5 derniers champs d'un code FEN
    -(void)LireSecondPartStrFEN:(NSString *)secondStr {
       
@@ -455,7 +455,7 @@ NSString *strPieces;
    } // Fin de Méthode 'LireSecondPartStrFEN'
 
    
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode permettant d'accéder à MakeIAMoveForSide sans passer de params et donc de l'utiliser
    // dans un NSTimer
    -(void)LancerCoupNoirs {
@@ -467,13 +467,13 @@ NSString *strPieces;
    }
 
    
-   //***************************************************************************************************
+   // ==================================================================================================
    // REALISATION DES DEPLACEMENTS CALCULÉS PAR L'IA  -  Version silencieuse de 'MakeIAMoveForSide'
    // permettant à l'IA de jouer des deux côtés alternativement, tout en testant le 'moteur'
    -(void)SilentMakeIAMoveForSide:(Side)side Board:(ChessBoard *)board
    {
       sideCourant = side; // affectation nécessaire car MakeIAMoveFS peut être appelée à tout moment
-      Move *aiMove = [maMinimax BestMoveForSide:side board:board];
+      Move *aiMove = [maMinimax BestMoveForSide:side Board:board];
       ChessBoard* savedBoard = board.copy; // Sauvegardé pour usage dans 'ConvertEnStringMove' avt 'PerformMove'
       
       // Réalisation du move - NOTER : c'est 'PerformMove' qui positionne les indicateurs de roque
@@ -550,7 +550,7 @@ NSString *strPieces;
    } // Fin de SilentMakeIAMoveForSide
 
 
-   //***************************************************************************************************
+   // ==================================================================================================
    // MCN - Version silencieuse de 'TestEchecFavSide'
    // Détection des positions d'Échec en faveur du coté 'Side' (autrement dit Roi 'otherSide' en échec)
    +(NSString *)SilentTestEchecFavSide:(Side)side Board:(ChessBoard *)board
@@ -570,10 +570,10 @@ NSString *strPieces;
             {
                if (piece.side == side)
                {
-                  NSSet *PosAcceptees = [RuleBook PosAccepteesForPiece:piece atPos:pos inBoard:board];
+                  NSSet *PosAcceptees = [RuleBook PosLegalesForPiece:piece atPos:pos inBoard:board];
                   for (Pos *possibleDest in PosAcceptees)
                   {
-                     Move *moveSide = [[Move alloc] initWithStart:pos dest:possibleDest];
+                     Move *moveSide = [[Move alloc] initWithStart:pos Dest:possibleDest];
                      
                      // DÉTECTION MISE EN ÉCHEC  ...on regarde si sur chacune de ces cases destination,
                      // il y a une pièce de la couleur opposée dont le type est Roi. Si oui, il y a Echec
@@ -602,7 +602,7 @@ NSString *strPieces;
    }  // fin méthode SilentTestEchecFavSide
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode MCN - Version silencieuse de MajStatusBarViaMove
    // Mettant à jour la majorité des champs de la 'Barre d'état'
    -(void) SilentMajStatusBarViaMove:(Move *)move PrecBoard:(ChessBoard *)precBoard StrCheck:(NSString *)strCheck {
@@ -638,7 +638,7 @@ NSString *strPieces;
 
 
 
-   //***************************************************************************************************
+   // ==================================================================================================
    // MCN - Méthode de classe pour assurer la gestion du Pat et du Mat - Version silencieuse
    // CETTE MÉTHODE NE DOIT ÊTRE APPELÉE QU'APRÈS QU'UN TEST SUR 'PossibleMovesForSide' AIT RÉVÉLÉ QUE LE
    // JEU DE MOVES EST VIDE, CAR C'EST BIEN CE TEST QUI CARACTÉRISE UNE SITUATION DE MAT OU DE PAT,

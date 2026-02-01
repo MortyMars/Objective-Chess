@@ -14,27 +14,22 @@
 
 @interface RuleBook : NSObject
 
-   
    // Méthodes de Classe
-   +(NSSet *) PosAccepteesForPiece:(Piece *)piece
-                             atPos:(Pos *)pos
-                           inBoard:(ChessBoard *)board;
+   +(NSSet *) PosLegalesForPiece:(Piece *)piece
+                           atPos:(Pos *)pos
+                         inBoard:(ChessBoard *)board;
 
-   +(NSSet *) RechercheEnDirection:(Pos *)start
+   +(NSSet *) SearchInDirection:(Pos *)start
                                 dx:(int)dx
                                 dy:(int)dy
                              board:(ChessBoard *)board;
 
-
-
    // Méthodes de Classe MCN
-   +(NSSet *) PosAccepteesForPieceSAR:(Piece *)piece
-                                atPos:(Pos *)pos
-                              inBoard:(ChessBoard *)board;
+   +(NSSet *) PosLegalesForPieceSAR:(Piece *)piece       // Méthode SAR (Sans appel récursif)
+                              atPos:(Pos *)pos
+                            inBoard:(ChessBoard *)board;
 
-   +(BOOL)    TestEchecRoiSideSAR:(Side)side
+   +(BOOL)    TestEchecRoiSideSAR:(Side)side             // Méthode SAR (Sans appel récursif)
                           inBoard:(ChessBoard *)board;
-
-  
 
 @end

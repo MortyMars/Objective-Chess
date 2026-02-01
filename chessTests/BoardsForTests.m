@@ -12,7 +12,7 @@
 
 @implementation BoardsForTests
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode non-test de configuration du board du Coup Du Berger
    +(ChessBoard *)ConfigBoardCoupDuBerger {
       
@@ -32,17 +32,17 @@
       
       
       // Puis mise en place du scénario à étudier par une série de moves
-      Move *move1 = [[Move alloc]initWithStart:[Pos posWithX:4 y:1] dest:[Pos posWithX:4 y:3]];
+      Move *move1 = [[Move alloc]initWithStart:[Pos posWithX:4 y:1] Dest:[Pos posWithX:4 y:3]];
       [testBoard PerformMove:move1]; // e2-e4 Blancs
-      Move *move2 = [[Move alloc]initWithStart:[Pos posWithX:4 y:6] dest:[Pos posWithX:4 y:4]];
+      Move *move2 = [[Move alloc]initWithStart:[Pos posWithX:4 y:6] Dest:[Pos posWithX:4 y:4]];
       [testBoard PerformMove:move2]; // e5-e7 Noirs
-      Move *move3 = [[Move alloc]initWithStart:[Pos posWithX:3 y:0] dest:[Pos posWithX:7 y:4]];
+      Move *move3 = [[Move alloc]initWithStart:[Pos posWithX:3 y:0] Dest:[Pos posWithX:7 y:4]];
       [testBoard PerformMove:move3]; // Dd1-h5 Blancs
-      Move *move4 = [[Move alloc]initWithStart:[Pos posWithX:1 y:7] dest:[Pos posWithX:2 y:5]];
+      Move *move4 = [[Move alloc]initWithStart:[Pos posWithX:1 y:7] Dest:[Pos posWithX:2 y:5]];
       [testBoard PerformMove:move4]; // Cb8-c6 Noirs
-      Move *move5 = [[Move alloc]initWithStart:[Pos posWithX:5 y:0] dest:[Pos posWithX:2 y:3]];
+      Move *move5 = [[Move alloc]initWithStart:[Pos posWithX:5 y:0] Dest:[Pos posWithX:2 y:3]];
       [testBoard PerformMove:move5]; // Ff1-c4 Blancs
-      Move *move6 = [[Move alloc]initWithStart:[Pos posWithX:6 y:7] dest:[Pos posWithX:5 y:5]];
+      Move *move6 = [[Move alloc]initWithStart:[Pos posWithX:6 y:7] Dest:[Pos posWithX:5 y:5]];
       [testBoard PerformMove:move6]; // Cg8-f6 Noirs
       
       // Sortie de contrôle de la matrice
@@ -53,7 +53,7 @@
 
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode non-test de configuration du board cas1 Mat en 10 coups
    +(ChessBoard *)ConfigBoardMatEn3Cas1 {
       /* Contrairement au test du coup du berger, le cas de ce board de départ ne comporte que 16 pièces,
@@ -121,7 +121,7 @@
    } // Fin board cas1
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode non-test de configuration du board cas2 Mat en 10 coups
    +(ChessBoard *)ConfigBoardMatEn3Cas2 {
       /* Contrairement au test du coup du berger, le cas de ce board de départ ne comporte que 22 pièces,
@@ -192,7 +192,7 @@
    } // Fin board cas2
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode non-test de configuration du board cas3 Mat en 10 coups
    +(ChessBoard *)ConfigBoardMatEn3Cas3 {
       /* Contrairement au test du coup du berger, le cas de ce board de départ ne comporte que 20 pièces,
@@ -262,7 +262,7 @@
       return testBoard;
    } // Fin board cas3
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode non-test de configuration du board cas4 Mat en 10 coups
    +(ChessBoard *)ConfigBoardMatEn3Cas4 {
       /* Contrairement au test du coup du berger, le cas de ce board de départ ne comporte que 15 pièces,
@@ -327,7 +327,7 @@
    } // Fin board cas4
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode non-test de configuration du board cas Mat en 3 coups Niveau dit Très Fort
    +(ChessBoard *)ConfigBoardMatEn3Fort {
       /* Contrairement au test du coup du berger, le cas de ce board de départ ne comporte que 15 pièces,
@@ -392,7 +392,7 @@
    } // Fin board cas5
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode non-test de configuration du board cas6 Mat en 10 coups
    +(ChessBoard *)ConfigBoardMatEn7Demi {
       /* Contrairement au test du coup du berger, le cas de ce board de départ ne comporte que 22 pièces,
@@ -463,7 +463,7 @@
    } // Fin board cas6
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode non-test de configuration du board cas7 Mat en 10 coups
    +(ChessBoard *)ConfigBoardMatEn3Zugzwang {
       /* Contrairement au test du coup du berger, le cas de ce board de départ ne comporte que 22 pièces,
@@ -514,7 +514,7 @@
    } // Fin board cas7
 
 
-// **************************************************************************************************
+// ==================================================================================================
 // Méthode non-test de configuration du board cas8 Mat en 10 coups
 +(ChessBoard *)ConfigBoardMatEn3Hard {
    /* Contrairement au test du coup du berger, le cas de ce board de départ ne comporte que 22 pièces,

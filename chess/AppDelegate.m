@@ -11,7 +11,7 @@
    @synthesize monMCNconnecteur; // MCN
    //@synthesize maMinimax;
 
-   //***************************************************************************************************
+   // ==================================================================================================
    // MÉTHODE SYSTÈME
    // MacOS peut sauvegarder et restaurer automatiquement l’état d’une application quand elle est relancée
    // (état fenêtres, contenu, etc.) et il est demandé au dev d'indiquer ses intentions vis-à-vis de cette
@@ -20,7 +20,7 @@
        return YES;
    }
 
-   //***************************************************************************************************
+   // ==================================================================================================
    // UNIQUE RÉELLE MÉTHODE (d'instance) de la classe ayant pour objectif d'initialiser l'application
    - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
    {

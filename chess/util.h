@@ -2,16 +2,33 @@
 //  chess
 //  Created by Andrew Wang on 15/07/2013,
 //  Copyright (c) 2013 Andrew Wang. All rights reserved
-//  Updated by MCN in 2020
+//  Updated by MCN in 2020 and 2026 (engine refactoring)
 
-//#import "Pos.h"
-//#import "Piece.h"
 
 /* MCN - Macro permettant de supprimer les indications Date, Heure, Appli, ... des messages NSLog */
 #define NSLog(FORMAT, ...) printf("%s\n", [[NSString stringWithFormat:FORMAT, ##__VA_ARGS__] UTF8String]);
 
+// Macros de transposition de la propriété 'square' d'un 'move'
+// cf. la déclaration du typedef Square ci-après
+#define SQ(x, y)   ((y) * 8 + (x))
+#define SQ_X(sq)   ((sq) & 7)
+#define SQ_Y(sq)   ((sq) >> 3)
 
-/* "PieceType" définit -via une énum- un nouveau type de données pour les pièces du jeu.
+/* Macro de debugging des Move sous forme de 'square' selon l'usage
+ NSLog(@"Move %@ -> %@", SQ_STR(m.fromSquare), SQ_STR(m.toSquare));  */
+#define SQ_STR(sq) \
+    ([NSString stringWithFormat:@"%c%d", 'a'+SQ_X(sq), SQ_Y(sq)+1])
+
+
+
+/* 'Square' représente les cases de l'échiquier sous la forme d'un int entre 0 et 63
+ La transposition en coordonnées x (colonnes) et y (rangées) s'opère grâce aux macros ci-dessus */
+typedef int Square;
+
+
+
+
+/* 'PieceType' définit -via une énum- un nouveau type de données pour les pièces du jeu.
 (pour le coup il s'agit du type de pièce : pion, tour, cavalier, fou, dame, roi)
 La succession des pièces dans l'énumération n'est pas anodine.
 En effet, chacune recevra l'indice de sa position lorsqu'il s'agira de lui attribuer une représentation en
@@ -34,31 +51,16 @@ typedef enum {Invalide, Pion, Cava, Fou,
               Tour, Dame, Roi} PieceType;
 
 
-/* "Side" définit -via une énum- un nouveau type pour les couleurs en présence.
+/* 'Side' définit -via une énum- un nouveau type pour les couleurs en présence.
 Chaque 'Side' ici défini prend la valeur de son indice dans l'enum
 Ainsi on peut écrire que sideInvalid = 0, sideBlack = 1, et sideWhite = 2, mais il est beaucoup
 plus efficace dans le code d'utiliser leur mnémonique plutôt que leur valeur intrinsèque */
 typedef enum {sideInvalid, sideBlack, sideWhite} Side;
 
-/*@class Piece, Move;
-typedef struct {
-   Piece *capturedPiece;
-
-   BOOL wasPromotion;
-   PieceType oldType;
-
-   // ÉTAT DU PLATEAU
-   __unsafe_unretained Move *lastMove;
-   __unsafe_unretained NSString *strRoque;
-   __unsafe_unretained NSString *strCibleEP;
-   int nbDemis;
-   int nbEntiers;
-} MoveState; */
-
-typedef int Square;
 
 
-/* Modif. MCN - Ajout de variables globales (pardon aux puristes défenseurs du code)
+
+/* Ajout de variables globales (pardon aux puristes défenseurs du code)
 Chacune de ces variables ont des implantations dans le code de plusieurs Classes.
 Il n'a donc pas été possible de les déclarer comme variables d'instance, ce qui aurait été plus élégant.
 Certaines autres variables à portée plus limitée ont par contre pu être définies comme telles dans la classe qu'elles
@@ -66,46 +68,45 @@ concerne exclusivement.
 NB : 'extern' -mot clé pour definir une variable globale obj-c- supporte les variables mais aussi les fonctions
 (et méthodes ?) sous la forme par exemple de : 'extern void MaFonction(NSString *param1, int param2)' */
 
-   extern Side sideCourant;
-   extern Side sideJoueur;
-   extern Side sideIA;
+extern Side sideCourant;
+extern Side sideJoueur;
+extern Side sideIA;
 
-   extern NSString* stringCoupsPartie;
-   extern NSString* stringDebugging;
+extern NSString* stringCoupsPartie;
+extern NSString* stringDebugging;
 
-   extern BOOL petitRoque;    // petit roque exécuté
-   extern BOOL grandRoque;    // grand roque exécuté
-   extern BOOL stopMatOuPat;  // Mat ou Pat détecté
-   extern BOOL enPassant;     // prise en passant exécutée
+extern BOOL petitRoque;    // petit roque exécuté
+extern BOOL grandRoque;    // grand roque exécuté
+extern BOOL stopMatOuPat;  // Mat ou Pat détecté
+extern BOOL enPassant;     // prise en passant exécutée
 
-   extern int checkCount;     /* Nbre de mises en échec simultanées subies par un Roi
-                              Nécessaire du point de vue de la notation + ou ++ mais également potentiellement
-                              utile du point de vue performance puisqu'un Roi en position de double échec doit
-                              impérativement bouger (impossible de couvrir deux lignes d'échec en un seul coup),
-                              ce qui limite la recherche du prochain coup ; mais ça reste à implémenter... */
+extern int checkCount;     /* Nbre de mises en échec simultanées subies par un Roi
+                           Nécessaire du point de vue de la notation + ou ++ mais également potentiellement
+                           utile du point de vue performance puisqu'un Roi en position de double échec doit
+                           impérativement bouger (impossible de couvrir deux lignes d'échec en un seul coup),
+                           ce qui limite la recherche du prochain coup ; mais ça reste à implémenter...   */
 
-   extern int evalWhitePOV;   /* Valeur d'évaluation d'un Board, signée conformément à la convention */
+extern int evalWhitePOV;   /* Valeur d'évaluation d'un Board, signée conformément à la convention */
 
-   extern int  numCoup;       // Num apparaissant dans la liste des coups joués
-   extern long numDebugLine;  // Num de ligne du fichier de déboggage (implémentation supprimée du code)
+extern int  numCoup;       // Num apparaissant dans la liste des coups joués
+extern long numDebugLine;  // Num de ligne du fichier de déboggage (implémentation supprimée du code)
 
-   extern int NUMBER_MOVES_AHEAD;
+extern int NUMBER_MOVES_AHEAD;
 
-   /* Création d'une variable globale particulière, de type MCNconnecteur, ayant pour but de contrôler l'UI par
-   le code après lui avoir affecté la valeur de l'objet controleur instancié par AppDelegate (cf. cette classe) */
-   @class MCNconnecteur;
-   extern MCNconnecteur *monMCNControleur;
+/* Création d'une variable globale particulière, de type MCNconnecteur, ayant pour but de contrôler l'UI par
+le code après lui avoir affecté la valeur de l'objet controleur instancié par AppDelegate (cf. cette classe) */
+@class MCNconnecteur;
+extern MCNconnecteur *monMCNControleur;
 
-   // Déclaration de 2 tableaux intervenant dans la 'description' des Pos et des Move
-   extern int Absc1[8];
-   extern int Absc2[8];
+// Déclaration de 2 tableaux intervenant dans la 'description' des Pos et des Move
+extern int Absc1[8];
+extern int Absc2[8];
 
-   /* Pour tests d'accès à méthodes d'instances de la classe Minimax
-    création d'une variable globale permettant de garder le contrôle sur l'instance */
-   @class Minimax;
-   extern Minimax *maMinimax;
+/* Pour faciliter l'accès aux méthodes d'instances de la classe Minimax, création d'une variable
+globale permettant de garder le contrôle sur l'instance (unique dans une partie)              */
+@class Minimax;
+extern Minimax *maMinimax;
 
-// Fin de Modif. MCN
 
 extern void DoEvents(void);
 

@@ -10,30 +10,42 @@
 
 @implementation Move
 
-   //***************************************************************************************************
+   // ==================================================================================================
    // Méthode d'instance retournant un Move sur la base d'une position de départ et d'une position de
    // destination
-   -(id)initWithStart:(Pos *)start
-                 dest:(Pos *)dest
+   - (id)initWithStart:(Pos *)start Dest:(Pos *)dest
    {
-      if (self = [super init]) {
-         _start = start;
-         _dest  = dest;
-      }
-      return self;
+       self = [super init];
+       if (self) {
+           _start = start;
+           _dest = dest;
+
+           _capturedPiece = nil;
+           _movingPiece   = nil;
+
+           _isCapture     = NO;
+           _isPromotion   = NO;
+           _wasPromotion  = NO;
+           _isCastling    = NO;
+           _givesCheck    = NO;
+
+           _orderingScore = 0;
+       }
+       return self;
    }
 
-   // **************************************************************************************************
+
+   // ==================================================================================================
    // Méthode exigée par le Protocol NSCopying dont hérite la classe Move
    // Elle n'est pas formellement appelée dans le code, mais s'active dès l'envoi d'un msg copy sur un objet
    -(id)copyWithZone:(NSZone *)zone
    {
-      Move *newMove = [[Move allocWithZone:zone] initWithStart:self.start dest:self.dest];
+      Move *newMove = [[Move allocWithZone:zone] initWithStart:self.start Dest:self.dest];
       return newMove;
    }
 
 
-   //***************************************************************************************************
+   // ==================================================================================================
    // 'description' est une @property de NSObbject, dont l'appel est implicite
    // Elle est surdéfinie ici pour nos besoins d'affichage dans la console
    // et c'est à partir de cette base, que l'on traduira les moves en 'a1-b2'
@@ -44,7 +56,7 @@
    }
 
    
-   //***************************************************************************************************
+   // ==================================================================================================
    // Méthode implémentée pour utilisation par les 'Killer Moves' dans Minimax
    - (BOOL)isEqual:(id)object {
       if (![object isKindOfClass:[Move class]]) {
@@ -59,7 +71,7 @@
    }
 
    
-//***************************************************************************************************
+   // ==================================================================================================
    // Méthode implémentée pour utilisation par les 'Killer Moves' dans Minimax
    -(NSUInteger)hash {
       return self.start.x + self.start.y * 8 + self.dest.x * 64 + self.dest.y * 512;

@@ -50,7 +50,7 @@
 
    
    
-   // *********************************************************************************************
+   // =============================================================================================
    // Implémentation Méthode MàJ 'txtCoups'
    // appelée par MCNmoveToStr
    -(void)MaJtxtCoups;
@@ -61,7 +61,7 @@
    } // Fin de Méthode
 
    
-   // *********************************************************************************************
+   // =============================================================================================
    // Implémentation Méthode d'édition de la liste des coups
    // Appelée par AppDelegate pour la mise à jour du 1er coup qd l'IA a les Blancs
    - (void)InitialiseTxtCoups:(NSString *)texteSortie
@@ -73,7 +73,7 @@
    } // Fin de Méthode
 
    
-   // *********************************************************************************************
+   // =============================================================================================
    // Méthode d'instance assurant le repérage des rang. et col. selon l'orientation de l'échiquier
    -(void)MajReperesCases
    {
@@ -164,7 +164,7 @@
    }
    // Fin de gestion des items du menu 'Partie->Difficulté'
 
-   //***************************************************************************************************
+   // ==================================================================================================
    // Méthode d'affichage DÉLÉGUÉE
    // d'une boite de dialogue signalant qu'un camp est en position d'échec
    -(void)AlerteEchecRoiSide:(Side)side {

@@ -9,7 +9,7 @@
 
 @implementation Piece
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode d'instance définissant une Pièce sur la base d'un type et d'une couleur
    -(id)initWithType:(PieceType)type
                 side:(Side)side
@@ -21,7 +21,7 @@
       return self;
    }
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode exigée par le Protocol NSCopying dont hérite la classe Piece
    // Elle n'est pas formellement appelée dans le code, mais s'active dès l'envoi d'un msg copy sur un objet
    -(id)copyWithZone:(NSZone *)zone

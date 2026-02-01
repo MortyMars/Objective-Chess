@@ -21,8 +21,8 @@ de faire des copies d'objets Move, ...ce dont nous avons besoin            */
 
    // Propriétés ajoutées pour undo
    @property (nonatomic, strong) Piece *capturedPiece;
-   @property BOOL wasPromotion;
-   @property PieceType oldType;
+   @property (nonatomic) BOOL wasPromotion;  // Ce move a t-il généré une promotion de pion
+   @property (nonatomic) PieceType oldType;
 
    // Propriétés ajoutées pour méthode SEE
    @property (nonatomic, strong) Piece *movingPiece;
@@ -30,13 +30,17 @@ de faire des copies d'objets Move, ...ce dont nous avons besoin            */
    @property (nonatomic) Square toSquare;
 
    // Propriété pour le Move Ordering
+   @property (nonatomic) BOOL isCapture;     // Ce move est-il une capture
+   @property (nonatomic) BOOL givesCheck;    // Ce move provoque t-il une mise en échec
+   @property (nonatomic) BOOL isCastling;    // Ce move est-il un roque
+   @property (nonatomic) BOOL isPromotion;   // Ce move est-il une promotion de pion
    @property (nonatomic) int orderingScore;
-   @property (nonatomic) BOOL isCapture;
 
 
    // ...et une méthode initWithStart permettant d'en initialiser les valeurs
-   -(id) initWithStart:(Pos *)start dest:(Pos *)dest;
+   -(id) initWithStart:(Pos *)start Dest:(Pos *)dest;
    
+   // Méthode system
    -(id) copyWithZone:(NSZone *)zone;
    -(NSString *) description;
 

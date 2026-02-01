@@ -21,7 +21,7 @@
    
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode d'instance
    -(id)init
    {
@@ -39,7 +39,7 @@
    }
 
    
-   // **************************************************************************************************
+   // ==================================================================================================
    // MCN - Méthode d'instance lançant une nouvelle partie, le JOUEUR choisissant LES BLANCS
    - (IBAction)NewPartieJoueurBlancs:(id)sender {
       
@@ -83,7 +83,7 @@
    }
 
    
-   // **************************************************************************************************
+   // ==================================================================================================
    // MCN - Méthode d'instance lançant une nouvelle partie, le JOUEUR choisissant LES NOIRS
    - (IBAction)NewPartieJoueurNoirs:(id)sender {
       
@@ -130,7 +130,7 @@
    }
 
    
-   // **************************************************************************************************
+   // ==================================================================================================
    // MCN IBAction vers Méthode inversant l'échiquier
    - (IBAction)RetournerBoard:(id)sender {
       
@@ -185,7 +185,7 @@
    } // Fin de Méthode 'RetournerBoard'
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // INITIALISATION DES PIECES SUR L'ECHIQUIER (AFFECTATION DE LEUR POSITION EN DEBUT DE PARTIE)
    // Cette METHODE est appelée dans ChessView.m
    -(void)SetupPieces
@@ -230,7 +230,7 @@
    }
 
    
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode d'instance - Jouant le role d'accesseur à pieceCase
    // Retourne la pièce positionnée en (x,y)
    -(Piece *)piece_colX:(int)x rangY:(int)y
@@ -240,7 +240,7 @@
    }
 
    
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode d'instance
    // retourne la pièce positionnée en 'pos'
    -(Piece *)pieceAtPos:(Pos *)pos
@@ -251,7 +251,7 @@
    }
 
    
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode d'instance
    -(void)PerformMove:(Move *)move
    {
@@ -326,7 +326,7 @@
    }
 
     
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode d'instance
    -(Piece *)MovePieceDeStart:(Pos *)start ADest:(Pos *)dest
    {
@@ -343,7 +343,7 @@
    }
 
    
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode exigée par le Protocol NSCopying dont hérite la classe ChessBoard
    // Elle n'est pas directement appelée, mais est utilisée dès qu'on envoie un message copy sur un objet
    // ChessBoard
@@ -359,7 +359,7 @@
       return newBoard;
    }
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // 'description' est une @property existante de la classe NSObject retournant une NSString
    // Dans le cas de notre programme elle est sollicitée implicitement lors d'un affichage console
    // Dans cette perspective elle est surdéfinie ci-dessous en Méthode d'instance permettant l'affichage
@@ -380,7 +380,7 @@
    }
 
    
-   // **************************************************************************************************
+   // ==================================================================================================
    // MCN
    // Méthode d'instance permettant d'affecter la couleur de chacun des adversaires, Humain et Machine
    // MÉTHODE DÉSUETTE DEPUIS LA REFONTE DE L'UI DÉMARRANT SUR UN ÉCHIQUIER VIDE...
@@ -425,7 +425,7 @@
 
    
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // MCN
    // Méthode d'instance, appelée en fin d'initialisation du plateau quand l'IA a les blancs
    // LE TOUT PREMIER COUP DE LA PARTIE REVIENT À L'IA QUAND ELLE A LES BLANCS
@@ -433,7 +433,7 @@
    {
       /* self fait référence à l'objet ChessBoard qui appelle la méthode PremCoupAIBlancs
       calcul du meilleur 1er coup IA  */
-      Move* firstAImove = [maMinimax BestMoveForSide:sideWhite board:self];
+      Move* firstAImove = [maMinimax BestMoveForSide:sideWhite Board:self];
       ChessBoard* boardAvantMove = self.copy;   // sauvegardé pour ConvertEnStringMove avant PerformMove
       
       [self PerformMove:firstAImove];           // réalisation graphique du coup
@@ -461,7 +461,7 @@
    } // Fin de PremCoupAIBlancs
 
 
-   // ********************************************************************************************
+   // ============================================================================================
    // MCN - Méthode d'instance
    // Gérant la promotion d'un pion parvenant sur sa dernière rangée
    -(NSString *) SelectPromoPion:(Piece*)piece auRang:(int)rang
@@ -518,7 +518,7 @@
    } // Fin de Méthode SelectPromoPion
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // MCN - Méthode d'instance permettant de déterminer la chaine décrivant les possibilités de Roque
    -(void) CalculerStrRoque {
       
@@ -578,12 +578,12 @@
    }
 
    
-   // **************************************************************************************************
-   // MCN - Méthode d'instance permettant de déterminer la cible d'une prise en passant potentielle.
+   // ==================================================================================================
+   // MCN - Méthode permettant de déterminer la cible d'une prise en passant potentielle.
    // NB : La cible e.p. à laquelle il est fait référence, notamment dans un code FEN, correspond de fait
-   // à la case traversée par le pion pris avançant de 2 cases, case qui sera occupée par le pion prenant
+   // à la case traversée par le pion pris avançant de 2 cases, case qui sera occupée par le pion prenant.
    // C'est donc cette case traversée qui est indiquée comme cible, qu'un pion adverse soit suffisamment
-   // avancé pour exécuter la prise en passant ou pas...
+   // avancé pour exécuter la prise en passant ou pas.
    -(void) DeterminerCibleEP:(Move *)move {
       
       NSString *cibleEP;
@@ -614,7 +614,7 @@
                case 5 : cibleEP=[NSString stringWithFormat:@"c%d", (7-(move.start.y + move.dest.y)/2+1)] ; break;
                case 6 : cibleEP=[NSString stringWithFormat:@"b%d", (7-(move.start.y + move.dest.y)/2+1)] ; break;
                case 7 : cibleEP=[NSString stringWithFormat:@"a%d", (7-(move.start.y + move.dest.y)/2+1)] ; break;
-               default           :break;
+               default : break;
             }
          }
          else cibleEP = @"-";
@@ -624,7 +624,7 @@
    } // Fin de Méthode DeterminerCibleEP
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // MCN - Méthode d'instance permettant de compatiliser les demi-coups entre prise et/ou mvt de pion
    -(void) CompterDemiCoups:(Move *)move {
       
@@ -635,7 +635,7 @@
    } // Fin de Méthode CompterDemiCoups
 
    
-   // **************************************************************************************************
+   // ==================================================================================================
    -(void) ProposerNulle50Coups {
 
    // Boite de dialogne 1
@@ -663,7 +663,7 @@
    } // Fin de Méthode 'NotifieNulle50Coups'
 
    
-   // **************************************************************************************************
+   // ==================================================================================================
    // MCN - Alerte partie Nulle
    // Boite d'alerte dans sa forme la plus simple, pouvant potentiellement servir de boite info de base
    -(void) AlertePartieNulle {
@@ -676,46 +676,52 @@
    }
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode d'instance 'makeMove' permettant de réaliser un move de test
    -(MoveState)makeMove:(Move *)m
    {
        MoveState st;
-       st.captured = pieceCase[m.dest.x][m.dest.y];
+       st.captured     = nil;
        st.wasPromotion = NO;
-       st.oldType = 0;
+       st.oldType      = 0;
 
-       Piece *moving = pieceCase[m.start.x][m.start.y];
+       int fx = SQ_X(m.fromSquare);
+       int fy = SQ_Y(m.fromSquare);
+       int tx = SQ_X(m.toSquare);
+       int ty = SQ_Y(m.toSquare);
 
-       // Invariants
+       Piece *moving = pieceCase[fx][fy];
        NSAssert(moving != nil, @"makeMove: pas de pièce à déplacer");
 
+       // Capture
+       st.captured = pieceCase[tx][ty];
+
        // Déplacement
-       pieceCase[m.dest.x][m.dest.y] = moving;
-       pieceCase[m.start.x][m.start.y] = nil;
+       pieceCase[tx][ty] = moving;
+       pieceCase[fx][fy] = nil;
 
-       // Promotion simple
-       if (moving.type == Pion &&
-           ((moving.side == sideWhite && m.dest.y == 7) ||
-            (moving.side == sideBlack && m.dest.y == 0))) {
-
+       // Promotion (pilotée par le Move)
+       if (m.isPromotion) {
            st.wasPromotion = YES;
            st.oldType = moving.type;
-           moving.type = Dame;
+           moving.type = Dame; // choix fixe pour l’instant
        }
 
        return st;
    }
 
 
-
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode d'instance 'unmakeMove' permettant d'annuler un move de test et de rétablir le board
    // initial en restaurant les positions et indicateurs d'avant move
    -(void)unmakeMove:(Move *)m state:(MoveState)st
    {
-       Piece *moving = pieceCase[m.dest.x][m.dest.y];
+       int fx = SQ_X(m.fromSquare);
+       int fy = SQ_Y(m.fromSquare);
+       int tx = SQ_X(m.toSquare);
+       int ty = SQ_Y(m.toSquare);
 
+       Piece *moving = pieceCase[tx][ty];
        NSAssert(moving != nil, @"unmakeMove: case dest vide");
 
        // Annuler promotion
@@ -723,11 +729,9 @@
            moving.type = st.oldType;
        }
 
-       pieceCase[m.start.x][m.start.y] = moving;
-       pieceCase[m.dest.x][m.dest.y]  = st.captured;
+       pieceCase[fx][fy] = moving;
+       pieceCase[tx][ty] = st.captured;
    }
-
-
 
 
 @end

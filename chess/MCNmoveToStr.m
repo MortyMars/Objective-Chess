@@ -19,7 +19,7 @@
 @implementation MCNmoveToStr
 
 
-   //***************************************************************************************************
+   // ==================================================================================================
    // Méthode de classe
    // MCN - Extraction Transformation
    +(NSMutableString *) ConvertEnStringMove:(Move *) move
@@ -74,7 +74,7 @@
    } // Fin de ConvertEnStringMove
 
 
-   //***************************************************************************************************
+   // ==================================================================================================
    // Méthode de classe
    // Mise en forme de la suite des coups, pour avoir deux déplacements par ligne (Blancs puis Noirs)
    +(void) MettreEnFormeChaine:(NSString *) moveToStr
@@ -110,7 +110,7 @@
    } // Fin de 'MettreEnFormeChaine'
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Méthode de classe
    // Transforme la représentation des coups (1 , 1) vers (2 , 2) en a1-b2
    // La méthode est appelée par ConvertEnStringMove et par certains contrôle de NSLog

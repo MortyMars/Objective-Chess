@@ -48,7 +48,7 @@
       NSLog(@"\n\n Valeur de retour de NegamaxFS = %d \n\n",negaMax);
    }
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Test de détermination du coup ultime pour le Mat du berger
    - (void)testCoupDuBerger {
       
@@ -103,7 +103,7 @@
    } // Fin de testCoupDuBerger
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Test permettant de vérifier le solutionnement de cas de mat résolubles idéalement en 3 coups
    // On se contentera ici d'un mat dans les 10 coups que l'on s'accorde pour y parvenir
    -(void) test1MatEn20CoupsMax {
@@ -213,7 +213,7 @@
    } // Fin de test MatEnXcoups
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Test permettant de vérifier le solutionnement de cas de mat résolubles idéalement en 3 coups
    // On se contentera ici d'un mat dans les 10 coups que l'on s'accorde pour y parvenir
    -(void) test2MatEn20CoupsMax {
@@ -297,14 +297,14 @@
 
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Test de performance
    -(void)testPerformanceBestMoveFS
    {
       // This is an example of a performance test case.
       [self measureBlock:^{
          // Put the code you want to measure the time of here.
-         [maMinimax BestMoveForSide:sideWhite board:[BoardsForTests ConfigBoardMatEn3Cas2]];
+         [maMinimax BestMoveForSide:sideWhite Board:[BoardsForTests ConfigBoardMatEn3Cas2]];
       }];
       
       /* Résultat du test réalisé le 28 mars :
@@ -330,7 +330,7 @@
    }
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Test de performance
    -(void)testPerformancePossibleMoveFS {
       // This is an example of a performance test case.
@@ -355,7 +355,7 @@
    }
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Test de performance
    -(void)testPerformancePerformMove {
       // This is an example of a performance test case.
@@ -363,7 +363,7 @@
          // Put the code you want to measure the time of here.
          Pos *Depart =  [[Pos alloc] initWithX:5 y:4];
          Pos *Arrivee = [[Pos alloc] initWithX:1 y:0];
-         Move *moveTest = [[Move alloc] initWithStart:Depart dest:Arrivee];
+         Move *moveTest = [[Move alloc] initWithStart:Depart Dest:Arrivee];
          ChessBoard *perfBoard = [BoardsForTests ConfigBoardMatEn3Cas2];
          [perfBoard PerformMove:moveTest];
       }];
@@ -384,7 +384,7 @@
    }
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Test de performance
    -(void)testPerformanceEvalBoardFS {
       // This is an example of a performance test case.
@@ -408,7 +408,7 @@
    }
 
 
-   // **************************************************************************************************
+   // ==================================================================================================
    // Test de performance
    -(void)testPerformanceNegamaxFS {
       // This is an example of a performance test case.
@@ -445,7 +445,7 @@
    }
 
 
-   // ******************************
+   // ==============================
    // Test de la fonction d'évaluation
    -(void)testFonctEvaluation {
 

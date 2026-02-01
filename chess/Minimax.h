@@ -56,20 +56,20 @@
 
 
    // MÉTHODES AJOUTÉES POUR LE REFACTORING DU MOTEUR
-   -(void)generatePseudoMovesForSide:(Side)side
+   -(void)GenMovesForSide:(Side)side
                                board:(ChessBoard *)board
                                 into:(NSMutableArray<Move *> *)moves;
 
-   -(void)generateCaptureMovesForSide:(Side)side
+   -(void)GenCapturForSide:(Side)side
                               board:(ChessBoard *)board
                               into:(NSMutableArray<Move *> *)moves;
-   -(BOOL)kingInCheck:(Side)side board:(ChessBoard *)board;
+   -(BOOL)IsKingInCheck:(Side)side board:(ChessBoard *)board;
 
    
 // DÉCLARATION DES MÉTHODES D'INSTANCE
    // Méthode de classe déterminant le meilleur coup pour 'side''
    -(Move *)   BestMoveForSide:(Side)side             // côté blanc ou côté noir
-                         board:(ChessBoard *)board;   // et selon la configuration de l'échiquier courant
+                         Board:(ChessBoard *)board;   // et selon la configuration de l'échiquier courant
 
    // Méthode de classe évaluant l'échiquier à un moment donné de la partie
    -(int)      EvalBoardForSide:(Side)side
