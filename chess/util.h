@@ -4,6 +4,8 @@
 //  Copyright (c) 2013 Andrew Wang. All rights reserved
 //  Updated by MCN in 2020 and 2026 (engine refactoring)
 
+// =====================================================================================================
+// DEFINE ET MACROS
 
 /* MCN - Macro permettant de supprimer les indications Date, Heure, Appli, ... des messages NSLog */
 #define NSLog(FORMAT, ...) printf("%s\n", [[NSString stringWithFormat:FORMAT, ##__VA_ARGS__] UTF8String]);
@@ -20,12 +22,22 @@
     ([NSString stringWithFormat:@"%c%d", 'a'+SQ_X(sq), SQ_Y(sq)+1])
 
 
+// =====================================================================================================
+// TYPEDEF
 
 /* 'Square' représente les cases de l'échiquier sous la forme d'un int entre 0 et 63
- La transposition en coordonnées x (colonnes) et y (rangées) s'opère grâce aux macros ci-dessus */
+La transposition en coordonnées x (colonnes) et y (rangées) s'opère grâce aux macros ci-dessus
+L'ordre de numérotation arbitraire est le suivant (les blancs sont en bas) :
+       0  1  2  3  4  5  6  7       (rangée y=0 *8=0  + colonne x=0 à 7)
+       8  9 10 11 12 13 14 15       (rangée y=1 *8=8  + colonne x=0 à 7)
+      16 17 18 19 20 21 22 23       (rangée y=2 *8=16 + colonne x=0 à 7)
+      24 25 26 27 28 29 30 31       (rangée y=3 *8=24 + colonne x=0 à 7)
+      32 33 34 35 36 37 38 39       (rangée y=4 *8=32 + colonne x=0 à 7)
+      40 41 42 43 44 45 46 47       (rangée y=5 *8=40 + colonne x=0 à 7)
+      48 49 50 51 52 53 54 55       (rangée y=6 *8=48 + colonne x=0 à 7)
+      56 57 58 59 60 61 62 63       (rangée y=7 *8=56 + colonne x=0 à 7)      */
+
 typedef int Square;
-
-
 
 
 /* 'PieceType' définit -via une énum- un nouveau type de données pour les pièces du jeu.
@@ -37,15 +49,14 @@ Sachant que le premier type dans l'énum porte l'indice 0, que le deuxième port
 on déduit de l'ordre fixé dans l'énum, qu'une pièce invalide ou l'absence de pièce sera représentée par '0'
 un pion '1', un cavalier '2', un fou '3', une tour '4', une dame '5', et un roi '6' d'où la matrice de départ
 de partie (les blancs sont en bas) :
-
-           4 2 3 5 6 3 2 4
-           1 1 1 1 1 1 1 1
-           0 0 0 0 0 0 0 0
-           0 0 0 0 0 0 0 0
-           0 0 0 0 0 0 0 0
-           0 0 0 0 0 0 0 0
-           1 1 1 1 1 1 1 1
-           4 2 3 5 6 3 2 4      */
+      4  2  3  5  6  3  2  4
+      1  1  1  1  1  1  1  1
+      0  0  0  0  0  0  0  0
+      0  0  0  0  0  0  0  0
+      0  0  0  0  0  0  0  0
+      0  0  0  0  0  0  0  0
+      1  1  1  1  1  1  1  1
+      4  2  3  5  6  3  2  4         */
 
 typedef enum {Invalide, Pion, Cava, Fou,
               Tour, Dame, Roi} PieceType;
@@ -55,10 +66,12 @@ typedef enum {Invalide, Pion, Cava, Fou,
 Chaque 'Side' ici défini prend la valeur de son indice dans l'enum
 Ainsi on peut écrire que sideInvalid = 0, sideBlack = 1, et sideWhite = 2, mais il est beaucoup
 plus efficace dans le code d'utiliser leur mnémonique plutôt que leur valeur intrinsèque */
+
 typedef enum {sideInvalid, sideBlack, sideWhite} Side;
 
 
-
+// =====================================================================================================
+// VARIABLES GLOBALES
 
 /* Ajout de variables globales (pardon aux puristes défenseurs du code)
 Chacune de ces variables ont des implantations dans le code de plusieurs Classes.

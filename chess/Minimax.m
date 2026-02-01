@@ -117,28 +117,12 @@ static int nodes = 0;
          BOOL isDangerous = NO;
          
          /* Valeur de la pièce qui bouge */
-         int movingValue = 0;
-         switch (movingPiece.type) {
-            case Dame: movingValue = 900; break;
-            case Tour: movingValue = 500; break;
-            case Fou:
-            case Cava: movingValue = 300; break;
-            case Pion: movingValue = 100; break;
-            case Roi: movingValue = 0; break;
-            default: break;
-         }
+         int movingValue = [self ValueOfPiece:movingPiece.type];
          
          /* Valeur capturée */
          int capturedValue = 0;
          if (capturedPiece && capturedPiece.type != Invalide) {
-            switch (capturedPiece.type) {
-               case Dame: capturedValue = 900; break;
-               case Tour: capturedValue = 500; break;
-               case Fou:
-               case Cava: capturedValue = 300; break;
-               case Pion: capturedValue = 100; break;
-               default: break;
-            }
+            int capturedValue = [self ValueOfPiece:capturedPiece.type];
          }
          
          /* Vérifier seulement pour les pièces chères */
@@ -1254,11 +1238,11 @@ static int nodes = 0;
    - (int)ValueOfPiece:(PieceType)p
    {
        switch (p) {
-           case Pion       : return 100;
-           case Cava       : return 320;
-           case Fou        : return 330;
-           case Tour       : return 500;
-           case Dame       : return 900;
+           case Pion       : return 100;     // valeur de base
+           case Cava       : return 300;     // 3 Pions
+           case Fou        : return 310;     // 3 Pions mais avec une préf. // Cava
+           case Tour       : return 500;     // 5 Pions et moins que Fou + Cava
+           case Dame       : return 900;     // 9 Pions et moins que 2 Tours
            case Roi        : return 20000;
            case Invalide   : return 0;
            default         : return 0;

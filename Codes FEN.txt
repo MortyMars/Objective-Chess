@@ -4,7 +4,7 @@
 //  Copyright © 2022 MCN. All rights reserved
 
  -----------------------------------------------------------------------------------------------------------------------
-|			Codes FEN (à copier /coller à l'invit de l'appli)                 |  Commentaires                                |
+|			Codes FEN (à copier /coller à l'invit de l'appli)                 |  Commentaires                              |
  --------------------------------------------------------------------------|--------------------------------------------
                                                                            |
 Board de début de partie standard :									               |
