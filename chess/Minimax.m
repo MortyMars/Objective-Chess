@@ -95,7 +95,7 @@ static int nodes = 0;
       
       /* PRÉREQUIS : Tester si side est mat ou pat */
       if (movesPossibles.count == 0) {
-         [self NotifiePatMatDesSide:side onBoard:board];
+         [monControleur AlertMsgPatMatSide:side onBoard:board];
          return nil;
       }
       
@@ -961,7 +961,8 @@ static int nodes = 0;
       // Message en Log
       strOtherSide = (side == sideWhite)? @"Noir":@"Blanc";
       if ([strEchec isEqual:@"Echec"]) {
-         [monMCNControleur.maChessView.delegate AlerteEchecRoiSide:otherSide];
+         //[monControleur.maChessView.delegate AlertMsgEchecSide:otherSide];
+         [monControleur AlertMsgEchecSide:otherSide];
          NSLog(@"\nLe Roi %@ est en situation : %@", strOtherSide, strEchec);
       }
       
@@ -997,13 +998,13 @@ static int nodes = 0;
    }
 
 
-   // ================================================================================================
-   // MÉTHODE 10 : NotifiePatMatDesSide - GESTION FIN DE PARTIE
-   -(void)NotifiePatMatDesSide:(Side)side
+   /* // ================================================================================================
+   // MÉTHODE 10 : AlertMsgPatMatSide - GESTION FIN DE PARTIE
+   -(void)AlertMsgPatMatSide:(Side)side
                        onBoard:(ChessBoard*)board
    {
       if ([self TestEchecRoiSide:side inBoard:board]) {
-         /* MAT DÉTECTÉ */
+         // MAT DÉTECTÉ
          NSString *msgTitre;
          NSString *msgInfo;
          
@@ -1014,19 +1015,19 @@ static int nodes = 0;
             stringCoupsPartie = [stringCoupsPartie substringWithRange:NSMakeRange(0,stringCoupsPartie.length-1)];
          }
          
-         monMCNControleur.lblEchec.cell.stringValue = @"Échec et Mat !";
+         monControleur.lblEchec.cell.stringValue = @"Échec et Mat !";
          
          if (side == sideBlack) {
             msgTitre = @"Les NOIRS sont Mat !";
             msgInfo  = @"Partie terminée, Les BLANCS gagnent !";
             stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t1-0"];
-            [monMCNControleur MaJtxtCoups];
+            [monControleur MaJtxtCoups];
          }
          else if (side == sideWhite) {
             msgTitre = @"Les BLANCS sont Mat !";
             msgInfo  = @"Partie terminée, Les NOIRS gagnent !";
             stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t0-1"];
-            [monMCNControleur MaJtxtCoups];
+            [monControleur MaJtxtCoups];
          }
          
          NSAlert *alertMat = [[NSAlert alloc] init];
@@ -1045,9 +1046,9 @@ static int nodes = 0;
          NSLog(@"\nLe Roi %@ est Mat\n", strRoiMat);
       }
       else {
-         /* PAT DÉTECTÉ */
+         // PAT DÉTECTÉ
          stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"\n\t1/2-1/2"];
-         [monMCNControleur MaJtxtCoups];
+         [monControleur MaJtxtCoups];
          
          NSString *msgTitre;
          NSString *msgInfo;
@@ -1061,7 +1062,7 @@ static int nodes = 0;
             msgInfo  = @"Le Roi Blanc est Pat, la partie est déclarée nulle !";
          }
          
-         monMCNControleur.lblEchec.cell.stringValue = @"Pat !";
+         monControleur.lblEchec.cell.stringValue = @"Pat !";
          
          NSAlert *alertPat = [[NSAlert alloc] init];
          [alertPat addButtonWithTitle:@"OK"];
@@ -1078,7 +1079,7 @@ static int nodes = 0;
          NSString *strRoiPat = (side == sideBlack)? @"\"Noirs\"":@"\"Blancs\"";
          NSLog(@"\nLe Roi %@ est Pat\n", strRoiPat);
       }
-   }
+   }   */
 
 
    // ================================================================================================
@@ -1278,6 +1279,7 @@ static int nodes = 0;
       nodes++;
       
       Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
+      
       BOOL inCheck = [self IsKingInCheck:side board:board];
       
       int standPat = -INF;
@@ -1366,12 +1368,13 @@ static int nodes = 0;
             if (p && p.type == Roi && p.side == side) {
                kingX = x;
                kingY = y;
-               break;
+               //NSLog(@"Pièce trouvée en col:%d rang:%d = %@",x,y,p);
+               break;                                          // On sort du 'for'
             }
          }
       }
       
-      NSAssert(kingX != -1, @"IsKingInCheck: roi introuvable");
+      NSAssert(kingX != -1, @"IsKingInCheck: roi introuvable"); // Assertion problématique...
       
       Side enemy = (side == sideWhite) ? sideBlack : sideWhite;
       
@@ -1384,7 +1387,7 @@ static int nodes = 0;
       for (int i = 0; i < 8; i++) {
          int nx = kingX + knightMoves[i][0];
          int ny = kingY + knightMoves[i][1];
-         if (nx < 0 || nx > 7 || ny < 0 || ny > 7) continue;
+         if (nx < 0 || nx > 7 || ny < 0 || ny > 7) continue;   // On passe à l'itération suivante du 'for'
          
          Piece *p = board->pieceCase[nx][ny];
          if (p && p.side == enemy && p.type == Cava)
@@ -1523,14 +1526,14 @@ static int nodes = 0;
                       board:(ChessBoard *)board
                        into:(NSMutableArray<Move *> *)moves
    {
-      /* Le nouveau moteur basé sur make/unmake est déconnecté de l'UI quant au déplacement des pièces car
-      il est toujours calé sur l'orientation classique 'Blancs en bas' et se trouve donc en 'inversion'
-      potentielle lorsque l'on joue les Noirs et que l'UI retourne le board. Cette 'inversion' n'a cependant
+      /* Le nouveau moteur basé sur make/unmake est désynchronisé de l'UI quant aux déplacements des pièces
+      car il est toujours calé sur l'orientation classique 'Blancs en bas' et se trouve donc en 'inversion'
+      relative lorsque l'on joue les Noirs et que l'UI retourne le board. Cette 'inversion' n'a cependant
       aucun effet sur le déplacement des pièces qui peuvent 'avancer' ou 'reculer', càd toutes à l'exception
-      du pion qui est la seule pièce orientée.
-      Ceci oblige à inverser le sens de déplacement des pions lorsque les noirs sont en bas : le pion blanc
-      doit progresser vers le bas et le pion noir vers le haut. C'est le but du bloc ci-dessous, qui modifie
-      au passage la définition des rangs de départ à partir desquels le pion peut avancer de 2 cases      */
+      du pion qui est la seule pièce orientée. L'inversion du sens de déplacement des pions lorsque les noirs
+      sont en bas, permet ainsi aux pions blancs de progresser vers le bas et aux pions noirs vers le haut.
+      C'est le but du bloc ci-dessous, qui modifie au passage la définition des rangs de départ à partir
+      desquels un pion peut avancer de 2 cases                                                             */
       int dir;
       int startRank;
       if (sideJoueur == sideWhite) {
@@ -1541,7 +1544,7 @@ static int nodes = 0;
          dir = (p.side == sideWhite) ? -1 : 1;
          startRank = (p.side == sideWhite) ? 6 : 1;
       }
-      /* Fin de modif du sens de déplacement des pions pour new engine ---------------------------------- */
+      /* Fin de modif du sens de déplacement des pions pour new engine ----------------------------------- */
       
       // 1️⃣ Avance simple
       int ny = y + dir;
@@ -1872,13 +1875,13 @@ static int nodes = 0;
                        board:(ChessBoard *)board
                         into:(NSMutableArray<Move *> *)moves
    {
-      /* Le nouveau moteur basé sur make/unmake est déconnecté de l'UI quant au déplacement des pièces car
-      il est toujours calé sur l'orientation classique 'Blancs en bas' et se trouve donc en 'inversion'
-      potentielle lorsque l'on joue les Noirs et que l'UI retourne le board. Cette 'inversion' n'a cependant
+      /* Le nouveau moteur basé sur make/unmake est désynchronisé de l'UI quant aux déplacements des pièces
+      car il est toujours calé sur l'orientation classique 'Blancs en bas' et se trouve donc en 'inversion'
+      relative lorsque l'on joue les Noirs et que l'UI retourne le board. Cette 'inversion' n'a cependant
       aucun effet sur le déplacement des pièces qui peuvent 'avancer' ou 'reculer', càd toutes à l'exception
-      du pion qui est la seule pièce orientée.
-      Ceci oblige à inverser le sens de déplacement des pions lorsque les noirs sont en bas : le pion blanc
-      doit progresser vers le bas et le pion noir vers le haut. C'est le but du bloc ci-dessous          */
+      du pion qui est la seule pièce orientée. L'inversion du sens de déplacement des pions lorsque les noirs
+      sont en bas, permet ainsi aux pions blancs de progresser vers le bas et aux pions noirs vers le haut.
+      C'est le but du bloc ci-dessous.                                                                     */
       int dir;
       if (sideJoueur == sideWhite) {
          dir = (p.side == sideWhite) ? 1 : -1;
@@ -1886,7 +1889,7 @@ static int nodes = 0;
       else {
          dir = (p.side == sideWhite) ? -1 : 1;
       }
-      /* Fin de modif du sens de déplacement des pions pour new engine --------------------------------- */
+      /* Fin de modif du sens de déplacement des pions pour new engine ----------------------------------- */
       
       
       int ny = y + dir;

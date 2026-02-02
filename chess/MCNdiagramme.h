@@ -41,7 +41,7 @@
                                  PrecBoard:(ChessBoard *)precBoard
                                   StrCheck:(NSString *)strCheck;
    
-   +(void)       SilentNotifiePatMatDesSide:(Side)side
+   +(void)       SilentAlertMsgPatMatSide:(Side)side
                                     onBoard:(ChessBoard*)board;
 
 @end

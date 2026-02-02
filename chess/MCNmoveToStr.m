@@ -105,7 +105,7 @@
                            [NSString stringWithFormat:@"%@ : %@", strJ_IA, moveToStr]];
       
       // Mise à jour du contrôle 'txtView' affichant la liste des coups
-      [monMCNControleur MaJtxtCoups];
+      [monControleur MaJtxtCoups];
       
    } // Fin de 'MettreEnFormeChaine'
 

@@ -11,7 +11,7 @@
 @class ChessBoard, Pos;
 
 @protocol ChessViewDelegate <NSObject>
-   -(void)AlerteEchecRoiSide:(Side)side;
+   -(void)AlertMsgEchecSide:(Side)side;
 @end
 
 @interface ChessView : NSView

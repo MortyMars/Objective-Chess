@@ -82,7 +82,8 @@
    @property (strong) IBOutlet NSMenuItem *menuPoursuivre;
 
    /* Déclaration des Méthodes gérant les NSAlert déléguées */
-   -(void) AlerteEchecRoiSide:(Side) side;
+   -(void) AlertMsgEchecSide:(Side) side;
+   -(void)AlertMsgPatMatSide:(Side)side onBoard:(ChessBoard*)board;
 
 
 @end

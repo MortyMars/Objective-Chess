@@ -111,7 +111,7 @@
       [menuChampion  setState:NO];
       NUMBER_MOVES_AHEAD = 1;
       //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
-      monMCNControleur.lblInfo.cell.stringValue =
+      monControleur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
 
@@ -123,7 +123,7 @@
       [menuChampion  setState:NO];
       NUMBER_MOVES_AHEAD = 2;
       //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
-      monMCNControleur.lblInfo.cell.stringValue =
+      monControleur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
 
@@ -135,7 +135,7 @@
       [menuChampion  setState:NO];
       NUMBER_MOVES_AHEAD = 3;
       //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
-      monMCNControleur.lblInfo.cell.stringValue =
+      monControleur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
 
@@ -147,7 +147,7 @@
       [menuChampion  setState:NO];
       NUMBER_MOVES_AHEAD = 4;
       //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
-      monMCNControleur.lblInfo.cell.stringValue =
+      monControleur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
 
@@ -159,21 +159,21 @@
       [menuChampion  setState:YES];
       NUMBER_MOVES_AHEAD = 5;
       //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
-      monMCNControleur.lblInfo.cell.stringValue =
+      monControleur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
    // Fin de gestion des items du menu 'Partie->Difficulté'
 
    // ==================================================================================================
    // Méthode d'affichage DÉLÉGUÉE
-   // d'une boite de dialogue signalant qu'un camp est en position d'échec
-   -(void)AlerteEchecRoiSide:(Side)side {
+   // d'une boite de dialogue signalant qu'un camp est en position d'ÉCHEC
+   -(void)AlertMsgEchecSide:(Side)side {
       
       NSString *msgTitre;
       NSString *msgInfo;
       int bouton;
       
-      if (sideCourant == sideWhite) {
+      if (side == sideBlack) {
          msgTitre = @"Le Roi NOIR est en position d'Échec !";
          msgInfo  = @"OK pour poursuivre la partie...";
       }
@@ -194,6 +194,93 @@
       qu'interrompre le programme en attente d'un clic sur 'OK', bouton = 1 n'est qu'un artifice */
       
    }
+
+
+// ================================================================================================
+// Méthode d'affichage DÉLÉGUÉE
+// d'une boite de dialogue signalant qu'un camp est en position de MAT ou de PAT
+-(void)AlertMsgPatMatSide:(Side)side
+                    onBoard:(ChessBoard*)board
+{
+   if ([maMinimax IsKingInCheck:(side) board:(board)]) {
+      /* Roi en échec --> MAT DÉTECTÉ
+      car on a appelé la méthode APRÈS avoir vérifié que le Roi side n'a pas d'échappatoire */
+      NSString *msgTitre;
+      NSString *msgInfo;
+      
+      while ([stringCoupsPartie characterAtIndex:(stringCoupsPartie.length-1)] == ' ') {
+         stringCoupsPartie = [stringCoupsPartie substringWithRange:NSMakeRange(0,stringCoupsPartie.length-1)];
+      }
+      while ([stringCoupsPartie characterAtIndex:(stringCoupsPartie.length-1)] == '+') {
+         stringCoupsPartie = [stringCoupsPartie substringWithRange:NSMakeRange(0,stringCoupsPartie.length-1)];
+      }
+      
+      monControleur.lblEchec.cell.stringValue = @"Échec et Mat !";
+      
+      if (side == sideBlack) {
+         msgTitre = @"Les NOIRS sont Mat !";
+         msgInfo  = @"Partie terminée, Les BLANCS gagnent !";
+         stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t1-0"];
+         [monControleur MaJtxtCoups];
+      }
+      else if (side == sideWhite) {
+         msgTitre = @"Les BLANCS sont Mat !";
+         msgInfo  = @"Partie terminée, Les NOIRS gagnent !";
+         stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t0-1"];
+         [monControleur MaJtxtCoups];
+      }
+      
+      NSAlert *alertMat = [[NSAlert alloc] init];
+      [alertMat addButtonWithTitle:@"OK"];
+      [alertMat setMessageText:msgTitre];
+      [alertMat setInformativeText:msgInfo];
+      [alertMat setAlertStyle:NSAlertStyleInformational];
+      
+      NSModalResponse boutonChoisi = [alertMat runModal];
+      if (boutonChoisi == NSAlertFirstButtonReturn) {
+         stopMatOuPat = YES;
+      }
+      
+      // Message en Log
+      NSString *strRoiMat = (side == sideBlack)? @"\"Noirs\"":@"\"Blancs\"";
+      NSLog(@"\nLe Roi %@ est Mat\n", strRoiMat);
+   }
+   else {
+      /* Roi pas en échec --> PAT DÉTECTÉ */
+      stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"\n\t1/2-1/2"];
+      [monControleur MaJtxtCoups];
+      
+      NSString *msgTitre;
+      NSString *msgInfo;
+      
+      if (side == sideBlack) {
+         msgTitre = @"Les NOIRS sont Pat !";
+         msgInfo  = @"Le Roi Noir est Pat, la partie est déclarée nulle !";
+      }
+      else if (side == sideWhite) {
+         msgTitre = @"Les BLANCS sont Pat !";
+         msgInfo  = @"Le Roi Blanc est Pat, la partie est déclarée nulle !";
+      }
+      
+      monControleur.lblEchec.cell.stringValue = @"Pat !";
+      
+      NSAlert *alertPat = [[NSAlert alloc] init];
+      [alertPat addButtonWithTitle:@"OK"];
+      [alertPat setMessageText:msgTitre];
+      [alertPat setInformativeText:msgInfo];
+      [alertPat setAlertStyle:NSAlertStyleInformational];
+      
+      NSModalResponse boutonChoisi = [alertPat runModal];
+      if (boutonChoisi == NSAlertFirstButtonReturn) {
+         stopMatOuPat = YES;
+      }
+      
+      // Message en Log
+      NSString *strRoiPat = (side == sideBlack)? @"\"Noirs\"":@"\"Blancs\"";
+      NSLog(@"\nLe Roi %@ est Pat\n", strRoiPat);
+   }
+}
+
 
 
 

@@ -58,7 +58,7 @@
       // À partir de là on attend Dh5xf7# ou Fc4xf7# (Dh5xf7+ ou Fc4xf7+ en mode dégradé)...
       
       // Récupération du 'focus' sur le ChessView instancié par l'application
-      ChessView *testView = monMCNControleur.maChessView;
+      ChessView *testView = monControleur.maChessView;
       
       testView.needsDisplay = YES;
       
@@ -149,7 +149,7 @@
       //[Minimax EvalBoardForSide:sideWhite board:testBoard];
       
       // Récupération du 'focus' sur le ChessView instancié par l'application
-      ChessView *testView = monMCNControleur.maChessView;
+      ChessView *testView = monControleur.maChessView;
       
       testView.needsDisplay = YES;
       
@@ -253,7 +253,7 @@
       }
       
       // Récupération du 'focus' sur le ChessView instancié par l'application
-      ChessView *testView = monMCNControleur.maChessView;
+      ChessView *testView = monControleur.maChessView;
       
       testView.needsDisplay = YES;
       

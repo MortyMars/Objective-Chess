@@ -109,7 +109,7 @@ extern int NUMBER_MOVES_AHEAD;
 /* Création d'une variable globale particulière, de type MCNconnecteur, ayant pour but de contrôler l'UI par
 le code après lui avoir affecté la valeur de l'objet controleur instancié par AppDelegate (cf. cette classe) */
 @class MCNconnecteur;
-extern MCNconnecteur *monMCNControleur;
+extern MCNconnecteur *monControleur;
 
 // Déclaration de 2 tableaux intervenant dans la 'description' des Pos et des Move
 extern int Absc1[8];

@@ -8,7 +8,7 @@
 
 @implementation AppDelegate
 
-   @synthesize monMCNconnecteur; // MCN
+   @synthesize monMCNConnecteur; // MCN
    //@synthesize maMinimax;
 
    // ==================================================================================================
@@ -31,36 +31,36 @@
       
       // MCN - MàJ des repères de cases selon l'affichage standard
       sideJoueur = sideWhite;  sideIA = sideBlack; //choix arbitraire à ce stade, qui sera confirmé + tard
-      [monMCNconnecteur MajReperesCases];
+      [monMCNConnecteur MajReperesCases];
       
       /* MCN - MàJ du listing des coups joués
       'InitialiseTxtCoups' est appelée afin d'afficher le premier coup lorsque l'IA a les Blancs, sachant
       qu'il faut d'abord définir la police utilisée dans le contrôle txtCoups (exigence de TextView)...  */
-      [monMCNconnecteur.txtCoups setFont:[NSFont fontWithName:@"Helvetica" size:14]];
-      //[monMCNconnecteur InitialiseTxtCoups:stringCoupsPartie];
+      [monMCNConnecteur.txtCoups setFont:[NSFont fontWithName:@"Helvetica" size:14]];
+      //[monMCNConnecteur InitialiseTxtCoups:stringCoupsPartie];
       
       // MCN - Initialisation des indicateurs
-      monMCNconnecteur.indicIAdoitJouer.transparent = YES;
-      monMCNconnecteur.indicJdoitJouer.transparent = NO;
+      monMCNConnecteur.indicIAdoitJouer.transparent = YES;
+      monMCNConnecteur.indicJdoitJouer.transparent = NO;
       
       /* MCN - Initialisation du niveau de prospection de l'IA par appel de la méthode 'SetDifficulty' ad-hoc
       On note qu'ici c'est AppDelegate (self) qui envoi le message à SetDifficulty3 qui est une IBAction
       ici on choisit le niveau 2... qui correspond à fixer NUMBER_MOVE_AHEAD à 3
       (le mini = Difficulty1 -> NUMBER_MOVE_AHEAD = 0, et le maxi = Difficulty5 -> NUMBER_MOVE_AHEAD = 4) */
-      [monMCNconnecteur SetDifficulty3:self];
+      [monMCNConnecteur SetDifficulty3:self];
       
       /* MCN - INITIALISATION DE LA VARIABLE GLOBALE 'monMCNcontroleur' DÉCLARÉE DANS 'UTIL.H'.
-      LA VARIABLE EST IDENTIFIÉE ICI COMME ÉTANT L'OBJET 'monMCNconnecteur' INSTANCIÉ DANS APPDELEGATE.
-      ELLE EN PREND AVANTAGEUSEMENT LA PLACE PUISQUE L'INSTANCE COURANTE 'monMCNconnecteur' PERDRA LE FOCUS
+      LA VARIABLE EST IDENTIFIÉE ICI COMME ÉTANT L'OBJET 'monMCNConnecteur' INSTANCIÉ DANS APPDELEGATE.
+      ELLE EN PREND AVANTAGEUSEMENT LA PLACE PUISQUE L'INSTANCE COURANTE 'monMCNConnecteur' PERDRA LE FOCUS
       SUR L'UI DÈS QUE L'ON SORTIRA DE 'APPLICATIONDIDFINISHLAUNCHING' ET N'AURA PLUS D'UTILITÉ.
       'monMCNcontroleur' DEVIENT DÈS LORS LE SEUL MOYEN EFFICACE D'INTERAGIR ULTÉRIEUREMENT ET DIRECTEMENT
       AVEC L'INTERFACE  DURANT TOUTE LA DURÉE DE VIE DE L'APPLICATION.
       (J'imagine qu'il doit exister un moyen plus élégant de parvenir aux mêmes fins, mais à ce stade de mes
       essais c'est le seul trouvé qui fonctionne efficacement, et c'est tout ce qui m'importe finalement.) */
-      monMCNControleur = monMCNconnecteur;
+      monControleur = monMCNConnecteur;
       
       // Revoir finalité de cette commande car je ne me rappelle plus...
-      monMCNControleur.maChessView.delegate = monMCNControleur;
+      monControleur.maChessView.delegate = monControleur;
       
       /* Initialisation de la variable */
       //maMinimax = maMinimax;

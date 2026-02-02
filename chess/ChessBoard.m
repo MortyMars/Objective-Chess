@@ -60,11 +60,11 @@
       // Réinitialisation de la liste des coups
       stringCoupsPartie = @"";
       numCoup = 2; // N° des coups joués, initialisé à 2 car le n°1 est intégré au 1er coup
-      [monMCNControleur MaJtxtCoups];
+      [monControleur MaJtxtCoups];
       
       // Définition Couleurs Joueur et IA et MàJ repères de cases
       sideJoueur = sideWhite;    sideIA = sideBlack;
-      [monMCNControleur MajReperesCases];
+      [monControleur MajReperesCases];
       
       // Les pièces sont créées sur le board, les BLANCS en BAS
       [self SetupPieces];
@@ -73,12 +73,12 @@
 
       
       // Chargement du board dans la vue active et rafraichissement
-      monMCNControleur.maChessView->liveBoard = self;
-      monMCNControleur.maChessView.needsDisplay = YES;
+      monControleur.maChessView->liveBoard = self;
+      monControleur.maChessView.needsDisplay = YES;
       
       //MàJ des menus
-      monMCNControleur.menuPoursuivre.title = @"Poursuivre avec les Noirs";
-      monMCNControleur.menuPoursuivre.enabled = YES;
+      monControleur.menuPoursuivre.title = @"Poursuivre avec les Noirs";
+      monControleur.menuPoursuivre.enabled = YES;
       
    }
 
@@ -107,11 +107,11 @@
       // Réinitialisation de la liste des coups
       stringCoupsPartie = @"";
       numCoup = 2; // N° des coups joués, initialisé à 2 car le n°1 est intégré au 1er coup
-      [monMCNControleur MaJtxtCoups];
+      [monControleur MaJtxtCoups];
       
       // Définition Couleurs Joueur et IA et MàJ repères de cases
       sideJoueur = sideBlack;    sideIA = sideWhite;
-      [monMCNControleur MajReperesCases];
+      [monControleur MajReperesCases];
       
       // Les pièces sont créées sur le board, les NOIRS en BAS
       [self SetupPieces];
@@ -120,15 +120,15 @@
 
       
       // Chargement du board dans la vue active et rafraichissement
-      monMCNControleur.maChessView->liveBoard = self;
-      monMCNControleur.maChessView.needsDisplay = YES;
+      monControleur.maChessView->liveBoard = self;
+      monControleur.maChessView.needsDisplay = YES;
       
       // Affichage du 1er coup de l'IA qui joue les BLANCS
-      [monMCNControleur InitialiseTxtCoups:stringCoupsPartie];
+      [monControleur InitialiseTxtCoups:stringCoupsPartie];
       
       //MàJ des menus
-      monMCNControleur.menuPoursuivre.title = @"Poursuivre avec les Blancs";
-      monMCNControleur.menuPoursuivre.enabled = YES;
+      monControleur.menuPoursuivre.title = @"Poursuivre avec les Blancs";
+      monControleur.menuPoursuivre.enabled = YES;
       
    }
 
@@ -138,7 +138,7 @@
    - (IBAction)RetournerBoard:(id)sender {
       
       // Recopie des pièces du boardA vers le boardB
-      ChessBoard *boardA = monMCNControleur.maChessView->liveBoard;
+      ChessBoard *boardA = monControleur.maChessView->liveBoard;
       ChessBoard *boardB = [[ChessBoard alloc]init];
       for (int x=0; x<8; x++) {
          for (int y=0; y<8; y++){
@@ -155,34 +155,34 @@
       boardB->nbEntiers  = boardA->nbEntiers;
       
       // Focus sur le nouveau board
-      monMCNControleur.maChessView->liveBoard = boardB;
-      monMCNControleur.maChessView.needsDisplay = YES;
+      monControleur.maChessView->liveBoard = boardB;
+      monControleur.maChessView.needsDisplay = YES;
       
       // Recalage de la partie
       if (sideJoueur == sideWhite) {
          sideJoueur = sideBlack;
          sideIA = sideWhite;
-         [monMCNControleur.maChessView MakeIAMoveForSide:sideWhite Board:boardB];
+         [monControleur.maChessView MakeIAMoveForSide:sideWhite Board:boardB];
          sideCourant = sideBlack;
       }
       else if (sideJoueur == sideBlack) {
          sideJoueur = sideWhite;
          sideIA = sideBlack;
-         [monMCNControleur.maChessView MakeIAMoveForSide:sideBlack Board:boardB];
+         [monControleur.maChessView MakeIAMoveForSide:sideBlack Board:boardB];
          sideCourant = sideWhite;
       }
       
       // MàJ repérage des cases et de la 'status bar'
-      [monMCNControleur MajReperesCases];
-      monMCNControleur.lblRoque.cell.stringValue   = [NSString stringWithFormat:@"Roque : %@",      boardB->strRoque];
-      monMCNControleur.lblCibleEP.cell.stringValue = [NSString stringWithFormat:@"Cible e.p. : %@", boardB->strCibleEP];
-      monMCNControleur.lbl50Coups.cell.stringValue = [NSString stringWithFormat:@"50 demis : %d",   boardB->nbDemis];
-      monMCNControleur.lblNumCoup.cell.stringValue = [NSString stringWithFormat:@"Coup n° : %d",    boardB->nbEntiers];
+      [monControleur MajReperesCases];
+      monControleur.lblRoque.cell.stringValue   = [NSString stringWithFormat:@"Roque : %@",      boardB->strRoque];
+      monControleur.lblCibleEP.cell.stringValue = [NSString stringWithFormat:@"Cible e.p. : %@", boardB->strCibleEP];
+      monControleur.lbl50Coups.cell.stringValue = [NSString stringWithFormat:@"50 demis : %d",   boardB->nbDemis];
+      monControleur.lblNumCoup.cell.stringValue = [NSString stringWithFormat:@"Coup n° : %d",    boardB->nbEntiers];
       
       // MàJ menus
-      if([monMCNControleur.menuPoursuivre.title isEqual:@"Poursuivre avec les Blancs"])
-         monMCNControleur.menuPoursuivre.title = @"Poursuivre avec les Noirs";
-      else      monMCNControleur.menuPoursuivre.title = @"Poursuivre avec les Blancs";
+      if([monControleur.menuPoursuivre.title isEqual:@"Poursuivre avec les Blancs"])
+         monControleur.menuPoursuivre.title = @"Poursuivre avec les Noirs";
+      else      monControleur.menuPoursuivre.title = @"Poursuivre avec les Blancs";
       //boardA = nil;
       
    } // Fin de Méthode 'RetournerBoard'
@@ -533,7 +533,7 @@
       
       /* Si, dans la partie, strRoque est déjà positionnée sur '-' c'est que plus aucun roque n'est autorisé
        Pas la peine alors de rééxécuter la méthode à chaque move...   */
-      if (!([monMCNControleur.maChessView->liveBoard->strRoque isEqual:@"-"])) {
+      if (!([monControleur.maChessView->liveBoard->strRoque isEqual:@"-"])) {
          
          NSString *strProvRoque = @"";
          
@@ -577,7 +577,7 @@
          }
          
          // Affectation de la valeur trouvée à la variable d'instance ad-hoc
-         monMCNControleur.maChessView->liveBoard->strRoque = strProvRoque;
+         monControleur.maChessView->liveBoard->strRoque = strProvRoque;
       }
    }
 
@@ -623,7 +623,7 @@
          }
          else cibleEP = @"-";
       }
-      monMCNControleur.maChessView->liveBoard->strCibleEP = cibleEP;
+      monControleur.maChessView->liveBoard->strCibleEP = cibleEP;
       
    } // Fin de Méthode DeterminerCibleEP
 
@@ -633,8 +633,8 @@
    -(void) CompterDemiCoups:(Move *)move {
       
       if (([self pieceAtPos:move.dest].type != Invalide) || ([self pieceAtPos:move.start].type == Pion))
-         monMCNControleur.maChessView->liveBoard->nbDemis = 0;
-      else  monMCNControleur.maChessView->liveBoard->nbDemis ++;
+         monControleur.maChessView->liveBoard->nbDemis = 0;
+      else  monControleur.maChessView->liveBoard->nbDemis ++;
       
    } // Fin de Méthode CompterDemiCoups
 
@@ -654,14 +654,14 @@
       switch (boutonChoisi) {
          case NSAlertFirstButtonReturn :
             stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"\n\t1/2-1/2"];
-            [monMCNControleur MaJtxtCoups];
+            [monControleur MaJtxtCoups];
             [self AlertePartieNulle];
             stopMatOuPat = YES;
             break;
             
          case NSAlertSecondButtonReturn:
             self->nbDemis=0;
-            monMCNControleur.lbl50Coups.cell.stringValue = [NSString stringWithFormat:@"50 demis : %d", self->nbDemis];
+            monControleur.lbl50Coups.cell.stringValue = [NSString stringWithFormat:@"50 demis : %d", self->nbDemis];
             break;
       }
    } // Fin de Méthode 'NotifieNulle50Coups'

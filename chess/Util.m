@@ -35,7 +35,7 @@ arbitraire-, du 'menu item' n°3 dans 'Partie->Difficulté'. Mais ça n'est qu'u
 car c'est dans AppDelegate que l'on initialise réellement NUMBER_MOVES_AHEAD par appel de
 [MCNconnecteur SetDifficulty1, 2, 3, 4, ou 5] qui positionne au passage le menu ad-hoc */
 
-MCNconnecteur *monMCNControleur = nil;
+MCNconnecteur *monControleur = nil;
 
 // Pré initialisation de maMinimax
 Minimax *maMinimax = nil;

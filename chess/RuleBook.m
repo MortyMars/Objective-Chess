@@ -38,6 +38,7 @@
          
          // Vérification légale via make/unmake
          MoveState st = [board makeMove:m];
+         
          BOOL illegal = [maMinimax IsKingInCheck:piece.side board:board];
          [board unmakeMove:m state:st];
          
@@ -79,6 +80,7 @@
          
          // Vérification légale via make/unmake
          MoveState st = [board makeMove:m];
+         
          BOOL illegal = [maMinimax IsKingInCheck:piece.side board:board];
          [board unmakeMove:m state:st];
          

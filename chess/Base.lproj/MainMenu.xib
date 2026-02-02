@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24128" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24128"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -309,7 +308,7 @@ CA
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <clipView key="contentView" drawsBackground="NO" id="3Yi-Br-mjc">
                             <rect key="frame" x="1" y="1" width="269" height="648"/>
-                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <autoresizingMask key="autoresizingMask"/>
                             <subviews>
                                 <textView editable="NO" importsGraphics="NO" richText="NO" verticallyResizable="YES" spellingCorrection="YES" smartInsertDelete="YES" id="hcA-ub-qgC">
                                     <rect key="frame" x="0.0" y="0.0" width="269" height="648"/>
@@ -439,12 +438,12 @@ CA
         </window>
         <customObject id="kit-5z-Zxr" userLabel="monAppDelegate" customClass="AppDelegate">
             <connections>
-                <outlet property="monMCNconnecteur" destination="YzN-GE-tMw" id="GqI-m1-sHf"/>
+                <outlet property="monMCNConnecteur" destination="YzN-GE-tMw" id="GqI-m1-sHf"/>
                 <outlet property="window" destination="371" id="0Bu-za-7wt"/>
             </connections>
         </customObject>
         <customObject id="oGd-vg-EmX" userLabel="monChessBoard" customClass="ChessBoard"/>
-        <customObject id="YzN-GE-tMw" userLabel="monMCNconnecteur" customClass="MCNconnecteur">
+        <customObject id="YzN-GE-tMw" userLabel="monMCNConnecteur" customClass="MCNconnecteur">
             <connections>
                 <outlet property="chiffresSideBlancs" destination="huy-nn-Je9" id="at3-EP-BsE"/>
                 <outlet property="chiffresSideBlancsGauche" destination="XEc-yi-VdK" id="ZK4-gU-m4f"/>

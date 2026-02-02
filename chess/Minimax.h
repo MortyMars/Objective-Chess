@@ -80,8 +80,7 @@
                               board:(ChessBoard *)board;
 
    // Méthode notifiant s'il y a Pat ou Mat des 'side'
-   -(void)     NotifiePatMatDesSide:(Side)side
-                            onBoard:(ChessBoard*)board;
+   //-(void)     AlertMsgPatMatSide:(Side)side onBoard:(ChessBoard*)board;
 
    // MÉTHODES DE CLASSE MCN
    // Méthode testant si 'side' met son adversaire en échec

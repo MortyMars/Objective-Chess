@@ -16,7 +16,7 @@
    @property (assign) IBOutlet NSWindow *window;
    
    // MCN - Déclaration du MCNconnecteur instancié par AppDelegate
-   @property (strong) IBOutlet MCNconnecteur *monMCNconnecteur;
+   @property (strong) IBOutlet MCNconnecteur *monMCNConnecteur;
 
    //@property Minimax *maMinimax;
 
