@@ -2,7 +2,7 @@
 //  chess
 //  Created by Andrew Wang on 15/07/2013,
 //  Copyright (c) 2013 Andrew Wang. All rights reserved.
-//  Updated by MCN in 2020
+//  Optimized New Engine (makeMove/unmakeMove based) by MCN in 2026
 
 #import "Move.h"
 #import "Pos.h"
@@ -15,23 +15,35 @@
    // destination
    - (id)initWithStart:(Pos *)start Dest:(Pos *)dest
    {
-       self = [super init];
-       if (self) {
-           _start = start;
-           _dest = dest;
+      self = [super init];
+      if (self) {
+         _start = start;
+         _dest = dest;
+         
+         _capturedPiece = nil;
+         _movingPiece   = nil;
+         
+         _isCapture     = NO;
+         _isPromotion   = NO;
+         _wasPromotion  = NO;
+         _isCastling    = NO;
+         _givesCheck    = NO;
+         _isEnPassant    = NO;
+         
+         _orderingScore = 0;
+      }
+      return self;
+   }
 
-           _capturedPiece = nil;
-           _movingPiece   = nil;
 
-           _isCapture     = NO;
-           _isPromotion   = NO;
-           _wasPromotion  = NO;
-           _isCastling    = NO;
-           _givesCheck    = NO;
-
-           _orderingScore = 0;
-       }
-       return self;
+   // ==================================================================================================
+   // Implémentation Méthode de confort, plus lisible
+   +(Move *) newMoveFromX:(int)x Y:(int)y ToNx:(int)nx Ny:(int)ny
+   {
+      Pos *start = [Pos posWithX:x y:y];
+      Pos *dest  = [Pos posWithX:nx y:ny];
+      Move *m = [[Move alloc] initWithStart:start Dest:dest];
+      return m;
    }
 
 
@@ -55,7 +67,7 @@
       return [NSString stringWithFormat:@"%@>%@",self.start,self.dest];
    }
 
-   
+
    // ==================================================================================================
    // Méthode implémentée pour utilisation par les 'Killer Moves' dans Minimax
    - (BOOL)isEqual:(id)object {
@@ -70,7 +82,7 @@
               self.dest.y == other.dest.y);
    }
 
-   
+
    // ==================================================================================================
    // Méthode implémentée pour utilisation par les 'Killer Moves' dans Minimax
    -(NSUInteger)hash {

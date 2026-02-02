@@ -2,7 +2,7 @@
 // chess
 // Created by Andrew Wang on 15/07/2013
 // Copyright (c) 2013 Andrew Wang. All rights reserved.
-// Optimized for AI perfs by MCN in 2026
+// Optimized New Engine (makeMove/unmakeMove based) by MCN in 2026
 
 
 #import "Minimax.h"
@@ -11,14 +11,14 @@
 #define DELTA_MARGIN 100   // sécurité = un pion
 
 /* // Macros de transposition de la propriété 'square' d'un 'move'
-#define SQ(x, y)   ((y) * 8 + (x))
-#define SQ_X(sq)   ((sq) & 7)
-#define SQ_Y(sq)   ((sq) >> 3)
-
-// Macro de debugging des Move sous forme de 'square' selon l'usage
-// NSLog(@"Move %@ -> %@", SQ_STR(m.fromSquare), SQ_STR(m.toSquare));  
-#define SQ_STR(sq) \
-    ([NSString stringWithFormat:@"%c%d", 'a'+SQ_X(sq), SQ_Y(sq)+1]) */
+ #define SQ(x, y)   ((y) * 8 + (x))
+ #define SQ_X(sq)   ((sq) & 7)
+ #define SQ_Y(sq)   ((sq) >> 3)
+ 
+ // Macro de debugging des Move sous forme de 'square' selon l'usage
+ // NSLog(@"Move %@ -> %@", SQ_STR(m.fromSquare), SQ_STR(m.toSquare));
+ #define SQ_STR(sq) \
+ ([NSString stringWithFormat:@"%c%d", 'a'+SQ_X(sq), SQ_Y(sq)+1]) */
 
 
 
@@ -122,7 +122,7 @@ static int nodes = 0;
          /* Valeur capturée */
          int capturedValue = 0;
          if (capturedPiece && capturedPiece.type != Invalide) {
-            int capturedValue = [self ValueOfPiece:capturedPiece.type];
+            capturedValue = [self ValueOfPiece:capturedPiece.type];
          }
          
          /* Vérifier seulement pour les pièces chères */
@@ -134,8 +134,8 @@ static int nodes = 0;
             
             /* Utiliser le helper */
             int cheapestAttacker = [self CheapestAttackValue:move.dest
-                                                        bySide:enemySide
-                                                       inBoard:testBoard];
+                                                      bySide:enemySide
+                                                     inBoard:testBoard];
             
             if (cheapestAttacker > 0) {  // Case attaquée
                int netGain = capturedValue - movingValue;
@@ -249,21 +249,21 @@ static int nodes = 0;
       
       // Move Ordering
       [self ScoreMovesList:moves board:board side:side];
-
+      
       [moves sortUsingComparator:^NSComparisonResult(Move *a, Move *b) {
-          return (a.orderingScore < b.orderingScore);
+         return (a.orderingScore < b.orderingScore);
       }];
       // Fin de Move Ordering
       
       // Traiter le cas où 'moves' est vide, càd si Mat ou Pat
       if (moves.count == 0) {
-          if ([self IsKingInCheck:side board:board]) {
-              // Mat : très mauvais pour le camp qui joue
-              return -100000 + (NUMBER_MOVES_AHEAD - depth);
-          } else {
-              // Pat : nul
-              return 0;
-          }
+         if ([self IsKingInCheck:side board:board]) {
+            // Mat : très mauvais pour le camp qui joue
+            return -100000 + (NUMBER_MOVES_AHEAD - depth);
+         } else {
+            // Pat : nul
+            return 0;
+         }
       }
       // Fin de détection préalable de Mat ou Pat
       
@@ -271,27 +271,27 @@ static int nodes = 0;
       Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
       
       for (Move *m in moves) {
-
-          MoveState st = [board makeMove:m];
-
-          // 🔴 FILTRE LÉGALITÉ — MANQUANT JUSQU’ICI
-          if (![self IsKingInCheck:side board:board]) {
-
-              int score = -[self NegamaxForSide:otherSide
-                                          board:board
-                                          depth:depth-1
-                                          alpha:-beta
-                                           beta:-alpha];
-
-              if (score > alpha) alpha = score;
-          }
-
-          [board unmakeMove:m state:st];
-
-          if (alpha >= beta)
-              break;
+         
+         MoveState st = [board makeMove:m];
+         
+         // 🔴 FILTRE LÉGALITÉ — MANQUANT JUSQU’ICI
+         if (![self IsKingInCheck:side board:board]) {
+            
+            int score = -[self NegamaxForSide:otherSide
+                                        board:board
+                                        depth:depth-1
+                                        alpha:-beta
+                                         beta:-alpha];
+            
+            if (score > alpha) alpha = score;
+         }
+         
+         [board unmakeMove:m state:st];
+         
+         if (alpha >= beta)
+            break;
       }
-
+      
       
       return alpha;
    } // !NegamaxForSide
@@ -319,7 +319,7 @@ static int nodes = 0;
          return NSOrderedSame;
       }];
    }
-   
+
 
    // ================================================================================================
    // MÉTHODE 4 : ScoreMove - ÉVALUATION D'UN COUP (Ne pas confondre avec 'ScoreMovesList'
@@ -395,43 +395,43 @@ static int nodes = 0;
 
    // ================================================================================================
    // MÉTHODE 4bis : ScoreMovesList - ÉVALUATION D'UNE LISTE DE COUPS (Ne pas confondre avec ScoreMove)
-- (void)ScoreMovesList:(NSArray<Move *> *)moves
-                 board:(ChessBoard *)board
-                  side:(Side)side
-{
-    for (Move *m in moves) {
-
-        int score = 0;
-
-        if (m.isCapture) {
-
+   - (void)ScoreMovesList:(NSArray<Move *> *)moves
+                    board:(ChessBoard *)board
+                     side:(Side)side
+   {
+      for (Move *m in moves) {
+         
+         int score = 0;
+         
+         if (m.isCapture) {
+            
             int see = [self SEEForMove:m board:board];
-
+            
             if (see >= 0)
-                score = 10000 + see;   // captures gagnantes
+               score = 10000 + see;   // captures gagnantes
             else
-                score = 5000 + see;    // captures perdantes
-
-        } else {
-
+               score = 5000 + see;    // captures perdantes
+            
+         } else {
+            
             // 🎯 Coups calmes intéressants
             if (m.movingPiece.type == Cava || m.movingPiece.type == Fou)
-                score += 100;  // développement
-
+               score += 100;  // développement
+            
             if (m.givesCheck)
-                score += 200;
-
+               score += 200;
+            
             if (m.isCastling)
-                score += 300;
-
+               score += 300;
+            
             if (m.isPromotion)
-                score += 900;
-
-        }
-
-        m.orderingScore = score;
-    }
-}
+               score += 900;
+            
+         }
+         
+         m.orderingScore = score;
+      }
+   }
 
 
 
@@ -667,21 +667,21 @@ static int nodes = 0;
       } // fin de for 'x' et fin de parcours de l'échiquier
       
       /* Log peu utile désactivé
-      // Compter les dames pour vérifier les promotions
-      int queensWhite = 0, queensBlack = 0;
-      for (int x = 0; x < 8; x++) {
-         for (int y = 0; y < 8; y++) {
-            Piece *p = [board piece_colX:x rangY:y];
-            if (p && p.type == Dame) {
-               if (p.side == sideWhite) queensWhite++;
-               else queensBlack++;
-            }
-         }
-      }
-      
-      if (queensWhite > 1 || queensBlack > 1)
-         NSLog(@"🔍 EvalBFS - PROMOTION DÉTECTÉE : Blancs= %d Dames, Noirs= %d Dames", queensWhite, queensBlack);
-      */
+       // Compter les dames pour vérifier les promotions
+       int queensWhite = 0, queensBlack = 0;
+       for (int x = 0; x < 8; x++) {
+       for (int y = 0; y < 8; y++) {
+       Piece *p = [board piece_colX:x rangY:y];
+       if (p && p.type == Dame) {
+       if (p.side == sideWhite) queensWhite++;
+       else queensBlack++;
+       }
+       }
+       }
+       
+       if (queensWhite > 1 || queensBlack > 1)
+       NSLog(@"🔍 EvalBFS - PROMOTION DÉTECTÉE : Blancs= %d Dames, Noirs= %d Dames", queensWhite, queensBlack);
+       */
       
       
       // PARTIE 2 désactivée
@@ -775,7 +775,7 @@ static int nodes = 0;
                // ✅ NOUVEAU : Pénalité si Roi au centre en milieu de partie
                //BOOL isEndGame = (totalMaterial < 2000);  // Peu de matériel
                BOOL isEndGame = (materialWhite + materialBlack < 2600);
-
+               
                
                if (!isEndGame) {
                   // En milieu de partie, le Roi DOIT être sur les bords
@@ -1203,33 +1203,33 @@ static int nodes = 0;
    // Méthode SEE Static Exchange Evaluation
    - (int)SEEForMove:(Move *)move board:(ChessBoard *)board
    {
-       // Valeur gagnée
-       int gain = [self ValueOfPiece:move.capturedPiece.type];
-
-       // Coût : pièce qui capture
-       int attackerValue = [self ValueOfPiece:move.movingPiece.type];
-
-       MoveState st = [board makeMove:move];
-
-       Side side = move.movingPiece.side;
-       Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
-
-       NSMutableArray<Move *> *recaptures = [NSMutableArray arrayWithCapacity:8];
-       [self GenCapturForSide:otherSide board:board into:recaptures];
-
-       int worstRecapture = 0;
-
-       for (Move *rm in recaptures) {
-           if (rm.toSquare == move.toSquare) {
-               int v = [self ValueOfPiece:rm.movingPiece.type];
-               worstRecapture = MAX(worstRecapture, v);
-           }
-       }
-
-       [board unmakeMove:move state:st];
-
-       // 👉 BILAN MATÉRIEL RÉEL
-       return gain - attackerValue - worstRecapture;
+      // Valeur gagnée
+      int gain = [self ValueOfPiece:move.capturedPiece.type];
+      
+      // Coût : pièce qui capture
+      int attackerValue = [self ValueOfPiece:move.movingPiece.type];
+      
+      MoveState st = [board makeMove:move];
+      
+      Side side = move.movingPiece.side;
+      Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
+      
+      NSMutableArray<Move *> *recaptures = [NSMutableArray arrayWithCapacity:8];
+      [self GenCapturForSide:otherSide board:board into:recaptures];
+      
+      int worstRecapture = 0;
+      
+      for (Move *rm in recaptures) {
+         if (rm.toSquare == move.toSquare) {
+            int v = [self ValueOfPiece:rm.movingPiece.type];
+            worstRecapture = MAX(worstRecapture, v);
+         }
+      }
+      
+      [board unmakeMove:move state:st];
+      
+      // 👉 BILAN MATÉRIEL RÉEL
+      return gain - attackerValue - worstRecapture;
    }
 
 
@@ -1237,30 +1237,30 @@ static int nodes = 0;
    // Méthode retournant la valeur d'une pièce
    - (int)ValueOfPiece:(PieceType)p
    {
-       switch (p) {
-           case Pion       : return 100;     // valeur de base
-           case Cava       : return 300;     // 3 Pions
-           case Fou        : return 310;     // 3 Pions mais avec une préf. // Cava
-           case Tour       : return 500;     // 5 Pions et moins que Fou + Cava
-           case Dame       : return 900;     // 9 Pions et moins que 2 Tours
-           case Roi        : return 20000;
-           case Invalide   : return 0;
-           default         : return 0;
-       }
+      switch (p) {
+         case Pion       : return 100;     // valeur de base
+         case Cava       : return 300;     // 3 Pions
+         case Fou        : return 310;     // 3 Pions mais avec une préf. // Cava
+         case Tour       : return 500;     // 5 Pions et moins que Fou + Cava
+         case Dame       : return 900;     // 9 Pions et moins que 2 Tours
+         case Roi        : return 20000;
+         case Invalide   : return 0;
+         default         : return 0;
+      }
    }
    /* Ancien code
-   -(int)PieceValue:(Piece *)piece
-   {
-      switch (piece.type) {
-         case Pion: return 100;
-         case Cava:
-         case Fou:  return 300;
-         case Tour: return 500;
-         case Dame: return 900;
-         case Roi:  return 100000;
-         default:   return 0;
-      }
-   } */
+    -(int)PieceValue:(Piece *)piece
+    {
+    switch (piece.type) {
+    case Pion: return 100;
+    case Cava:
+    case Fou:  return 300;
+    case Tour: return 500;
+    case Dame: return 900;
+    case Roi:  return 100000;
+    default:   return 0;
+    }
+    } */
 
 
 
@@ -1275,80 +1275,80 @@ static int nodes = 0;
                        beta:(int)beta
                     qsDepth:(int)qsDepth
    {
-       nodes++;
+      nodes++;
       
-       Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
-       BOOL inCheck = [self IsKingInCheck:side board:board];
-
-       int standPat = -INF;
-
-       // 1️⃣ Stand-pat uniquement hors échec
-       if (!inCheck) {
-           standPat = [self EvalBoardForSide:side board:board];
-
-           if (standPat >= beta) return beta;
-
-           if (standPat > alpha) alpha = standPat;
-       }
-
-       // 2️⃣ Limite QS (mais jamais en échec)
-       if (qsDepth >= QS_MAX_DEPTH && !inCheck) return alpha;
-
-       // 3️⃣ Génération des coups
-       NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:32];
-
-       if (inCheck) {
-           [self GenMovesForSide:side board:board into:moves];
-       } else {
-           [self GenCapturForSide:side board:board into:moves];
-       }
-
-       // 4️⃣ Boucle QS
-       for (Move *m in moves) {
-
-           // 🔹 DELTA PRUNING
-           if (!inCheck) {
-               int gain = [self ValueOfPiece:m.capturedPiece.type];
-               if (standPat + gain + DELTA_MARGIN < alpha)
-                   continue;
-           }
-
-           // 🔹 SEE FILTER
-           if (!inCheck) {
-               int see = [self SEEForMove:m board:board];
-               if (see < 0)
-                   continue;
-           }
-          
-           // 🔴 INTERDICTION DES SUICIDES DE DAME
-           if (!inCheck && m.movingPiece.type == Dame && ![self IsSquareDefended:m.toSquare
-                                                                          bySide:side
-                                                                           board:board]) {
-              continue;
-           }
-
-           // On peut y aller
-           MoveState st = [board makeMove:m];
-
-           if (![self IsKingInCheck:side board:board]) {
-
-               int score = -[self QuiescenceForSide:otherSide
-                                              board:board
-                                              alpha:-beta
-                                               beta:-alpha
-                                            qsDepth:qsDepth + 1];
-
-               [board unmakeMove:m state:st];
-
-               if (score >= beta) return beta;
-
-               if (score > alpha) alpha = score;
-
-           }
-           else [board unmakeMove:m state:st];
-       }
-
-       return alpha;
+      Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
+      BOOL inCheck = [self IsKingInCheck:side board:board];
+      
+      int standPat = -INF;
+      
+      // 1️⃣ Stand-pat uniquement hors échec
+      if (!inCheck) {
+         standPat = [self EvalBoardForSide:side board:board];
+         
+         if (standPat >= beta) return beta;
+         
+         if (standPat > alpha) alpha = standPat;
+      }
+      
+      // 2️⃣ Limite QS (mais jamais en échec)
+      if (qsDepth >= QS_MAX_DEPTH && !inCheck) return alpha;
+      
+      // 3️⃣ Génération des coups
+      NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:32];
+      
+      if (inCheck) {
+         [self GenMovesForSide:side board:board into:moves];
+      } else {
+         [self GenCapturForSide:side board:board into:moves];
+      }
+      
+      // 4️⃣ Boucle QS
+      for (Move *m in moves) {
+         
+         // 🔹 DELTA PRUNING
+         if (!inCheck) {
+            int gain = [self ValueOfPiece:m.capturedPiece.type];
+            if (standPat + gain + DELTA_MARGIN < alpha)
+               continue;
+         }
+         
+         // 🔹 SEE FILTER
+         if (!inCheck) {
+            int see = [self SEEForMove:m board:board];
+            if (see < 0)
+               continue;
+         }
+         
+         // 🔴 INTERDICTION DES SUICIDES DE DAME
+         if (!inCheck && m.movingPiece.type == Dame && ![self IsSquareDefended:m.toSquare
+                                                                        bySide:side
+                                                                         board:board]) {
+            continue;
+         }
+         
+         // On peut y aller
+         MoveState st = [board makeMove:m];
+         
+         if (![self IsKingInCheck:side board:board]) {
+            
+            int score = -[self QuiescenceForSide:otherSide
+                                           board:board
+                                           alpha:-beta
+                                            beta:-alpha
+                                         qsDepth:qsDepth + 1];
+            
+            [board unmakeMove:m state:st];
+            
+            if (score >= beta) return beta;
+            
+            if (score > alpha) alpha = score;
+            
+         }
+         else [board unmakeMove:m state:st];
+      }
+      
+      return alpha;
       
    } // !QuiescenceForSide
 
@@ -1491,17 +1491,17 @@ static int nodes = 0;
                   
                case Fou:
                   [self GenSlideMovesFromX:x y:y piece:p board:board
-                                        dirs:bishopDirs dirCount:4 into:moves];
+                                      dirs:bishopDirs dirCount:4 into:moves];
                   break;
                   
                case Tour:
                   [self GenSlideMovesFromX:x y:y piece:p board:board
-                                        dirs:rookDirs dirCount:4 into:moves];
+                                      dirs:rookDirs dirCount:4 into:moves];
                   break;
                   
                case Dame:
                   [self GenSlideMovesFromX:x y:y piece:p board:board
-                                        dirs:queenDirs dirCount:8 into:moves];
+                                      dirs:queenDirs dirCount:8 into:moves];
                   break;
                   
                case Roi:
@@ -1518,89 +1518,98 @@ static int nodes = 0;
 
    // ================================================================================================
    // Méthode déterminant les déplacements légaux du Pion
-   -(void)GenPawnMovesFromX:(int)x y:(int)y  // x=col  y=rang
+   -(void)GenPawnMovesFromX:(int)x y:(int)y
                       piece:(Piece *)p
                       board:(ChessBoard *)board
-                       into:(NSMutableArray *)moves
+                       into:(NSMutableArray<Move *> *)moves
    {
-      int dir = (p.side == sideWhite) ? 1 : -1; // Direction: blancs rang croissant, noirs décroissant
-      int startRank = (p.side == sideWhite) ? 1 : 6; // Rangées de départ: blancs= 1, noirs= 6
+      /* Le nouveau moteur basé sur make/unmake est déconnecté de l'UI quant au déplacement des pièces car
+      il est toujours calé sur l'orientation classique 'Blancs en bas' et se trouve donc en 'inversion'
+      potentielle lorsque l'on joue les Noirs et que l'UI retourne le board. Cette 'inversion' n'a cependant
+      aucun effet sur le déplacement des pièces qui peuvent 'avancer' ou 'reculer', càd toutes à l'exception
+      du pion qui est la seule pièce orientée.
+      Ceci oblige à inverser le sens de déplacement des pions lorsque les noirs sont en bas : le pion blanc
+      doit progresser vers le bas et le pion noir vers le haut. C'est le but du bloc ci-dessous, qui modifie
+      au passage la définition des rangs de départ à partir desquels le pion peut avancer de 2 cases      */
+      int dir;
+      int startRank;
+      if (sideJoueur == sideWhite) {
+         dir = (p.side == sideWhite) ? 1 : -1;
+         startRank = (p.side == sideWhite) ? 1 : 6;
+      }
+      else {
+         dir = (p.side == sideWhite) ? -1 : 1;
+         startRank = (p.side == sideWhite) ? 6 : 1;
+      }
+      /* Fin de modif du sens de déplacement des pions pour new engine ---------------------------------- */
       
+      // 1️⃣ Avance simple
       int ny = y + dir;
-      
-      // Avance simple
-      if (ny >= 0 && ny < 8 && board->pieceCase[x][ny] == nil) {
-         Pos *start = [Pos posWithX:x y:y];
-         Pos *dest  = [Pos posWithX:x y:ny]; // Avancement simple : x est constant
-         Move *m = [[Move alloc] initWithStart:start Dest:dest];
-
+      if (ny >= 0 && ny <= 7 && !board->pieceCase[x][ny]) {
+         
+         Move *m = [Move newMoveFromX:x Y:y ToNx:x Ny:ny];
          m.movingPiece = p;
-         m.fromSquare  = SQ(x, y);
-         m.toSquare    = SQ(x, ny);
-
-         /*if (target) {
-             m.isCapture = YES;
-             m.capturedPiece = target;
-         } */
-         
-         if ((p.side == sideWhite && ny == 7) ||
-             (p.side == sideBlack && ny == 0)) {
-             m.isPromotion = YES;
-         }
+         m.fromSquare  = SQ(x,y);
+         m.toSquare    = SQ(x,ny);
          [moves addObject:m];
-
          
-         // Double pas
-         if (y == startRank) {
-            int ny2 = y + 2 * dir;
-            if (board->pieceCase[x][ny2] == nil) {
-               Pos *dest2 = [Pos posWithX:x y:ny2];
-               Move *m = [[Move alloc] initWithStart:start Dest:dest2];
-
-               m.movingPiece = p;
-               m.fromSquare  = SQ(x, y);        // ou équivalent chez toi
-               m.toSquare    = SQ(x, ny2);
-
-               /*if (target) {
-                   m.isCapture = YES;
-                   m.capturedPiece = target;
-               }*/
-               
-               if ((p.side == sideWhite && ny == 7) ||
-                   (p.side == sideBlack && ny == 0)) {
-                   m.isPromotion = YES;
-               }
-               [moves addObject:m];
-            }
+         // Avance double
+         if (y == startRank && !board->pieceCase[x][y + 2*dir]) {
+            Move *m2 = [Move newMoveFromX:x Y:y ToNx:x Ny:y + 2*dir];
+            m2.movingPiece = p;
+            m2.fromSquare  = SQ(x,y);
+            m2.toSquare    = SQ(x,y + 2*dir);
+            [moves addObject:m2];
          }
       }
       
-      // Captures diagonales
+      // 2️⃣ Captures diagonales NORMALES
       for (int dx = -1; dx <= 1; dx += 2) {
+         
          int nx = x + dx;
+         ny = y + dir;
+         
          if (nx < 0 || nx > 7 || ny < 0 || ny > 7) continue;
          
-         if (!board->pieceCase[nx][ny]) {
-            Pos *start = [Pos posWithX:x y:y];
-            Pos *dest  = [Pos posWithX:nx y:ny];
-            Move *m = [[Move alloc] initWithStart:start Dest:dest];
-
-            m.movingPiece = p;
-            m.fromSquare  = SQ(x, y);        // ou équivalent chez toi
-            m.toSquare    = SQ(nx, ny);
-
-            /*if (target) {
-                m.isCapture = YES;
-                m.capturedPiece = target;
-            }*/
+         Piece *target = board->pieceCase[nx][ny];
+         if (target && target.side != p.side) {
             
-            if ((p.side == sideWhite && ny == 7) ||
-                (p.side == sideBlack && ny == 0)) {
-                m.isPromotion = YES;
-            }
+            Move *m = [Move newMoveFromX:x Y:y ToNx:nx Ny:ny];
+            m.movingPiece   = p;
+            m.isCapture     = YES;
+            m.capturedPiece = target;
+            m.fromSquare    = SQ(x,y);
+            m.toSquare      = SQ(nx,ny);
+            
             [moves addObject:m];
          }
       }
+      
+      // 3️⃣ PRISE EN PASSANT
+      Move *lm = board.lastMove;
+      if (!lm) return;
+      
+      // Dernier coup = pion adverse ayant avancé de 2 cases
+      if (lm.movingPiece.type != Pion) return;
+      if (lm.movingPiece.side == p.side) return;
+      if (abs(lm.start.y - lm.dest.y) != 2) return;
+      
+      // Le pion adverse est à côté
+      if (lm.dest.y != y) return;
+      if (abs(lm.dest.x - x) != 1) return;
+      
+      int epX = lm.dest.x;
+      int epY = y + dir;
+      
+      Move *ep = [Move newMoveFromX:x Y:y ToNx:epX Ny:epY];
+      ep.movingPiece   = p;
+      ep.isCapture     = YES;
+      ep.isEnPassant   = YES;
+      ep.capturedPiece = board->pieceCase[epX][y]; // pion pris
+      ep.fromSquare    = SQ(x,y);
+      ep.toSquare      = SQ(epX,epY);
+      
+      [moves addObject:ep];
    }
 
 
@@ -1623,18 +1632,18 @@ static int nodes = 0;
             Pos *start = [Pos posWithX:x y:y];
             Pos *dest  = [Pos posWithX:nx y:ny];
             Move *m = [[Move alloc] initWithStart:start Dest:dest];
-
+            
             m.movingPiece = p;
-            m.fromSquare  = SQ(x, y);        // ou équivalent chez toi
+            m.fromSquare  = SQ(x, y);
             m.toSquare    = SQ(nx, ny);
-
+            
             if (target) {
-                m.isCapture = YES;
-                m.capturedPiece = target;
+               m.isCapture = YES;
+               m.capturedPiece = target;
             }
-
+            
             [moves addObject:m];
-
+            
          }
          
       }
@@ -1665,34 +1674,34 @@ static int nodes = 0;
             
             if (!target) {
                Move *m = [[Move alloc] initWithStart:start Dest:dest];
-
+               
                m.movingPiece = p;
-               m.fromSquare  = SQ(x, y);        // ou équivalent chez toi
+               m.fromSquare  = SQ(x, y);
                m.toSquare    = SQ(nx, ny);
-
+               
                if (target) {
-                   m.isCapture = YES;
-                   m.capturedPiece = target;
+                  m.isCapture = YES;
+                  m.capturedPiece = target;
                }
-
+               
                [moves addObject:m];
-
+               
             }
             else {
                if (target.side != p.side && target.type != Roi) {
                   Move *m = [[Move alloc] initWithStart:start Dest:dest];
-
+                  
                   m.movingPiece = p;
-                  m.fromSquare  = SQ(x, y);        // ou équivalent chez toi
+                  m.fromSquare  = SQ(x, y);
                   m.toSquare    = SQ(nx, ny);
-
+                  
                   if (target) {
-                      m.isCapture = YES;
-                      m.capturedPiece = target;
+                     m.isCapture = YES;
+                     m.capturedPiece = target;
                   }
-
+                  
                   [moves addObject:m];
-
+                  
                }
                break; // 🛑 toute pièce bloque, y compris le roi
             }
@@ -1705,57 +1714,110 @@ static int nodes = 0;
    }
 
 
+
    // ================================================================================================
-   // Méthode déterminant les déplacements légaux du Roi
+   // Génération des coups légaux du Roi (déplacements normaux + roque)
    -(void)GenKingMovesFromX:(int)x y:(int)y
                       piece:(Piece *)p
                       board:(ChessBoard *)board
                        into:(NSMutableArray *)moves
    {
-      for (int dx = -1; dx <= 1; dx++) {        // Le roi se déplace d'1 case dans les 2 sens de x
-         for (int dy = -1; dy <= 1; dy++) {     // ... et de y
-            if (dx == 0 && dy == 0) continue;   // On passe la case d'origine car aucun move dans ce cas
+      
+      // 1️⃣ Déplacements normaux du Roi (8 cases autour)
+      for (int dx = -1; dx <= 1; dx++) {
+         for (int dy = -1; dy <= 1; dy++) {
             
-            int nx = x + dx;  // new x = x + déplacement sur x
-            int ny = y + dy;  // idem pour ny
+            if (dx == 0 && dy == 0)
+               continue;   // pas de déplacement nul
             
-            if (nx < 0 || nx > 7 || ny < 0 || ny > 7) continue; // On passe les mvts qui sortent de l'échiquier
+            int nx = x + dx;
+            int ny = y + dy;
+            
+            // Hors échiquier
+            if (nx < 0 || nx > 7 || ny < 0 || ny > 7)
+               continue;
             
             Piece *target = board->pieceCase[nx][ny];
             
+            // Case libre ou occupée par une pièce adverse (sauf Roi adverse)
             if (!target || (target.side != p.side && target.type != Roi)) {
-               Pos *start = [Pos posWithX:x y:y];
-               Pos *dest  = [Pos posWithX:nx y:ny];
-               Move *m = [[Move alloc] initWithStart:start Dest:dest];
-
-               // Positionnement des properties du move
+               
+               Move *m = [Move newMoveFromX:x Y:y ToNx:nx Ny:ny];
+               
                m.movingPiece = p;
                m.fromSquare  = SQ(x, y);
                m.toSquare    = SQ(nx, ny);
+               
                if (target) {
-                   m.isCapture = YES;
-                   m.capturedPiece = target;
+                  m.isCapture = YES;
+                  m.capturedPiece = target;
                }
-               if (abs(nx - x) == 2) {
-                   m.isCastling = YES;
-               }
-
+               
                [moves addObject:m];
-
             }
          }
       }
+      
+      // 2️⃣ Roque (ajouté hors des boucles de déplacement)
+      if (p.type != Roi || p.numMoves != 0)
+         return;
+      
+      // Rang du Roi (blancs en bas / noirs en haut)
+      int yRoi = (p.side == sideWhite) ? 0 : 7;
+      
+      // Sécurité minimale : on doit être bien sur la case de départ
+      if (x != 4 || y != yRoi)
+         return;
+      
+      // Petit roque (côté Roi)
+      Piece *rookH = board->pieceCase[7][yRoi];
+      if (rookH &&
+          rookH.type == Tour &&
+          rookH.side == p.side &&
+          rookH.numMoves == 0) {
+         
+         if (!board->pieceCase[5][yRoi] &&
+             !board->pieceCase[6][yRoi]) {
+            
+            Move *m = [Move newMoveFromX:4 Y:yRoi ToNx:6 Ny:yRoi];
+            m.isCastling = YES;
+            m.movingPiece = p;
+            m.fromSquare  = SQ(4, yRoi);
+            m.toSquare    = SQ(6, yRoi);
+            
+            [moves addObject:m];
+         }
+      }
+      
+      // Grand roque (côté Dame)
+      Piece *rookA = board->pieceCase[0][yRoi];
+      if (rookA &&
+          rookA.type == Tour &&
+          rookA.side == p.side &&
+          rookA.numMoves == 0) {
+         
+         if (!board->pieceCase[1][yRoi] &&
+             !board->pieceCase[2][yRoi] &&
+             !board->pieceCase[3][yRoi]) {
+            
+            Move *m = [Move newMoveFromX:4 Y:yRoi ToNx:2 Ny:yRoi];
+            m.isCastling = YES;
+            m.movingPiece = p;
+            m.fromSquare  = SQ(4, yRoi);
+            m.toSquare    = SQ(2, yRoi);
+            
+            [moves addObject:m];
+         }
+      }
    }
-
-
 
 
    // ================================================================================================
    // Méthode générant uniquement les coups bruyants (captures) des pièces présentes sur l'échiquier
    // (contrairement à 'generatePseudo...' qui génère tous les déplacements les possibles)
    - (void)GenCapturForSide:(Side)side
-                                 board:(ChessBoard *)board
-                                  into:(NSMutableArray<Move *> *)moves
+                      board:(ChessBoard *)board
+                       into:(NSMutableArray<Move *> *)moves
    {
       [moves removeAllObjects];
       
@@ -1777,17 +1839,17 @@ static int nodes = 0;
                   
                case Fou:
                   [self GenSlideCapturFromX:x y:y piece:p board:board
-                                           dirs:bishopDirs dirCount:4 into:moves];
+                                       dirs:bishopDirs dirCount:4 into:moves];
                   break;
                   
                case Tour:
                   [self GenSlideCapturFromX:x y:y piece:p board:board
-                                           dirs:rookDirs dirCount:4 into:moves];
+                                       dirs:rookDirs dirCount:4 into:moves];
                   break;
                   
                case Dame:
                   [self GenSlideCapturFromX:x y:y piece:p board:board
-                                           dirs:queenDirs dirCount:8 into:moves];
+                                       dirs:queenDirs dirCount:8 into:moves];
                   break;
                   
                case Roi:
@@ -1806,11 +1868,27 @@ static int nodes = 0;
    // ================================================================================================
    // Méthode déterminant les captures réalisables par le Pion
    -(void)GenPawnCapturFromX:(int)x y:(int)y
-                         piece:(Piece *)p
-                         board:(ChessBoard *)board
-                          into:(NSMutableArray<Move *> *)moves
+                       piece:(Piece *)p
+                       board:(ChessBoard *)board
+                        into:(NSMutableArray<Move *> *)moves
    {
-      int dir = (p.side == sideWhite) ? 1 : -1;
+      /* Le nouveau moteur basé sur make/unmake est déconnecté de l'UI quant au déplacement des pièces car
+      il est toujours calé sur l'orientation classique 'Blancs en bas' et se trouve donc en 'inversion'
+      potentielle lorsque l'on joue les Noirs et que l'UI retourne le board. Cette 'inversion' n'a cependant
+      aucun effet sur le déplacement des pièces qui peuvent 'avancer' ou 'reculer', càd toutes à l'exception
+      du pion qui est la seule pièce orientée.
+      Ceci oblige à inverser le sens de déplacement des pions lorsque les noirs sont en bas : le pion blanc
+      doit progresser vers le bas et le pion noir vers le haut. C'est le but du bloc ci-dessous          */
+      int dir;
+      if (sideJoueur == sideWhite) {
+         dir = (p.side == sideWhite) ? 1 : -1;
+      }
+      else {
+         dir = (p.side == sideWhite) ? -1 : 1;
+      }
+      /* Fin de modif du sens de déplacement des pions pour new engine --------------------------------- */
+      
+      
       int ny = y + dir;
       
       if (ny < 0 || ny >= 8) return;
@@ -1824,32 +1902,56 @@ static int nodes = 0;
             Pos *start = [Pos posWithX:x y:y];
             Pos *dest  = [Pos posWithX:nx y:ny];
             Move *m = [[Move alloc] initWithStart:start Dest:dest];
-
+            
             m.movingPiece = p;
             m.fromSquare  = SQ(x, y);        // ou équivalent chez toi
             m.toSquare    = SQ(nx, ny);
-
+            
             if (target) {
-                m.isCapture = YES;
-                m.capturedPiece = target;
+               m.isCapture = YES;
+               m.capturedPiece = target;
             }
             
             if ((p.side == sideWhite && ny == 7) ||
                 (p.side == sideBlack && ny == 0)) {
-                m.isPromotion = YES;
+               m.isPromotion = YES;
             }
             [moves addObject:m];
          }
       }
+      
+      // 3️⃣ PRISE EN PASSANT
+      Move *lm = board.lastMove;
+      if (lm &&
+          lm.movingPiece.type == Pion &&
+          lm.movingPiece.side != p.side &&
+          abs(lm.start.y - lm.dest.y) == 2 &&
+          lm.dest.y == y &&
+          abs(lm.dest.x - x) == 1)
+      {
+         
+         int epX = lm.dest.x;
+         int epY = y + dir;
+         
+         Move *ep = [Move newMoveFromX:x Y:y ToNx:epX Ny:epY];
+         ep.movingPiece   = p;
+         ep.isCapture     = YES;
+         ep.isEnPassant   = YES;
+         ep.capturedPiece = board->pieceCase[epX][y]; // pion pris
+         ep.fromSquare    = SQ(x,y);
+         ep.toSquare      = SQ(epX,epY);
+         [moves addObject:ep];
+      }
+      
    }
 
 
    // ================================================================================================
    // Méthode déterminant les captures réalisables par le Cavalier
    -(void)GenKnightCapturFromX:(int)x y:(int)y
-                           piece:(Piece *)p
-                           board:(ChessBoard *)board
-                            into:(NSMutableArray<Move *> *)moves
+                         piece:(Piece *)p
+                         board:(ChessBoard *)board
+                          into:(NSMutableArray<Move *> *)moves
    {
       static const int kMoves[8][2] = {
          {-2,-1},{-2,1},{-1,-2},{-1,2},
@@ -1868,18 +1970,18 @@ static int nodes = 0;
             Pos *start = [Pos posWithX:x y:y];
             Pos *dest  = [Pos posWithX:nx y:ny];
             Move *m = [[Move alloc] initWithStart:start Dest:dest];
-
+            
             m.movingPiece = p;
             m.fromSquare  = SQ(x, y);        // ou équivalent chez toi
             m.toSquare    = SQ(nx, ny);
-
+            
             if (target) {
-                m.isCapture = YES;
-                m.capturedPiece = target;
+               m.isCapture = YES;
+               m.capturedPiece = target;
             }
-
+            
             [moves addObject:m];
-
+            
          }
          
       }
@@ -1889,11 +1991,11 @@ static int nodes = 0;
    // ================================================================================================
    // Méthode déterminant les captures réalisables par les pièces glissantes : Fou, Tour, Dame
    -(void)GenSlideCapturFromX:(int)x y:(int)y
-                            piece:(Piece *)p
-                            board:(ChessBoard *)board
-                             dirs:(const int (*)[2])dirs
-                         dirCount:(int)dirCount
-                             into:(NSMutableArray<Move *> *)moves
+                        piece:(Piece *)p
+                        board:(ChessBoard *)board
+                         dirs:(const int (*)[2])dirs
+                     dirCount:(int)dirCount
+                         into:(NSMutableArray<Move *> *)moves
    {
       // Pour chaque direction possible
       for (int d = 0; d < dirCount; d++) {
@@ -1917,18 +2019,18 @@ static int nodes = 0;
                   Pos *start = [Pos posWithX:x y:y];
                   Pos *dest  = [Pos posWithX:nx y:ny];
                   Move *m = [[Move alloc] initWithStart:start Dest:dest];
-
+                  
                   m.movingPiece = p;
                   m.fromSquare  = SQ(x, y);        // ou équivalent chez toi
                   m.toSquare    = SQ(nx, ny);
-
+                  
                   if (target) {
-                      m.isCapture = YES;
-                      m.capturedPiece = target;
+                     m.isCapture = YES;
+                     m.capturedPiece = target;
                   }
-
+                  
                   [moves addObject:m];
-
+                  
                }
                
                break; // 🛑 on s'arrête à la première pièce rencontrée
@@ -1945,9 +2047,9 @@ static int nodes = 0;
    // ================================================================================================
    // Méthode déterminant les captures réalisables par le Roi
    -(void)GenKingCapturFromX:(int)x y:(int)y
-                         piece:(Piece *)p
-                         board:(ChessBoard *)board
-                          into:(NSMutableArray<Move *> *)moves
+                       piece:(Piece *)p
+                       board:(ChessBoard *)board
+                        into:(NSMutableArray<Move *> *)moves
    {
       for (int dx = -1; dx <= 1; dx++) {
          for (int dy = -1; dy <= 1; dy++) {
@@ -1964,18 +2066,18 @@ static int nodes = 0;
                Pos *start = [Pos posWithX:x y:y];
                Pos *dest  = [Pos posWithX:nx y:ny];
                Move *m = [[Move alloc] initWithStart:start Dest:dest];
-
+               
                m.movingPiece = p;
                m.fromSquare  = SQ(x, y);        // ou équivalent chez toi
                m.toSquare    = SQ(nx, ny);
-
+               
                if (target) {
-                   m.isCapture = YES;
-                   m.capturedPiece = target;
+                  m.isCapture = YES;
+                  m.capturedPiece = target;
                }
-
+               
                [moves addObject:m];
-
+               
             }
             
          }
@@ -1987,16 +2089,15 @@ static int nodes = 0;
    // Méthode détectant si une pièce est défendue
    - (BOOL)IsSquareDefended:(Square)sq bySide:(Side)side board:(ChessBoard *)board
    {
-       NSMutableArray<Move *> *caps = [NSMutableArray arrayWithCapacity:8];
-       [self GenCapturForSide:side board:board into:caps];
-
-       for (Move *m in caps) {
-           if (m.toSquare == sq)
-               return YES;
-       }
-       return NO;
+      NSMutableArray<Move *> *caps = [NSMutableArray arrayWithCapacity:8];
+      [self GenCapturForSide:side board:board into:caps];
+      
+      for (Move *m in caps) {
+         if (m.toSquare == sq)
+            return YES;
+      }
+      return NO;
    }
-
 
 
 @end

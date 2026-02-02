@@ -2,7 +2,7 @@
 //  chess
 //  Created by Andrew Wang on 15/07/2013
 //  Copyright (c) 2013 Andrew Wang. All rights reserved
-//  Updated by MCN in 2020
+//  Optimized New Engine (makeMove/unmakeMove based) by MCN in 2026
 
 
 #import "MCNmoveToStr.h"
@@ -13,40 +13,11 @@
 
 @class Piece, Move, Pos;
 
-/*typedef struct {
-   Piece *capturedPiece;
-
-   BOOL wasPromotion;
-   PieceType oldType;
-
-   // ÉTAT DU PLATEAU
-   __unsafe_unretained Move *lastMove;
-   __unsafe_unretained NSString *strRoque;
-   __unsafe_unretained NSString *strCibleEP;
-   int nbDemis;
-   int nbEntiers;
-} MoveState;*/
-
-/*typedef struct {
-    Piece *captured;
-    int oldType;
-    BOOL wasPromotion;
-} MoveState;*/
-
-/*typedef struct {
-    __unsafe_unretained Piece *captured;
-    BOOL wasPromotion;
-    PieceType oldType;
-} MoveState;*/
-
 typedef struct {
     Piece *captured;      // pièce capturée (ou nil)
     PieceType oldType;    // pour promotion
     BOOL wasPromotion;
 } MoveState;
-
-
-
 
 
 /* Déclaration de la Classe ChessBoard qui dérive de NSObject et qui adopte le protocole <NSCopying>,

@@ -135,6 +135,7 @@
       D'où la correction en ligne+5 faisant à nouveau correspondre la case cliquée avec la position curseur */
       CGPoint pos = [theEvent locationInWindow];
       int x = pos.x / tileWidth, y = pos.y / tileHeight;
+      
       /* 'Pos *tilePos = [Pos posWithX:x y:y]' = Ancienne formule à modifier car, ayant décalé l'échiquier
       de 75x75, càd d'1 case complète, il faut corriger la position du curseur de -1 case en x et en y   */
       Pos *tilePos = [Pos posWithX:x -1 y:y -1];
@@ -256,6 +257,8 @@
       
       [MCNmoveToStr MettreEnFormeChaine:bestMoveIA Protagoniste:@"IA"];
       
+      
+      /* REVOIR - L'UN OU L'AUTRE ######################################################################## */
       // Test examinant si le coup IA met le Joueur Mat...
       NSSet *movesPossibles = [maMinimax PossibleMovesForSide:sideJoueur board:liveBoard];
       if (movesPossibles.count == 0) [maMinimax NotifiePatMatDesSide:sideJoueur onBoard:liveBoard];
@@ -274,6 +277,10 @@
       sideCourant = (sideCourant == sideWhite) ? sideBlack : sideWhite;
       monMCNControleur.lblTrait.cell.stringValue =
                                  (sideCourant == sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
+      
+      /* REVOIR - L'AUTRE OU L'UN ######################################################################## */
+      // Test si le coup IA met en échec le Joueur
+      [maMinimax IsKingInCheck:sideJoueur board:liveBoard];
       
       // Mise à jour de la Vue dans le thread ppal si on n'y est pas déjà le cas
       dispatch_async(dispatch_get_main_queue(), ^{
@@ -335,6 +342,7 @@
       // Mise en forme de la chaine
       [MCNmoveToStr MettreEnFormeChaine:myMoveMCN Protagoniste:@"J"];
       
+      /* REVOIR - L'AUTRE OU L'UN ######################################################################## */
       // Test examinant si le coup Joueur met l'IA Mat...
       NSSet *movesPossibles = [maMinimax PossibleMovesForSide:sideIA board:liveBoard];
       if (movesPossibles.count == 0) [maMinimax NotifiePatMatDesSide:sideIA onBoard:liveBoard];
@@ -345,6 +353,10 @@
       // Joueur ayant joué, on inverse sideCourant avant de sortir de la méthode et de passer la main à l'IA
       sideCourant = (sideCourant == sideWhite) ? sideBlack : sideWhite;
       monMCNControleur.lblTrait.cell.stringValue = (sideCourant == sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
+      
+      /* REVOIR - L'AUTRE OU L'UN ######################################################################## */
+      // Test si le coup Joueur met en échec l'IA
+      [maMinimax IsKingInCheck:sideIA board:liveBoard];
       
       // Mise à jour de la Vue dans le thread ppal si on n'y est pas déjà
       dispatch_async(dispatch_get_main_queue(), ^{

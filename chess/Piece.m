@@ -32,4 +32,26 @@
       return newPiece;
    }
 
+
+// Méthode permettant un affichage des pièces en 'texte' clair plutôt qu'adresses de pointeurs
+- (NSString *)description
+{
+    NSString *sideStr = (self.side == sideWhite) ? @"White" : @"Black";
+
+    NSString *typeStr = @"?";
+    switch (self.type) {
+        case Roi:      typeStr = @"King";   break;
+        case Dame:     typeStr = @"Queen";  break;
+        case Tour:     typeStr = @"Rook";   break;
+        case Fou:      typeStr = @"Bishop"; break;
+        case Cava:     typeStr = @"Knight"; break;
+        case Pion:     typeStr = @"Pawn";   break;
+        case Invalide: typeStr = @"Invalid";break;
+    }
+
+    return [NSString stringWithFormat:@"<%@ %@>", sideStr, typeStr];
+}
+
+
+
 @end

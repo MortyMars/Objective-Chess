@@ -2,20 +2,20 @@
 //  chess
 //  Created by Andrew Wang on 15/07/2013,
 //  Copyright (c) 2013 Andrew Wang. All rights reserved
-//  Updated by MCN in 2020
+//  Optimized New Engine (makeMove/unmakeMove based) by MCN in 2026
 
 #import "Piece.h"
 
 @class Piece,Pos;  /* @class permet d'indiquer au compilateur que les classes "Piece" et "Pos" existent et
-                   sont déclarées ailleurs, ce qui permet d'éviter des #import bouclant sur eux-mêmes, en
-                   particulier en cas de classe en appelant une autre, comme ici Move qui utilise Pos
-                   NB : le rappel que Piece existe ne parait par contre pas pertinent ici... */
+                    sont déclarées ailleurs, ce qui permet d'éviter des #import bouclant sur eux-mêmes, en
+                    particulier en cas de classe en appelant une autre, comme ici Move qui utilise Pos
+                    NB : le rappel que Piece existe ne parait par contre pas pertinent ici... */
 
 /* Déclaration de la Classe Move qui adopte le protocole NSCopying permettant
-de faire des copies d'objets Move, ...ce dont nous avons besoin            */
+ de faire des copies d'objets Move, ...ce dont nous avons besoin            */
 @interface Move : NSObject <NSCopying>
-                        
-    // ...comprenant 2 propriétés, start et dest...
+
+   // ...comprenant 2 propriétés, start et dest...
    @property (nonatomic, strong) Pos *start;
    @property (nonatomic, strong) Pos *dest;
 
@@ -35,11 +35,15 @@ de faire des copies d'objets Move, ...ce dont nous avons besoin            */
    @property (nonatomic) BOOL isCastling;    // Ce move est-il un roque
    @property (nonatomic) BOOL isPromotion;   // Ce move est-il une promotion de pion
    @property (nonatomic) int orderingScore;
+   @property (nonatomic) BOOL isEnPassant;   // Ce move est-il une prise e.p.
 
 
    // ...et une méthode initWithStart permettant d'en initialiser les valeurs
    -(id) initWithStart:(Pos *)start Dest:(Pos *)dest;
-   
+
+   // ✨ méthode (de classe) de confort (sucre syntaxique)
+   +(Move *) newMoveFromX:(int)x Y:(int)y ToNx:(int)nx Ny:(int)ny;
+
    // Méthode system
    -(id) copyWithZone:(NSZone *)zone;
    -(NSString *) description;
