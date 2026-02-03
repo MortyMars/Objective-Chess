@@ -109,7 +109,7 @@
       [menuSTD       setState:NO];
       [menuReflechi  setState:NO];
       [menuChampion  setState:NO];
-      NUMBER_MOVES_AHEAD = 1;
+      NUMBER_MOVES_AHEAD = 2;
       //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
       monControleur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
@@ -121,7 +121,7 @@
       [menuSTD       setState:NO];
       [menuReflechi  setState:NO];
       [menuChampion  setState:NO];
-      NUMBER_MOVES_AHEAD = 2;
+      NUMBER_MOVES_AHEAD = 3;
       //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
       monControleur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
@@ -133,7 +133,7 @@
       [menuSTD       setState:YES];
       [menuReflechi  setState:NO];
       [menuChampion  setState:NO];
-      NUMBER_MOVES_AHEAD = 3;
+      NUMBER_MOVES_AHEAD = 4;
       //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
       monControleur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
@@ -145,7 +145,7 @@
       [menuSTD       setState:NO];
       [menuReflechi  setState:YES];
       [menuChampion  setState:NO];
-      NUMBER_MOVES_AHEAD = 4;
+      NUMBER_MOVES_AHEAD = 5;
       //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
       monControleur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
@@ -157,7 +157,7 @@
       [menuSTD       setState:NO];
       [menuReflechi  setState:NO];
       [menuChampion  setState:YES];
-      NUMBER_MOVES_AHEAD = 5;
+      NUMBER_MOVES_AHEAD = 6;
       //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
       monControleur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];

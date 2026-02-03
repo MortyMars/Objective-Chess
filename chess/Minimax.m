@@ -204,7 +204,8 @@ static int nodes = 0;
       
       NSLog(@"✅ Coup choisi : %@ (score=%d, %.1fs, %d nœuds, %.0f n/s)\n",
             bestMove, bestScore, elapsed, nodeCount, nodeCount/elapsed);
-      // Log de PROFILLING
+      
+      /* // Log de PROFILLING
       NSLog(@"\n📊 PROFILING :");
       NSLog(@"   EvalBoard : %d appels, %.2fs total, %.1fms/appel",
             evalCount, evalTotalTime, evalCount > 0 ? (evalTotalTime * 1000.0) / evalCount : 0);
@@ -217,9 +218,10 @@ static int nodes = 0;
       NSLog(@"   Répartition : EvalBoard=%.0f%%, MoveGen=%.0f%%\n", percentEval, percentMoveGen);
       
       // Profilling du nombre de coups élagué
-      NSLog(@"📊 Élagages : %d cutoffs sur %d nœuds (%.1f%%)", nbElag, nodeCount, (100.0 * nbElag / nodeCount));
+      NSLog(@"📊 Élagages : %d cutoffs sur %d nœuds (%.1f%%)", nbElag, nodeCount, (100.0 * nbElag / nodeCount)); */
       
       return bestMove;
+      
    } // !BestMoveForSide
 
 
