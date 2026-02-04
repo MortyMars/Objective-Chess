@@ -30,8 +30,8 @@
       souhaitée de l'affichage (c'est en tous cas ce que je crois avoir compris...)  */
       
       /* MCN - INITIALISATION DE LA VARIABLE GLOBALE 'monConnecteur' DÉCLARÉE DANS 'UTIL.H'.
-      L'instance créée par Interface Builder (connecteurFromIB) est assignée à la variable globale.
-      'monConnecteur' devient ainsi accessible depuis n'importe quelle classe qui importe Util.h,
+      L'instance créée par Interface Builder 'connecteurFromIB' est assignée à la variable globale
+      'monConnecteur' qui devient ainsi accessible depuis n'importe quelle classe qui importe Util.h,
       tout en restant retenue en mémoire durant toute la durée de vie de l'application. */
       monConnecteur = connecteurFromIB;
       

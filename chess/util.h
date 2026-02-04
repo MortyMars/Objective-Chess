@@ -4,6 +4,8 @@
 //  Copyright (c) 2013 Andrew Wang. All rights reserved
 //  Optimized New Engine (makeMove/unmakeMove based) by MCN in 2026
 
+
+
 // =====================================================================================================
 // DEFINE ET MACROS
 
@@ -22,7 +24,8 @@
     ([NSString stringWithFormat:@"%c%d", 'a'+SQ_X(sq), SQ_Y(sq)+1])
 
 
-// =====================================================================================================
+
+// ===============================================================================================================
 // TYPEDEF
 
 /* 'Square' représente les cases de l'échiquier sous la forme d'un int entre 0 et 63
@@ -70,16 +73,17 @@ plus efficace dans le code d'utiliser leur mnémonique plutôt que leur valeur i
 typedef enum {sideInvalid, sideBlack, sideWhite} Side;
 
 
-// =====================================================================================================
+
+// ===============================================================================================================
 // VARIABLES GLOBALES
 
-/* Ajout de variables globales (pardon aux puristes défenseurs du code)
+/* Ajout de variables globales (pardon aux puristes défenseurs du code académique)
 Chacune de ces variables ont des implantations dans le code de plusieurs Classes.
-Il n'a donc pas été possible de les déclarer comme variables d'instance, ce qui aurait été plus élégant.
-Certaines autres variables à portée plus limitée ont par contre pu être définies comme telles dans la classe qu'elles
-concerne exclusivement.
-NB : 'extern' -mot clé pour definir une variable globale obj-c- supporte les variables mais aussi les fonctions
-(et méthodes ?) sous la forme par exemple de : 'extern void MaFonction(NSString *param1, int param2)' */
+Il ne m'a donc pas été possible de les déclarer comme variables d'instance, ce qui aurait été plus élégant.
+Certaines autres variables à portée plus limitée ont par contre pu être définies comme telles dans la classe
+qu'elles concernent exclusivement.
+NB : 'extern' (mot clé pour definir une variable globale en Objectice-C) supporte les variables mais aussi
+les fonctions/méthodes sous la forme par exemple de : 'extern void MaFonction(NSString *param1, int param2)' */
 
 extern Side sideCourant;
 extern Side sideJoueur;
@@ -106,14 +110,17 @@ extern long numDebugLine;  // Num de ligne du fichier de débogage (implémentat
 
 extern int NUMBER_MOVES_AHEAD;
 
-/* Variable globale de type Connecteur permettant de contrôler l'UI depuis n'importe quelle classe.
-L'instance sera créée par Interface Builder et affectée à cette variable globale dans AppDelegate. */
-@class Connecteur;
-extern Connecteur *monConnecteur;
-
 // Déclaration de 2 tableaux intervenant dans la 'description' des Pos et des Move
 extern int Absc1[8];
 extern int Absc2[8];
+
+
+/* VARIABLE GLOBALE ESSENTIELLE, de type 'Connecteur' créée pour contrôler l'UI depuis n'importe quelle classe.
+Une instance de cette même classe ('connecteurFromIB') est à l'origine créée par Interface Builder lors de
+l'initialisation de l'interface, pour la piloter, mais avec l'inconvénient de ne pas être globalement accessible.
+On assignera la valeur de cette instance à notre variable globale pour en faire un 'connecteur' UI durable. */
+@class Connecteur;
+extern Connecteur *monConnecteur;
 
 /* Pour faciliter l'accès aux méthodes d'instances de la classe Minimax, création d'une variable
 globale permettant de garder le contrôle sur l'instance (unique dans une partie)              */
@@ -121,4 +128,9 @@ globale permettant de garder le contrôle sur l'instance (unique dans une partie
 extern Minimax *maMinimax;
 
 
+
+// ===============================================================================================================
+// MÉTHODES GLOBALES
+
+// Méthode globale 'DoEvents'
 extern void DoEvents(void);

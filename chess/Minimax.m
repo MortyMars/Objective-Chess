@@ -29,6 +29,7 @@ static const int queenDirs[8][2]     = {{-1,-1},{-1,1},{1,-1},{1,1},{-1,0},{1,0}
 static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,2},{2,-1},{2,1}};
 
 static int nodes = 0;
+static int nbCallsIsKingCheck = 0;
 
 // Valeur des pièces (même ordre que le TypeDef pieceType dans Util.h)
 //                        inv pion cava fou  tour dame roi
@@ -1361,6 +1362,9 @@ static int nodes = 0;
    // Méthode permettant de détecter si le Roi 'side' est en échec
    -(BOOL)IsKingInCheck:(Side)side board:(ChessBoard *)board
    {
+      nbCallsIsKingCheck++;
+      NSLog(@"Call n°%d from: %@",nbCallsIsKingCheck,([NSThread callStackSymbols].count > 1 ? [NSThread callStackSymbols][1] : @"inconnu"));
+      
       int kingX = -1, kingY = -1;
       
       // 1️⃣ Trouver le roi
@@ -1370,7 +1374,7 @@ static int nodes = 0;
             if (p && p.type == Roi && p.side == side) {
                kingX = x;
                kingY = y;
-               //NSLog(@"Pièce trouvée en col:%d rang:%d = %@",x,y,p);
+               NSLog(@"   --> Pièce trouvée en col:%d rang:%d = %@\n",x,y,p);
                break;                                          // On sort du 'for'
             }
          }

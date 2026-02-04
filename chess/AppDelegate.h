@@ -16,8 +16,8 @@
 
    @property (assign) IBOutlet NSWindow *window;
    
-   // MCN - IBOutlet pour Interface Builder (nom distinct pour éviter toute confusion)
-   // L'instance sera ensuite assignée à la variable globale monConnecteur
+   // IBOutlet pour Interface Builder (nom distinct pour éviter toute confusion)
+   // L'instance sera ensuite assignée à la variable globale 'monConnecteur'
    @property (strong) IBOutlet Connecteur *connecteurFromIB;
 
    //@property Minimax *maMinimax;
