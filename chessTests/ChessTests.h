@@ -11,7 +11,7 @@
 #import "Move.h"
 #import "Pos.h"
 #import "RuleBook.h"
-#import "MCNmoveToStr.h"
+#import "MoveToStr.h"
 #import "Piece.h"
 #import "Util.h"
 

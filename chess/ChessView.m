@@ -171,7 +171,7 @@
                self.needsDisplay = YES;
                
                // TODO REVOIR
-               /* [monControleur InverserIndicQuiJoue];     self.needsDisplay=YES; */
+               /* [monConnecteur InverserIndicQuiJoue];     self.needsDisplay=YES; */
                
                /* ON NE CONTINUE QUE SI MAT NON DÉTECTÉ (seule façon trouvée pour stopper le déroult auto du prog) */
                if (!stopMatOuPat)
@@ -214,7 +214,7 @@
       
       liveEvalWhitePOV = [maMinimax EvalBoardForSide:sideWhite board:liveBoard]; // Recalcul d'EvalBoard, base liveBoard
       liveStrEvalBoard =[ChessView VisualIndicator:liveEvalWhitePOV];
-      monControleur.lblEvalBoard.cell.title = liveStrEvalBoard;
+      monConnecteur.lblEvalBoard.cell.title = liveStrEvalBoard;
       NSLog(@"#### Coup Joueur => liveEvalWhitePOV = %d, Indicator = %@\n", liveEvalWhitePOV, liveStrEvalBoard);
       
       // Mise à jour de la Vue dans le thread ppal (si on n'y est pas déjà le cas) pour rendre visible la MàJ
@@ -252,16 +252,16 @@
       // Restauration des indicateurs de roque pour utilisation dans 'ConvertEnStringMove'
       petitRoque = roque;        grandRoque = ROQUE;         enPassant = ENPASS;
       
-      NSMutableString* bestMoveIA = [MCNmoveToStr ConvertEnStringMove:aiMove  PromPion:promPion
+      NSMutableString* bestMoveIA = [MoveToStr ConvertEnStringMove:aiMove  PromPion:promPion
                                                              StrEchec:strEchec   Board:savedBoard];
       
-      [MCNmoveToStr MettreEnFormeChaine:bestMoveIA Protagoniste:@"IA"];
+      [MoveToStr MettreEnFormeChaine:bestMoveIA Protagoniste:@"IA"];
       
       
       /* REVOIR - L'UN OU L'AUTRE ######################################################################## */
       /* // Test examinant si le coup IA met le Joueur Mat...
        NSSet *movesPossibles = [maMinimax PossibleMovesForSide:sideJoueur board:liveBoard];
-       if (movesPossibles.count == 0) [monControleur AlertMsgPatMatSide:sideJoueur onBoard:liveBoard];      */
+       if (movesPossibles.count == 0) [monConnecteur AlertMsgPatMatSide:sideJoueur onBoard:liveBoard];      */
       
       // MISE À JOUR 'STATUS BAR' HORS EVAL ET TRAIT
       [self MajStatusBarViaMove:aiMove PrecBoard:savedBoard StrCheck:strEchec];
@@ -269,13 +269,13 @@
       // ON MET FINALEMENT À JOUR L'AFFICHAGE POUR VALORISER LE MOVE IA QUI VIENT D'ÊTRE RÉALISÉ
       liveEvalWhitePOV = [maMinimax EvalBoardForSide:sideWhite board:liveBoard]; // Recalcul de EvalBoard, base liveBoard
       liveStrEvalBoard = [ChessView VisualIndicator:liveEvalWhitePOV];
-      monControleur.lblEvalBoard.cell.title = liveStrEvalBoard;
+      monConnecteur.lblEvalBoard.cell.title = liveStrEvalBoard;
       NSLog(@"#### Coup IA     => liveEvalWhitePOV = %d, Indicator = %@\n", liveEvalWhitePOV, liveStrEvalBoard);
       
       // L'IA ayant joué on inverse sideCourant
       //sideCourant = (sideIA == sideWhite) ? sideBlack : sideWhite;
       sideCourant = (sideCourant == sideWhite) ? sideBlack : sideWhite;
-      monControleur.lblTrait.cell.stringValue =
+      monConnecteur.lblTrait.cell.stringValue =
       (sideCourant == sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
       
       
@@ -283,10 +283,10 @@
       // Test si le coup IA met en échec ou Pat ou Mat le Joueur et message ad-hoc
       if ([maMinimax IsKingInCheck:sideJoueur board:liveBoard]){
          // Message Echec
-         [monControleur AlertMsgEchecSide:sideJoueur];
+         [monConnecteur AlertMsgEchecSide:sideJoueur];
          NSSet *movesPossibles = [maMinimax PossibleMovesForSide:sideJoueur board:liveBoard];
          if (movesPossibles.count == 0) {
-            [monControleur AlertMsgPatMatSide:sideJoueur onBoard:liveBoard];
+            [monConnecteur AlertMsgPatMatSide:sideJoueur onBoard:liveBoard];
          }
       }
       
@@ -336,40 +336,40 @@
       
       /* // Mise à jour 'Status Bar'
        if ([strEchecMat isEqual:@"Echec"]) {
-       if (checkCount >1) monControleur.lblEchec.cell.stringValue = @"Échec : ++";
-       else               monControleur.lblEchec.cell.stringValue = @"Échec : +";
+       if (checkCount >1) monConnecteur.lblEchec.cell.stringValue = @"Échec : ++";
+       else               monConnecteur.lblEchec.cell.stringValue = @"Échec : +";
        }
-       else monControleur.lblEchec.cell.stringValue = @"Échec :"; */
+       else monConnecteur.lblEchec.cell.stringValue = @"Échec :"; */
       
       // Restauration des indicateurs de Roque et de Prise e.p.
       petitRoque = roque;        grandRoque = ROQUE;        enPassant = ENPASS;
       
       // Transformation de la chaine du move
-      NSMutableString* myMoveMCN = [MCNmoveToStr ConvertEnStringMove:moveJoueur  PromPion:promPion
+      NSMutableString* myMoveMCN = [MoveToStr ConvertEnStringMove:moveJoueur  PromPion:promPion
                                                             StrEchec:strEchecMat    Board:savedBoard];
       // Mise en forme de la chaine
-      [MCNmoveToStr MettreEnFormeChaine:myMoveMCN Protagoniste:@"J"];
+      [MoveToStr MettreEnFormeChaine:myMoveMCN Protagoniste:@"J"];
       
       /* REVOIR - L'AUTRE OU L'UN ######################################################################## */
       /* // Test examinant si le coup Joueur met l'IA Mat...
        NSSet *movesPossibles = [maMinimax PossibleMovesForSide:sideIA board:liveBoard];
-       if (movesPossibles.count == 0) [monControleur AlertMsgPatMatSide:sideIA onBoard:liveBoard]; */
+       if (movesPossibles.count == 0) [monConnecteur AlertMsgPatMatSide:sideIA onBoard:liveBoard]; */
       
       // MISE À JOUR 'STATUS BAR' HORS EVAL ET TRAIT
       [self MajStatusBarViaMove:moveJoueur PrecBoard:savedBoard StrCheck:strEchecMat];
       
       // Joueur ayant joué, on inverse sideCourant avant de sortir de la méthode et de passer la main à l'IA
       sideCourant = (sideCourant == sideWhite) ? sideBlack : sideWhite;
-      monControleur.lblTrait.cell.stringValue = (sideCourant == sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
+      monConnecteur.lblTrait.cell.stringValue = (sideCourant == sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
       
       /* REVOIR - L'AUTRE OU L'UN ######################################################################## */
       // Test si le coup IA met en échec ou Pat ou Mat le Joueur et message ad-hoc
       if ([maMinimax IsKingInCheck:sideIA board:liveBoard]){
          // Message Echec
-         [monControleur AlertMsgEchecSide:sideIA];
+         [monConnecteur AlertMsgEchecSide:sideIA];
          NSSet *movesPossibles = [maMinimax PossibleMovesForSide:sideIA board:liveBoard];
          if (movesPossibles.count == 0) {
-            [monControleur AlertMsgPatMatSide:sideIA onBoard:liveBoard];
+            [monConnecteur AlertMsgPatMatSide:sideIA onBoard:liveBoard];
          }
       }
       
@@ -414,10 +414,10 @@
       
       /* // Mise à jour 'Status Bar'
        if ([strEchec isEqual:@"Echec"]) {
-       if (checkCount >1) monControleur.lblEchec.cell.stringValue = @"Échec : ++";
-       else               monControleur.lblEchec.cell.stringValue = @"Échec : +";
+       if (checkCount >1) monConnecteur.lblEchec.cell.stringValue = @"Échec : ++";
+       else               monConnecteur.lblEchec.cell.stringValue = @"Échec : +";
        }
-       else monControleur.lblEchec.cell.stringValue = @"Échec :"; */
+       else monConnecteur.lblEchec.cell.stringValue = @"Échec :"; */
       
       NSLog(@"\nLe Move effectué par les %@ est : %@", (sideCourant == 2)? @"Blancs":@"Noirs ", aiMove);
       if (![strEchec isEqual:@""]) NSLog(@"\n La chaine d'échec est : '%@'", strEchec);
@@ -425,15 +425,15 @@
       // Restauration des indicateurs de roque pour utilisation dans 'ConvertEnStringMove'
       petitRoque = roque;           grandRoque = ROQUE;           enPassant = ENPASS;
       
-      NSMutableString* bestMoveIA = [MCNmoveToStr ConvertEnStringMove:aiMove    PromPion:promPion
+      NSMutableString* bestMoveIA = [MoveToStr ConvertEnStringMove:aiMove    PromPion:promPion
                                                              StrEchec:strEchec     Board:savedBoard];
       
-      [MCNmoveToStr MettreEnFormeChaine:bestMoveIA Protagoniste:(side == sideWhite)? @"B":@"N"];
+      [MoveToStr MettreEnFormeChaine:bestMoveIA Protagoniste:(side == sideWhite)? @"B":@"N"];
       
       /* // Test examinant si le coup IA met le Joueur Mat...
        Side otherSide = (side == sideWhite)? sideBlack : sideWhite;
        NSSet *movesPossibles = [maMinimax PossibleMovesForSide:otherSide board:board];
-       if (movesPossibles.count == 0) [monControleur AlertMsgPatMatSide:otherSide onBoard:board]; */
+       if (movesPossibles.count == 0) [monConnecteur AlertMsgPatMatSide:otherSide onBoard:board]; */
       
       
       // MISE À JOUR 'STATUS BAR' HORS EVAL ET TRAIT
@@ -442,13 +442,13 @@
       
       // REVOIR MISE À JOUR DE L'AFFICHAGE DE L'ÉVAL
       NSLog(@"EvalWhitePOV = %d, Indicator = %@", evalWhitePOV, [ChessView VisualIndicator:evalWhitePOV]);
-      monControleur.lblEvalBoard.cell.title = [ChessView VisualIndicator:evalWhitePOV];
+      monConnecteur.lblEvalBoard.cell.title = [ChessView VisualIndicator:evalWhitePOV];
       
       
       // L'IA ayant joué on inverse sideCourant
       //sideCourant = (sideIA == sideWhite) ? sideBlack : sideWhite;
       sideCourant = (sideCourant == sideWhite) ? sideBlack : sideWhite;
-      monControleur.lblTrait.cell.stringValue = (sideCourant == sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
+      monConnecteur.lblTrait.cell.stringValue = (sideCourant == sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
       
       
       /* REVOIR - L'AUTRE OU L'UN ######################################################################## */
@@ -456,10 +456,10 @@
       Side otherSide = (side == sideWhite)? sideBlack : sideWhite;
       if ([maMinimax IsKingInCheck:otherSide board:liveBoard]){
          // Message Echec
-         [monControleur AlertMsgEchecSide:otherSide];
+         [monConnecteur AlertMsgEchecSide:otherSide];
          NSSet *movesPossibles = [maMinimax PossibleMovesForSide:otherSide board:liveBoard];
          if (movesPossibles.count == 0) {
-            [monControleur AlertMsgPatMatSide:otherSide onBoard:liveBoard];
+            [monConnecteur AlertMsgPatMatSide:otherSide onBoard:liveBoard];
          }
       }
       
@@ -474,31 +474,31 @@
    -(void) MajStatusBarViaMove:(Move *)move PrecBoard:(ChessBoard *)precBoard StrCheck:(NSString *)strCheck {
       
       /* lblTrait */
-      //monControleur.lblTrait.cell.stringValue = (sideCourant==sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
+      //monConnecteur.lblTrait.cell.stringValue = (sideCourant==sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
       
       /* lblRoque : déterminé par Méthode ad-hoc */
       [liveBoard CalculerStrRoque];
-      monControleur.lblRoque.cell.stringValue = [NSString stringWithFormat:@"Roque : %@", liveBoard->strRoque];
+      monConnecteur.lblRoque.cell.stringValue = [NSString stringWithFormat:@"Roque : %@", liveBoard->strRoque];
       
       /* lblCibleEP : déterminé par Méthode ad-hoc */
       [liveBoard DeterminerCibleEP:move];
-      monControleur.lblCibleEP.cell.stringValue = [NSString stringWithFormat:@"Cible EP : %@", liveBoard->strCibleEP];
+      monConnecteur.lblCibleEP.cell.stringValue = [NSString stringWithFormat:@"Cible EP : %@", liveBoard->strCibleEP];
       
       /* lbl50Coups : déterminé par Méthode ad-hoc */
       [precBoard CompterDemiCoups:move];
-      monControleur.lbl50Coups.cell.stringValue = [NSString stringWithFormat:@"50 demis : %d", liveBoard->nbDemis];
+      monConnecteur.lbl50Coups.cell.stringValue = [NSString stringWithFormat:@"50 demis : %d", liveBoard->nbDemis];
       if (liveBoard->nbDemis == 50) [liveBoard ProposerNulle50Coups]; //appel règle des 50 coups si nécessaire
       
       /* lblCoup : incrémenté dès que c'est aux Noirs de jouer */
       if (sideCourant == sideBlack) liveBoard->nbEntiers ++;
-      monControleur.lblNumCoup.cell.stringValue = [NSString stringWithFormat:@"n° coup : %d", liveBoard->nbEntiers];
+      monConnecteur.lblNumCoup.cell.stringValue = [NSString stringWithFormat:@"n° coup : %d", liveBoard->nbEntiers];
       
       /* lblEchec : déterminé ci-dessous */
       if ([strCheck isEqual:@"Echec"]) {
-         if (checkCount >1) monControleur.lblEchec.cell.stringValue = @"Échec : ++";
-         else               monControleur.lblEchec.cell.stringValue = @"Échec : +";
+         if (checkCount >1) monConnecteur.lblEchec.cell.stringValue = @"Échec : ++";
+         else               monConnecteur.lblEchec.cell.stringValue = @"Échec : +";
       }
-      else                  monControleur.lblEchec.cell.stringValue = @"Échec :";
+      else                  monConnecteur.lblEchec.cell.stringValue = @"Échec :";
       
       /* lblInfo : traité par ailleurs et en dehors des seuls cas des moves exécutés, puisqu'il s'agit
        davantage de renseigner l'utilisateur sur le déroulement de la partie...*/

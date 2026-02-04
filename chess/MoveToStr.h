@@ -1,4 +1,4 @@
-//  MCNmoveToStr.h
+//  MoveToStr.h
 //  Chess
 //  Created by MCN on 22/02/2022
 //  Copyright © 2022 MCN. All rights reserved
@@ -7,12 +7,12 @@
 #include "Minimax.h"
 
 
-/* La Classe 'MCNmoveToStr' n'a de Classe que le nom car elle n'a pas vocation à générer des instances,
+/* La Classe 'MoveToStr' n'a de Classe que le nom car elle n'a pas vocation à générer des instances,
 mais plutôt à définir des méthodes (de classe uniquement donc) qui s'apparentent plus dans leur role et
 leur utilisation, à des fonctions c. Mais dans un projet Objective-C, le rendu global est + élégant ;-)
 NB : c'est également le cas des très respectables classes 'Minimax' et 'RuleBook' */
 
-@interface MCNmoveToStr : NSObject
+@interface MoveToStr : NSObject
 
    // No variable d'instance :
    {

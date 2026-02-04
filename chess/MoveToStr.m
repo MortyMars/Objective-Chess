@@ -1,9 +1,9 @@
-//  MCNmoveToStr.m
+//  MoveToStr.m
 //  Chess
 //  Created by MCN on 22/02/2022
 //  Copyright © 2022 MCN. All rights reserved
 
-#import "MCNmoveToStr.h"
+#import "MoveToStr.h"
 
    /* Classe créée afin d'abriter les Méthodes implémentées ...
       1) pour EXTRAIRE d'un 'Move' le déplacement exécuté
@@ -16,7 +16,7 @@
         - dans ChessView.m encore, à chaque coup de l'IA quand elle a les noirs
           et à partir du deuxième coup quand elle a les blancs  */
 
-@implementation MCNmoveToStr
+@implementation MoveToStr
 
 
    // ==================================================================================================
@@ -105,7 +105,7 @@
                            [NSString stringWithFormat:@"%@ : %@", strJ_IA, moveToStr]];
       
       // Mise à jour du contrôle 'txtView' affichant la liste des coups
-      [monControleur MaJtxtCoups];
+      [monConnecteur MaJtxtCoups];
       
    } // Fin de 'MettreEnFormeChaine'
 

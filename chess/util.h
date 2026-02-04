@@ -102,14 +102,14 @@ extern int checkCount;     /* Nbre de mises en échec simultanées subies par un
 extern int evalWhitePOV;   /* Valeur d'évaluation d'un Board, signée conformément à la convention */
 
 extern int  numCoup;       // Num apparaissant dans la liste des coups joués
-extern long numDebugLine;  // Num de ligne du fichier de déboggage (implémentation supprimée du code)
+extern long numDebugLine;  // Num de ligne du fichier de débogage (implémentation supprimée du code)
 
 extern int NUMBER_MOVES_AHEAD;
 
-/* Création d'une variable globale particulière, de type MCNconnecteur, ayant pour but de contrôler l'UI par
-le code après lui avoir affecté la valeur de l'objet controleur instancié par AppDelegate (cf. cette classe) */
-@class MCNconnecteur;
-extern MCNconnecteur *monControleur;
+/* Variable globale de type Connecteur permettant de contrôler l'UI depuis n'importe quelle classe.
+L'instance sera créée par Interface Builder et affectée à cette variable globale dans AppDelegate. */
+@class Connecteur;
+extern Connecteur *monConnecteur;
 
 // Déclaration de 2 tableaux intervenant dans la 'description' des Pos et des Move
 extern int Absc1[8];
@@ -122,8 +122,3 @@ extern Minimax *maMinimax;
 
 
 extern void DoEvents(void);
-
-
-
-
-

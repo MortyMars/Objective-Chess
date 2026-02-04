@@ -439,12 +439,12 @@ CA
         </window>
         <customObject id="kit-5z-Zxr" userLabel="monAppDelegate" customClass="AppDelegate">
             <connections>
-                <outlet property="monMCNConnecteur" destination="YzN-GE-tMw" id="GqI-m1-sHf"/>
+                <outlet property="connecteurFromIB" destination="YzN-GE-tMw" id="t6e-Tt-XeB"/>
                 <outlet property="window" destination="371" id="0Bu-za-7wt"/>
             </connections>
         </customObject>
         <customObject id="oGd-vg-EmX" userLabel="monChessBoard" customClass="ChessBoard"/>
-        <customObject id="YzN-GE-tMw" userLabel="monMCNConnecteur" customClass="MCNconnecteur">
+        <customObject id="YzN-GE-tMw" userLabel="monConnecteur" customClass="Connecteur">
             <connections>
                 <outlet property="chiffresSideBlancs" destination="huy-nn-Je9" id="at3-EP-BsE"/>
                 <outlet property="chiffresSideBlancsGauche" destination="XEc-yi-VdK" id="ZK4-gU-m4f"/>
@@ -472,6 +472,6 @@ CA
                 <outlet property="txtCoups" destination="hcA-ub-qgC" id="DKO-H5-yQN"/>
             </connections>
         </customObject>
-        <customObject id="3iP-Qx-zvq" userLabel="monMCNdiagramme" customClass="MCNdiagramme"/>
+        <customObject id="3iP-Qx-zvq" userLabel="monDiagramme" customClass="Diagramme"/>
     </objects>
 </document>

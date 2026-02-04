@@ -1,4 +1,4 @@
-//  MCNdiagramme.h
+//  Diagramme.h
 //  Chess
 //  Created by MCN on 03/04/2022
 //  Copyright © 2022 MCN. All rights reserved
@@ -9,7 +9,7 @@
 //typedef enum {Slash=('/'),_1,_2,_3,_4,_5,_6,_7,_8,p,r,n,b,q,k,P,R,N,B,Q,K} carValid;
 
 
-@interface MCNdiagramme : NSView
+@interface Diagramme : NSView
 
    {  /* Création d'une variable d'instance de type NSOperation
       permettant un déroulement séquentiel des coups successifs */

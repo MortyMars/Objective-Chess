@@ -1,4 +1,4 @@
-//  MCNconnecteur.h
+//  Connecteur.h
 //  Chess
 //  Created by MCN on 01/11/2020.
 //  Copyright © 2020 MCN - All rights reserved
@@ -10,7 +10,7 @@
 @class ChessView;
 @protocol ChessViewDelegate;
 
-@interface MCNconnecteur : NSObjectController <ChessViewDelegate>
+@interface Connecteur : NSObjectController <ChessViewDelegate>
 
    // Variables d'instance :
    {
@@ -45,7 +45,7 @@
    -(void)InitialiseTxtCoups:(NSString *)textSortie;
 
    // Déclaration d'une Méthode pour la MISE A JOUR de la zone de texte 'txtCoups'
-   // Elle n'est appelée dans 'MCNmoveToStr' pour chaque MàJ nécessaire de la liste des coups
+   // Elle n'est appelée dans 'MoveToStr' pour chaque MàJ nécessaire de la liste des coups
    -(void)MaJtxtCoups;
 
    // Création des zones de texte assurant le repérage des cases

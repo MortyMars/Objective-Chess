@@ -4,8 +4,8 @@
 // Copyright (c) 2013 Andrew Wang. All rights reserved
 // Optimized New Engine (makeMove/unmakeMove based) by MCN in 2026
 
-#import "MCNconnecteur.h"
-#import "MCNmoveToStr.h"
+#import "Connecteur.h"
+#import "MoveToStr.h"
 #import "Piece.h"
 #import "Move.h"
 

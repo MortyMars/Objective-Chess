@@ -95,7 +95,7 @@ static int nodes = 0;
       
       /* PRÉREQUIS : Tester si side est mat ou pat */
       if (movesPossibles.count == 0) {
-         [monControleur AlertMsgPatMatSide:side onBoard:board];
+         [monConnecteur AlertMsgPatMatSide:side onBoard:board];
          return nil;
       }
       
@@ -963,8 +963,8 @@ static int nodes = 0;
       // Message en Log
       strOtherSide = (side == sideWhite)? @"Noir":@"Blanc";
       if ([strEchec isEqual:@"Echec"]) {
-         //[monControleur.maChessView.delegate AlertMsgEchecSide:otherSide];
-         [monControleur AlertMsgEchecSide:otherSide];
+         //[monConnecteur.maChessView.delegate AlertMsgEchecSide:otherSide];
+         [monConnecteur AlertMsgEchecSide:otherSide];
          NSLog(@"\nLe Roi %@ est en situation : %@", strOtherSide, strEchec);
       }
       
@@ -1017,19 +1017,19 @@ static int nodes = 0;
             stringCoupsPartie = [stringCoupsPartie substringWithRange:NSMakeRange(0,stringCoupsPartie.length-1)];
          }
          
-         monControleur.lblEchec.cell.stringValue = @"Échec et Mat !";
+         monConnecteur.lblEchec.cell.stringValue = @"Échec et Mat !";
          
          if (side == sideBlack) {
             msgTitre = @"Les NOIRS sont Mat !";
             msgInfo  = @"Partie terminée, Les BLANCS gagnent !";
             stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t1-0"];
-            [monControleur MaJtxtCoups];
+            [monConnecteur MaJtxtCoups];
          }
          else if (side == sideWhite) {
             msgTitre = @"Les BLANCS sont Mat !";
             msgInfo  = @"Partie terminée, Les NOIRS gagnent !";
             stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t0-1"];
-            [monControleur MaJtxtCoups];
+            [monConnecteur MaJtxtCoups];
          }
          
          NSAlert *alertMat = [[NSAlert alloc] init];
@@ -1050,7 +1050,7 @@ static int nodes = 0;
       else {
          // PAT DÉTECTÉ
          stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"\n\t1/2-1/2"];
-         [monControleur MaJtxtCoups];
+         [monConnecteur MaJtxtCoups];
          
          NSString *msgTitre;
          NSString *msgInfo;
@@ -1064,7 +1064,7 @@ static int nodes = 0;
             msgInfo  = @"Le Roi Blanc est Pat, la partie est déclarée nulle !";
          }
          
-         monControleur.lblEchec.cell.stringValue = @"Pat !";
+         monConnecteur.lblEchec.cell.stringValue = @"Pat !";
          
          NSAlert *alertPat = [[NSAlert alloc] init];
          [alertPat addButtonWithTitle:@"OK"];

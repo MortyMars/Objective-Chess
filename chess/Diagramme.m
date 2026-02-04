@@ -1,16 +1,16 @@
-//  MCNdiagramme.m
+//  Diagramme.m
 //  Chess
 //  Created by MCN on 03/04/2022
 //  Copyright © 2022 MCN. All rights reserved
 
-#import "MCNdiagramme.h"
+#import "Diagramme.h"
 
 
 //static NSString *strPieces;
 NSMutableString *strPiecesProv;
 NSString *strPieces;
 
-@implementation MCNdiagramme
+@implementation Diagramme
 
    // Initialisation des instances
    -(instancetype) init {
@@ -47,13 +47,13 @@ NSString *strPieces;
       if (codeFenOK==false) return;
       
       // Initialisation des variables
-      ChessView  *viewEC  = monControleur.maChessView;
-      ChessBoard *boardEC = monControleur.maChessView->liveBoard;
+      ChessView  *viewEC  = monConnecteur.maChessView;
+      ChessBoard *boardEC = monConnecteur.maChessView->liveBoard;
       /* définition (et init) de compteur pour qu'il soit accessible et assignable dans un bloc */
       __block int compteur = 1;
       
       // Cas du trait aux Blancs
-      if ([monControleur.lblTrait.cell.stringValue isEqual:@"Trait : Blancs"]) {
+      if ([monConnecteur.lblTrait.cell.stringValue isEqual:@"Trait : Blancs"]) {
          // Boite de dialogue, générant une interruption rendant possible l'affichage du board avant moves
          NSAlert *stop1 = [[NSAlert alloc] init];
          [stop1 setMessageText:    @"Résolution de Diagramme IA vs IA"];
@@ -80,7 +80,7 @@ NSString *strPieces;
                /* Forcement du thread principal pour MàJ ChessView et liste coups */
                dispatch_async(dispatch_get_main_queue(), ^{
                   [viewEC setNeedsDisplay:YES];
-                  [monControleur MaJtxtCoups];
+                  [monConnecteur MaJtxtCoups];
                }); // Fin Dispatch
             
                /* Si les Noirs ne se retrouvent pas Pat ou Mat après le coup Blancs ci-dessus... */
@@ -94,7 +94,7 @@ NSString *strPieces;
                   /* Forcement du thread principal pour MàJ ChessView et liste coups */
                   dispatch_async(dispatch_get_main_queue(), ^{
                      [viewEC setNeedsDisplay:YES];
-                     [monControleur MaJtxtCoups];
+                     [monConnecteur MaJtxtCoups];
                   }); // Fin Dispatch
                } // Fin if
             
@@ -105,7 +105,7 @@ NSString *strPieces;
       } // Fin de if Trait aux Blancs
       
       // Cas du trait aux Noirs
-      else if ([monControleur.lblTrait.cell.stringValue isEqual:@"Trait : Noirs"]) {
+      else if ([monConnecteur.lblTrait.cell.stringValue isEqual:@"Trait : Noirs"]) {
          
           // Boite de dialogue, générant une interruption rendant possible l'affichage du board avant moves
           NSAlert *stop1 = [[NSAlert alloc] init];
@@ -133,7 +133,7 @@ NSString *strPieces;
                 /* Forcement du thread principal pour MàJ ChessView et liste coups */
                 dispatch_async(dispatch_get_main_queue(), ^{
                    [viewEC setNeedsDisplay:YES];
-                   [monControleur MaJtxtCoups];
+                   [monConnecteur MaJtxtCoups];
                 }); // Fin Dispatch
              
                 /* Si les Blancs ne se retrouvent pas Pat ou Mat après le coup Noirs ci-dessus... */
@@ -147,7 +147,7 @@ NSString *strPieces;
                    /* Forcement du thread principal pour MàJ ChessView et liste coups */
                    dispatch_async(dispatch_get_main_queue(), ^{
                       [viewEC setNeedsDisplay:YES];
-                      [monControleur MaJtxtCoups];
+                      [monConnecteur MaJtxtCoups];
                    }); // Fin Dispatch
                 } // Fin if
              
@@ -263,7 +263,7 @@ NSString *strPieces;
       
       
       NSLog(@"\nCode FEN lu : %@",strFEN);
-      monControleur.lblInfo.cell.stringValue = @"Info : Diagramme correctement chargé !";
+      monConnecteur.lblInfo.cell.stringValue = @"Info : Diagramme correctement chargé !";
       return strFEN;
    }
 
@@ -277,7 +277,7 @@ NSString *strPieces;
       if (codeFenOK==false) return;
       
       // Effacement d'un éventuel précédent board déjà construit
-      ChessBoard *fenBoard = monControleur.maChessView->liveBoard;
+      ChessBoard *fenBoard = monConnecteur.maChessView->liveBoard;
       [self EffaceBoardBlancsEnBas:fenBoard];
       
       NSString *strTraitEtRoque;
@@ -347,11 +347,11 @@ NSString *strPieces;
       sideJoueur = sideWhite; sideIA = sideBlack; sideCourant = sideWhite;
       
       // Calcul d'EvalBoard
-      monControleur.lblEvalBoard.cell.stringValue = [NSString stringWithFormat:@"Éval : %d",
+      monConnecteur.lblEvalBoard.cell.stringValue = [NSString stringWithFormat:@"Éval : %d",
                                                        [maMinimax EvalBoardForSide:sideWhite board:fenBoard]];
       
       // Récupération du 'focus' sur le ChessView instancié par l'application
-      ChessView *fenView = monControleur.maChessView;
+      ChessView *fenView = monConnecteur.maChessView;
       
       fenView.needsDisplay = YES;
       
@@ -377,11 +377,11 @@ NSString *strPieces;
       
       // Réinitialisation de la liste des coups
       stringCoupsPartie = @"";
-      [monControleur MaJtxtCoups];
+      [monConnecteur MaJtxtCoups];
       
       // Définition Couleurs Joueur et IA et MàJ repères de cases
       sideJoueur = sideWhite;    sideIA = sideBlack;
-      [monControleur MajReperesCases];
+      [monConnecteur MajReperesCases];
       
    } // Fin de Méthode EffaceBoardBlancsEnBas
 
@@ -415,7 +415,7 @@ NSString *strPieces;
       else if ([secondStr characterAtIndex:0] == 'b') {sTrait = @"Trait : Noirs"; sideCourant = sideBlack;}
       else {sTrait = @"Trait : incorrect, valeur par défaut retenue (Blancs)"; sideCourant = sideWhite;}
       // Il n'y a pas de variable d'instance pour le Trait...
-      monControleur.lblTrait.cell.stringValue = sTrait;
+      monConnecteur.lblTrait.cell.stringValue = sTrait;
       NSLog(@"Phrase de la sous-chaîne du Trait : '%@'", sTrait);
       
       // Récupération de l'emplacement des espaces dans la chaine pour décrypter la suite
@@ -433,23 +433,23 @@ NSString *strPieces;
       // Récupération des 4 chaines unitaires suivantes
       // Roque
       NSString *sRoque = [secondStr substringWithRange:NSMakeRange(e[0]+1, e[1]-(e[0]+1))];
-      monControleur.maChessView->liveBoard->strRoque = sRoque;
-      monControleur.lblRoque.cell.stringValue = [NSString stringWithFormat:@"Roque : %@", sRoque];;
+      monConnecteur.maChessView->liveBoard->strRoque = sRoque;
+      monConnecteur.lblRoque.cell.stringValue = [NSString stringWithFormat:@"Roque : %@", sRoque];;
       NSLog(@"Sous-chaîne du Roque              : '%@'", sRoque);
       // CibleEP
       NSString *sCibleEP = [secondStr substringWithRange:NSMakeRange(e[1]+1, e[2]-(e[1]+1))];
-      monControleur.maChessView->liveBoard->strCibleEP = sCibleEP;
-      monControleur.lblCibleEP.cell.stringValue = [NSString stringWithFormat:@"Cible e.p. : %@",sCibleEP];
+      monConnecteur.maChessView->liveBoard->strCibleEP = sCibleEP;
+      monConnecteur.lblCibleEP.cell.stringValue = [NSString stringWithFormat:@"Cible e.p. : %@",sCibleEP];
       NSLog(@"Sous-chaîne de la CibleEP         : '%@'", sCibleEP);
       // Demis
       NSString *sDemis = [secondStr substringWithRange:NSMakeRange(e[2]+1, e[3]-(e[2]+1))];
-      monControleur.maChessView->liveBoard->nbDemis = [sDemis intValue];
-      monControleur.lbl50Coups.cell.stringValue = [NSString stringWithFormat:@"50 demis : %@", sDemis];
+      monConnecteur.maChessView->liveBoard->nbDemis = [sDemis intValue];
+      monConnecteur.lbl50Coups.cell.stringValue = [NSString stringWithFormat:@"50 demis : %@", sDemis];
       NSLog(@"Sous-chaîne du n° des Demis       : '%@'", sDemis);
       // Coup : tjs dernier caractère de la chaine
       NSString *sCoup = [secondStr substringWithRange:NSMakeRange(e[3]+1,secondStr.length-(e[3]+1))];
-      monControleur.maChessView->liveBoard->nbEntiers = [sCoup intValue];
-      monControleur.lblNumCoup.cell.stringValue = [NSString stringWithFormat:@"Coup n° : %@", sCoup];;
+      monConnecteur.maChessView->liveBoard->nbEntiers = [sCoup intValue];
+      monConnecteur.lblNumCoup.cell.stringValue = [NSString stringWithFormat:@"Coup n° : %@", sCoup];;
       NSLog(@"Sous-chaîne du n° du Coup         : '%@'\n", sCoup);
    
    } // Fin de Méthode 'LireSecondPartStrFEN'
@@ -460,8 +460,8 @@ NSString *strPieces;
    // dans un NSTimer
    -(void)LancerCoupNoirs {
       
-      ChessView  *viewEC  = monControleur.maChessView;
-      ChessBoard *boardEC = monControleur.maChessView->liveBoard;
+      ChessView  *viewEC  = monConnecteur.maChessView;
+      ChessBoard *boardEC = monConnecteur.maChessView->liveBoard;
       
       [viewEC MakeIAMoveForSide:sideBlack Board:boardEC];
    }
@@ -496,7 +496,7 @@ NSString *strPieces;
       
       /* Récup info d'une mise en échec éventuelle et de Prise e.p. pour renseigner 'ConvertEnStringMove'
       Bizarrement 'TestEchecForSide' RAZ les indic de Roque et de Prise e.p., d'où la sauvegarde ci-avant */
-      NSString *strEchec = [MCNdiagramme SilentTestEchecFavSide:side Board:board];
+      NSString *strEchec = [Diagramme SilentTestEchecFavSide:side Board:board];
       
       NSLog(@"\nLe Move effectué par les %@ est : %@", (sideCourant == 2)? @"Blancs":@"Noirs ", aiMove);
       if (![strEchec isEqual:@""]) NSLog(@"\nLa chaîne d'échec est : '%@'", strEchec);
@@ -504,29 +504,29 @@ NSString *strPieces;
       // Restauration des indicateurs de roque pour utilisation dans 'ConvertEnStringMove'
       petitRoque = roque;           grandRoque = ROQUE;           enPassant = ENPASS;
       
-      NSMutableString* bestMoveIA = [MCNmoveToStr ConvertEnStringMove:aiMove    PromPion:promPion
+      NSMutableString* bestMoveIA = [MoveToStr ConvertEnStringMove:aiMove    PromPion:promPion
                                                              StrEchec:strEchec     Board:savedBoard];
       
       /* Ligne déplacée dans le Thread Principal ci dessous
-      [MCNmoveToStr MettreEnFormeChaine:bestMoveIA Protagoniste:(side == sideWhite)? @"B":@"N"]; */
+      [MoveToStr MettreEnFormeChaine:bestMoveIA Protagoniste:(side == sideWhite)? @"B":@"N"]; */
       
       // Test examinant si le coup IA met le Joueur Mat...
       Side otherSide = (side == sideWhite)? sideBlack : sideWhite;
       NSSet *movesPossibles = [maMinimax PossibleMovesForSide:otherSide board:board];
       
       /* Ligne déplacée dans le thread principal
-      if (movesPossibles.count == 0) [MCNdiagramme SilentAlertMsgPatMatSide:otherSide onBoard:board]; */
+      if (movesPossibles.count == 0) [Diagramme SilentAlertMsgPatMatSide:otherSide onBoard:board]; */
       
       
       // MAIN THREAD POUR MàJ DE L'UI
       dispatch_async(dispatch_get_main_queue(), ^{
           
          // 1) Mise en forme de la chaîne (appelle MaJtxtCoups)
-         [MCNmoveToStr MettreEnFormeChaine:bestMoveIA Protagoniste:(side == sideWhite)? @"B":@"N"];
+         [MoveToStr MettreEnFormeChaine:bestMoveIA Protagoniste:(side == sideWhite)? @"B":@"N"];
          
          // 2) Notification Pat/Mat si nécessaire
          if (movesPossibles.count == 0) {
-            [MCNdiagramme SilentAlertMsgPatMatSide:otherSide onBoard:board];
+            [Diagramme SilentAlertMsgPatMatSide:otherSide onBoard:board];
          }
          
          // 3) MISE À JOUR 'STATUS BAR' HORS EVAL ET TRAIT
@@ -535,15 +535,15 @@ NSString *strPieces;
          // 4) MISE À JOUR DE L'AFFICHAGE DE L'ÉVAL DU BOARD APRÈS LE COUP
          /* int finalEval = [Minimax EvalBoardForSide:sideWhite board:board];
          if (finalEval > 0)
-            monControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : +%d", finalEval];
+            monConnecteur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : +%d", finalEval];
          else
-            monControleur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : %d", finalEval]; */
+            monConnecteur.lblEvalBoard.cell.title = [NSString stringWithFormat:@"Éval : %d", finalEval]; */
          NSLog(@"EvalWhitePOV = %d, Indicator = %@", evalWhitePOV, [ChessView VisualIndicator:evalWhitePOV]);
-         monControleur.lblEvalBoard.cell.title = [ChessView VisualIndicator:evalWhitePOV];
+         monConnecteur.lblEvalBoard.cell.title = [ChessView VisualIndicator:evalWhitePOV];
           
          // 5) L'IA ayant joué on inverse sideCourant
          sideCourant = (sideCourant == sideWhite) ? sideBlack : sideWhite;
-         monControleur.lblTrait.cell.stringValue = (sideCourant == sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
+         monConnecteur.lblTrait.cell.stringValue = (sideCourant == sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
          
       });
       
@@ -607,31 +607,31 @@ NSString *strPieces;
    // Mettant à jour la majorité des champs de la 'Barre d'état'
    -(void) SilentMajStatusBarViaMove:(Move *)move PrecBoard:(ChessBoard *)precBoard StrCheck:(NSString *)strCheck {
       // lblTrait
-      //monControleur.lblTrait.cell.stringValue = (sideCourant==sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
+      //monConnecteur.lblTrait.cell.stringValue = (sideCourant==sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
       // lblRoque
-      [monControleur.maChessView->liveBoard CalculerStrRoque];
-      monControleur.lblRoque.cell.stringValue = [NSString stringWithFormat:@"Roque : %@",
-                                                    monControleur.maChessView->liveBoard->strRoque];
+      [monConnecteur.maChessView->liveBoard CalculerStrRoque];
+      monConnecteur.lblRoque.cell.stringValue = [NSString stringWithFormat:@"Roque : %@",
+                                                    monConnecteur.maChessView->liveBoard->strRoque];
       // lblCibleEP
-      [monControleur.maChessView->liveBoard DeterminerCibleEP:move];
-      monControleur.lblCibleEP.cell.stringValue = [NSString stringWithFormat:@"Cible EP : %@",
-                                                      monControleur.maChessView->liveBoard->strCibleEP];
+      [monConnecteur.maChessView->liveBoard DeterminerCibleEP:move];
+      monConnecteur.lblCibleEP.cell.stringValue = [NSString stringWithFormat:@"Cible EP : %@",
+                                                      monConnecteur.maChessView->liveBoard->strCibleEP];
       //lbl50Coups
       [precBoard CompterDemiCoups:move];
-      monControleur.lbl50Coups.cell.stringValue = [NSString stringWithFormat:@"50 demis : %d",
-                                                      monControleur.maChessView->liveBoard->nbDemis];
-      /* if (monControleur.maChessView->liveBoard->nbDemis == 50)
-                     [monControleur.maChessView->liveBoard ProposerNulle50Coups]; */
+      monConnecteur.lbl50Coups.cell.stringValue = [NSString stringWithFormat:@"50 demis : %d",
+                                                      monConnecteur.maChessView->liveBoard->nbDemis];
+      /* if (monConnecteur.maChessView->liveBoard->nbDemis == 50)
+                     [monConnecteur.maChessView->liveBoard ProposerNulle50Coups]; */
       // lblCoup
-      if (sideCourant == sideBlack) monControleur.maChessView->liveBoard->nbEntiers ++;
-      monControleur.lblNumCoup.cell.stringValue = [NSString stringWithFormat:@"n° coup : %d",
-                                                      monControleur.maChessView->liveBoard->nbEntiers];
+      if (sideCourant == sideBlack) monConnecteur.maChessView->liveBoard->nbEntiers ++;
+      monConnecteur.lblNumCoup.cell.stringValue = [NSString stringWithFormat:@"n° coup : %d",
+                                                      monConnecteur.maChessView->liveBoard->nbEntiers];
       // lblEchec
       if ([strCheck isEqual:@"Echec"]) {
-         if (checkCount >1) monControleur.lblEchec.cell.stringValue = @"Échec : ++";
-         else               monControleur.lblEchec.cell.stringValue = @"Échec : +";
+         if (checkCount >1) monConnecteur.lblEchec.cell.stringValue = @"Échec : ++";
+         else               monConnecteur.lblEchec.cell.stringValue = @"Échec : +";
       }
-      else                  monControleur.lblEchec.cell.stringValue = @"Échec :";
+      else                  monConnecteur.lblEchec.cell.stringValue = @"Échec :";
       /* lblInfo : traité par ailleurs et en dehors des seuls cas des moves exécutés, puisqu'il s'agit
        davantage de renseigner l'utilisateur sur le déroulement de la partie...*/
    } // Fin de Méthode 'SilentMajStatusBarViaMove'
@@ -664,7 +664,7 @@ NSString *strPieces;
          }
          
          // Mise à jour 'Status Bar'
-         monControleur.lblEchec.cell.stringValue = @"Échec et Mat !";
+         monConnecteur.lblEchec.cell.stringValue = @"Échec et Mat !";
          
          // Boite de dialogue
          if (side == sideBlack)
@@ -673,7 +673,7 @@ NSString *strPieces;
             // Mise à jour de la liste des coups et du contrôle 'txtView'
             // on ajoute un '#' pour signifier mat, puis 1-0 pour "les Blancs gagnent"
             stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t1-0"];
-            [monControleur MaJtxtCoups];
+            [monConnecteur MaJtxtCoups];
          }
          else if (side == sideWhite)
          {  msgTitre = @"Les  BLANCS  sont Mat !";
@@ -681,7 +681,7 @@ NSString *strPieces;
             // Mise à jour de la liste des coups et du contrôle 'txtView'
             // on ajoute un '#' pour signifier mat, puis 0-1 pour "les Noirs gagnent"
             stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t0-1"];
-            [monControleur MaJtxtCoups];
+            [monConnecteur MaJtxtCoups];
          }
          
          stopMatOuPat = YES;
@@ -694,7 +694,7 @@ NSString *strPieces;
          // Si pas de move possible mais pas de situation d'Échec alors 'Pat'
          // Mise à jour de la liste des coups et du contrôle 'textView'
          stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"\n\t1/2-1/2"];
-         [monControleur MaJtxtCoups];
+         [monConnecteur MaJtxtCoups];
          
          NSString *msgTitre;
          NSString *msgInfo;
@@ -708,7 +708,7 @@ NSString *strPieces;
          }
          
          // Mise à jour 'Status Bar'
-         monControleur.lblEchec.cell.stringValue = @"Pat !";
+         monConnecteur.lblEchec.cell.stringValue = @"Pat !";
          
          stopMatOuPat = YES;
          

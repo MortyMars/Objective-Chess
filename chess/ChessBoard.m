@@ -60,11 +60,11 @@
       // Réinitialisation de la liste des coups
       stringCoupsPartie = @"";
       numCoup = 2; // N° des coups joués, initialisé à 2 car le n°1 est intégré au 1er coup
-      [monControleur MaJtxtCoups];
+      [monConnecteur MaJtxtCoups];
       
       // Définition Couleurs Joueur et IA et MàJ repères de cases
       sideJoueur = sideWhite;    sideIA = sideBlack;
-      [monControleur MajReperesCases];
+      [monConnecteur MajReperesCases];
       
       // Les pièces sont créées sur le board, les BLANCS en BAS
       [self SetupPieces];
@@ -73,12 +73,12 @@
 
       
       // Chargement du board dans la vue active et rafraichissement
-      monControleur.maChessView->liveBoard = self;
-      monControleur.maChessView.needsDisplay = YES;
+      monConnecteur.maChessView->liveBoard = self;
+      monConnecteur.maChessView.needsDisplay = YES;
       
       //MàJ des menus
-      monControleur.menuPoursuivre.title = @"Poursuivre avec les Noirs";
-      monControleur.menuPoursuivre.enabled = YES;
+      monConnecteur.menuPoursuivre.title = @"Poursuivre avec les Noirs";
+      monConnecteur.menuPoursuivre.enabled = YES;
       
    }
 
@@ -107,11 +107,11 @@
       // Réinitialisation de la liste des coups
       stringCoupsPartie = @"";
       numCoup = 2; // N° des coups joués, initialisé à 2 car le n°1 est intégré au 1er coup
-      [monControleur MaJtxtCoups];
+      [monConnecteur MaJtxtCoups];
       
       // Définition Couleurs Joueur et IA et MàJ repères de cases
       sideJoueur = sideBlack;    sideIA = sideWhite;
-      [monControleur MajReperesCases];
+      [monConnecteur MajReperesCases];
       
       // Les pièces sont créées sur le board, les NOIRS en BAS
       [self SetupPieces];
@@ -120,15 +120,15 @@
 
       
       // Chargement du board dans la vue active et rafraichissement
-      monControleur.maChessView->liveBoard = self;
-      monControleur.maChessView.needsDisplay = YES;
+      monConnecteur.maChessView->liveBoard = self;
+      monConnecteur.maChessView.needsDisplay = YES;
       
       // Affichage du 1er coup de l'IA qui joue les BLANCS
-      [monControleur InitialiseTxtCoups:stringCoupsPartie];
+      [monConnecteur InitialiseTxtCoups:stringCoupsPartie];
       
       //MàJ des menus
-      monControleur.menuPoursuivre.title = @"Poursuivre avec les Blancs";
-      monControleur.menuPoursuivre.enabled = YES;
+      monConnecteur.menuPoursuivre.title = @"Poursuivre avec les Blancs";
+      monConnecteur.menuPoursuivre.enabled = YES;
       
    }
 
@@ -138,7 +138,7 @@
    - (IBAction)RetournerBoard:(id)sender {
       
       // Recopie des pièces du boardA vers le boardB
-      ChessBoard *boardA = monControleur.maChessView->liveBoard;
+      ChessBoard *boardA = monConnecteur.maChessView->liveBoard;
       ChessBoard *boardB = [[ChessBoard alloc]init];
       for (int x=0; x<8; x++) {
          for (int y=0; y<8; y++){
@@ -155,34 +155,34 @@
       boardB->nbEntiers  = boardA->nbEntiers;
       
       // Focus sur le nouveau board
-      monControleur.maChessView->liveBoard = boardB;
-      monControleur.maChessView.needsDisplay = YES;
+      monConnecteur.maChessView->liveBoard = boardB;
+      monConnecteur.maChessView.needsDisplay = YES;
       
       // Recalage de la partie
       if (sideJoueur == sideWhite) {
          sideJoueur = sideBlack;
          sideIA = sideWhite;
-         [monControleur.maChessView MakeIAMoveForSide:sideWhite Board:boardB];
+         [monConnecteur.maChessView MakeIAMoveForSide:sideWhite Board:boardB];
          sideCourant = sideBlack;
       }
       else if (sideJoueur == sideBlack) {
          sideJoueur = sideWhite;
          sideIA = sideBlack;
-         [monControleur.maChessView MakeIAMoveForSide:sideBlack Board:boardB];
+         [monConnecteur.maChessView MakeIAMoveForSide:sideBlack Board:boardB];
          sideCourant = sideWhite;
       }
       
       // MàJ repérage des cases et de la 'status bar'
-      [monControleur MajReperesCases];
-      monControleur.lblRoque.cell.stringValue   = [NSString stringWithFormat:@"Roque : %@",      boardB->strRoque];
-      monControleur.lblCibleEP.cell.stringValue = [NSString stringWithFormat:@"Cible e.p. : %@", boardB->strCibleEP];
-      monControleur.lbl50Coups.cell.stringValue = [NSString stringWithFormat:@"50 demis : %d",   boardB->nbDemis];
-      monControleur.lblNumCoup.cell.stringValue = [NSString stringWithFormat:@"Coup n° : %d",    boardB->nbEntiers];
+      [monConnecteur MajReperesCases];
+      monConnecteur.lblRoque.cell.stringValue   = [NSString stringWithFormat:@"Roque : %@",      boardB->strRoque];
+      monConnecteur.lblCibleEP.cell.stringValue = [NSString stringWithFormat:@"Cible e.p. : %@", boardB->strCibleEP];
+      monConnecteur.lbl50Coups.cell.stringValue = [NSString stringWithFormat:@"50 demis : %d",   boardB->nbDemis];
+      monConnecteur.lblNumCoup.cell.stringValue = [NSString stringWithFormat:@"Coup n° : %d",    boardB->nbEntiers];
       
       // MàJ menus
-      if([monControleur.menuPoursuivre.title isEqual:@"Poursuivre avec les Blancs"])
-         monControleur.menuPoursuivre.title = @"Poursuivre avec les Noirs";
-      else      monControleur.menuPoursuivre.title = @"Poursuivre avec les Blancs";
+      if([monConnecteur.menuPoursuivre.title isEqual:@"Poursuivre avec les Blancs"])
+         monConnecteur.menuPoursuivre.title = @"Poursuivre avec les Noirs";
+      else      monConnecteur.menuPoursuivre.title = @"Poursuivre avec les Blancs";
       //boardA = nil;
       
    } // Fin de Méthode 'RetournerBoard'
@@ -446,7 +446,7 @@
        à ce stade de la partie, de promotion de pion ou de position d'échec, d'où les paramètres fixés à @""
        Par ailleurs, inutile de gérer les infos de Roque car le premier coup ne peut consister à Roquer */
       
-      NSMutableString* premMoveToStr = [MCNmoveToStr ConvertEnStringMove:firstAImove
+      NSMutableString* premMoveToStr = [MoveToStr ConvertEnStringMove:firstAImove
                                                                 PromPion:@""
                                                                 StrEchec:@""
                                                                    Board:boardAvantMove];
@@ -533,7 +533,7 @@
       
       /* Si, dans la partie, strRoque est déjà positionnée sur '-' c'est que plus aucun roque n'est autorisé
        Pas la peine alors de rééxécuter la méthode à chaque move...   */
-      if (!([monControleur.maChessView->liveBoard->strRoque isEqual:@"-"])) {
+      if (!([monConnecteur.maChessView->liveBoard->strRoque isEqual:@"-"])) {
          
          NSString *strProvRoque = @"";
          
@@ -577,7 +577,7 @@
          }
          
          // Affectation de la valeur trouvée à la variable d'instance ad-hoc
-         monControleur.maChessView->liveBoard->strRoque = strProvRoque;
+         monConnecteur.maChessView->liveBoard->strRoque = strProvRoque;
       }
    }
 
@@ -623,7 +623,7 @@
          }
          else cibleEP = @"-";
       }
-      monControleur.maChessView->liveBoard->strCibleEP = cibleEP;
+      monConnecteur.maChessView->liveBoard->strCibleEP = cibleEP;
       
    } // Fin de Méthode DeterminerCibleEP
 
@@ -633,8 +633,8 @@
    -(void) CompterDemiCoups:(Move *)move {
       
       if (([self pieceAtPos:move.dest].type != Invalide) || ([self pieceAtPos:move.start].type == Pion))
-         monControleur.maChessView->liveBoard->nbDemis = 0;
-      else  monControleur.maChessView->liveBoard->nbDemis ++;
+         monConnecteur.maChessView->liveBoard->nbDemis = 0;
+      else  monConnecteur.maChessView->liveBoard->nbDemis ++;
       
    } // Fin de Méthode CompterDemiCoups
 
@@ -654,14 +654,14 @@
       switch (boutonChoisi) {
          case NSAlertFirstButtonReturn :
             stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"\n\t1/2-1/2"];
-            [monControleur MaJtxtCoups];
+            [monConnecteur MaJtxtCoups];
             [self AlertePartieNulle];
             stopMatOuPat = YES;
             break;
             
          case NSAlertSecondButtonReturn:
             self->nbDemis=0;
-            monControleur.lbl50Coups.cell.stringValue = [NSString stringWithFormat:@"50 demis : %d", self->nbDemis];
+            monConnecteur.lbl50Coups.cell.stringValue = [NSString stringWithFormat:@"50 demis : %d", self->nbDemis];
             break;
       }
    } // Fin de Méthode 'NotifieNulle50Coups'

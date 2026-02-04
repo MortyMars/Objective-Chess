@@ -1,17 +1,17 @@
-//  MCNconnecteur.m
+//  Connecteur.m
 //  Chess
 //  Created by MCN on 01/11/2020
 //  Copyright © 2020 MCN - All rights reserved
 
 // CLASSE CONTROLEUR INTERAGISSANT AVEC L'UI ET SES DIFFERENTS OBJETS
 
-#import "MCNconnecteur.h"
+#import "Connecteur.h"
 
 
-@implementation MCNconnecteur
+@implementation Connecteur
 
    /* Pour que les propriétés soient accessibles par d'autres objets que ceux de la classe
-   MCNconnecteur, il faut normalement créer des accesseurs (fonctions/méthodes d'accès)
+   Connecteur, il faut normalement créer des accesseurs (fonctions/méthodes d'accès)
    car les propriétés sont privées par défaut.
    Le mot clé 'synthesize', précédant la propriété, demande au compilateur de construire
    ces accesseurs pour nous, ce qui évite de le faire manuellement... */
@@ -52,7 +52,7 @@
    
    // =============================================================================================
    // Implémentation Méthode MàJ 'txtCoups'
-   // appelée par MCNmoveToStr
+   // appelée par MoveToStr
    -(void)MaJtxtCoups;
    {
       // Affectation de la valeur de la var global 'stringCoupsPartie'
@@ -111,7 +111,7 @@
       [menuChampion  setState:NO];
       NUMBER_MOVES_AHEAD = 2;
       //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
-      monControleur.lblInfo.cell.stringValue =
+      monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
 
@@ -123,7 +123,7 @@
       [menuChampion  setState:NO];
       NUMBER_MOVES_AHEAD = 3;
       //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
-      monControleur.lblInfo.cell.stringValue =
+      monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
 
@@ -135,7 +135,7 @@
       [menuChampion  setState:NO];
       NUMBER_MOVES_AHEAD = 4;
       //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
-      monControleur.lblInfo.cell.stringValue =
+      monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
 
@@ -147,7 +147,7 @@
       [menuChampion  setState:NO];
       NUMBER_MOVES_AHEAD = 5;
       //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
-      monControleur.lblInfo.cell.stringValue =
+      monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
 
@@ -159,7 +159,7 @@
       [menuChampion  setState:YES];
       NUMBER_MOVES_AHEAD = 6;
       //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
-      monControleur.lblInfo.cell.stringValue =
+      monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
    // Fin de gestion des items du menu 'Partie->Difficulté'
@@ -215,19 +215,19 @@
          stringCoupsPartie = [stringCoupsPartie substringWithRange:NSMakeRange(0,stringCoupsPartie.length-1)];
       }
       
-      monControleur.lblEchec.cell.stringValue = @"Échec et Mat !";
+      monConnecteur.lblEchec.cell.stringValue = @"Échec et Mat !";
       
       if (side == sideBlack) {
          msgTitre = @"Les NOIRS sont Mat !";
          msgInfo  = @"Partie terminée, Les BLANCS gagnent !";
          stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t1-0"];
-         [monControleur MaJtxtCoups];
+         [monConnecteur MaJtxtCoups];
       }
       else if (side == sideWhite) {
          msgTitre = @"Les BLANCS sont Mat !";
          msgInfo  = @"Partie terminée, Les NOIRS gagnent !";
          stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t0-1"];
-         [monControleur MaJtxtCoups];
+         [monConnecteur MaJtxtCoups];
       }
       
       NSAlert *alertMat = [[NSAlert alloc] init];
@@ -248,7 +248,7 @@
    else {
       /* Roi pas en échec --> PAT DÉTECTÉ */
       stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"\n\t1/2-1/2"];
-      [monControleur MaJtxtCoups];
+      [monConnecteur MaJtxtCoups];
       
       NSString *msgTitre;
       NSString *msgInfo;
@@ -262,7 +262,7 @@
          msgInfo  = @"Le Roi Blanc est Pat, la partie est déclarée nulle !";
       }
       
-      monControleur.lblEchec.cell.stringValue = @"Pat !";
+      monConnecteur.lblEchec.cell.stringValue = @"Pat !";
       
       NSAlert *alertPat = [[NSAlert alloc] init];
       [alertPat addButtonWithTitle:@"OK"];

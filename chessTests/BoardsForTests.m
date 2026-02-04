@@ -25,7 +25,7 @@
       sideIA = sideBlack;
       [testBoard SetupPieces];
       // Récupération du 'focus' sur le ChessBoard de la ChessView active
-      monControleur.maChessView->liveBoard = testBoard;
+      monConnecteur.maChessView->liveBoard = testBoard;
       
       //[self initBoardStd];
       
@@ -62,7 +62,7 @@
        CAS D'EXERCICE NUMÉRO 1 : Walter Browne - Victor Brond, Mar del Plata 1971 */
       
       // Récupération du 'focus' sur le ChessBoard de la ChessView active
-      ChessBoard *testBoard = monControleur.maChessView->liveBoard;
+      ChessBoard *testBoard = monConnecteur.maChessView->liveBoard;
       
       // Effacement du board déjà construit
       for (int x=0; x < 8; x ++) {
@@ -130,7 +130,7 @@
        CAS D'EXERCICE NUMÉRO 2 : Stian Johansen - Monika Machlik, Oslo 2013 */
       
       // Récupération du 'focus' sur le ChessBoard de la ChessView active
-      ChessBoard *testBoard = monControleur.maChessView->liveBoard;
+      ChessBoard *testBoard = monConnecteur.maChessView->liveBoard;
       
       // Effacement du board déjà construit
       for (int x=0; x < 8; x ++) {
@@ -201,7 +201,7 @@
        CAS D'EXERCICE NUMÉRO 3 : Tomasz Kamieniecki - Evgeniya Dolukhanova, Varsovie 2010 */
       
       // Récupération du 'focus' sur le ChessBoard de la ChessView active
-      ChessBoard *testBoard = monControleur.maChessView->liveBoard;
+      ChessBoard *testBoard = monConnecteur.maChessView->liveBoard;
       
       // Effacement du board déjà construit
       for (int x=0; x < 8; x ++) {
@@ -271,7 +271,7 @@
        CAS D'EXERCICE NUMÉRO 4 */
       
       // Récupération du 'focus' sur le ChessBoard de la ChessView active
-      ChessBoard *testBoard = monControleur.maChessView->liveBoard;
+      ChessBoard *testBoard = monConnecteur.maChessView->liveBoard;
       
       // Effacement du board déjà construit
       for (int x=0; x < 8; x ++) {
@@ -336,7 +336,7 @@
        CAS D'EXERCICE NUMÉRO 5 */
       
       // Récupération du 'focus' sur le ChessBoard de la ChessView active
-      ChessBoard *testBoard = monControleur.maChessView->liveBoard;
+      ChessBoard *testBoard = monConnecteur.maChessView->liveBoard;
       
       // Effacement du board déjà construit
       for (int x=0; x < 8; x ++) {
@@ -401,7 +401,7 @@
        CAS D'EXERCICE NUMÉRO 6 : Mat en 7 demi-coups */
       
       // Récupération du 'focus' sur le ChessBoard de la ChessView active
-      ChessBoard *testBoard = monControleur.maChessView->liveBoard;
+      ChessBoard *testBoard = monConnecteur.maChessView->liveBoard;
       
       // Effacement du board déjà construit
       for (int x=0; x < 8; x ++) {
@@ -472,7 +472,7 @@
        CAS D'EXERCICE NUMÉRO 7 : Mat en 3 coups par Zugzwang */
       
       // Récupération du 'focus' sur le ChessBoard de la ChessView active
-      ChessBoard *testBoard = monControleur.maChessView->liveBoard;
+      ChessBoard *testBoard = monConnecteur.maChessView->liveBoard;
       
       // Effacement du board déjà construit
       for (int x=0; x < 8; x ++) {
@@ -523,7 +523,7 @@
     CAS D'EXERCICE NUMÉRO 8 : Mat en 3 Difficile */
    
    // Récupération du 'focus' sur le ChessBoard de la ChessView active
-   ChessBoard *testBoard = monControleur.maChessView->liveBoard;
+   ChessBoard *testBoard = monConnecteur.maChessView->liveBoard;
    
    // Effacement du board déjà construit
    for (int x=0; x < 8; x ++) {

@@ -27,15 +27,15 @@ BOOL enPassant = NO;
 int checkCount = 0;
 int evalWhitePOV = 0;
 
-int   numCoup = 2; // Numéro du coup pour la liste des coups joés
+int   numCoup = 2; // Numéro du coup pour la liste des coups joués
 long  numDebugLine = 1;
 
 int NUMBER_MOVES_AHEAD = 4; /* Valeur arbitraire cohérente avec l'activation par défaut -tout aussi
 arbitraire-, du 'menu item' n°3 dans 'Partie->Difficulté'. Mais ça n'est qu'une conformité de façade
 car c'est dans AppDelegate que l'on initialise réellement NUMBER_MOVES_AHEAD par appel de
-[MCNconnecteur SetDifficulty1, 2, 3, 4, ou 5] qui positionne au passage le menu ad-hoc */
+[Connecteur SetDifficulty1, 2, 3, 4, ou 5] qui positionne au passage le menu ad-hoc */
 
-MCNconnecteur *monControleur = nil;
+Connecteur *monConnecteur = nil;
 
 // Pré initialisation de maMinimax
 Minimax *maMinimax = nil;
