@@ -10,17 +10,6 @@
 
 #define DELTA_MARGIN 100   // sécurité = un pion
 
-/* // Macros de transposition de la propriété 'square' d'un 'move'
- #define SQ(x, y)   ((y) * 8 + (x))
- #define SQ_X(sq)   ((sq) & 7)
- #define SQ_Y(sq)   ((sq) >> 3)
- 
- // Macro de debugging des Move sous forme de 'square' selon l'usage
- // NSLog(@"Move %@ -> %@", SQ_STR(m.fromSquare), SQ_STR(m.toSquare));
- #define SQ_STR(sq) \
- ([NSString stringWithFormat:@"%c%d", 'a'+SQ_X(sq), SQ_Y(sq)+1]) */
-
-
 
 // Variables globales déterminant les directions empruntées par les pièces
 static const int bishopDirs[4][2]    = {{-1,-1},{-1,1},{1,-1},{1,1}};
@@ -31,9 +20,6 @@ static const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,
 static int nodes = 0;
 static int nbCallsIsKingCheck = 0;
 
-// Valeur des pièces (même ordre que le TypeDef pieceType dans Util.h)
-//                        inv pion cava fou  tour dame roi
-// const int pieceValue[] = { 0, 100, 320, 330, 500, 900, 20000 };
 
 
 @implementation Minimax
@@ -1001,89 +987,6 @@ static int nbCallsIsKingCheck = 0;
    }
 
 
-   /* // ================================================================================================
-   // MÉTHODE 10 : AlertMsgPatMatSide - GESTION FIN DE PARTIE
-   -(void)AlertMsgPatMatSide:(Side)side
-                       onBoard:(ChessBoard*)board
-   {
-      if ([self TestEchecRoiSide:side inBoard:board]) {
-         // MAT DÉTECTÉ
-         NSString *msgTitre;
-         NSString *msgInfo;
-         
-         while ([stringCoupsPartie characterAtIndex:(stringCoupsPartie.length-1)] == ' ') {
-            stringCoupsPartie = [stringCoupsPartie substringWithRange:NSMakeRange(0,stringCoupsPartie.length-1)];
-         }
-         while ([stringCoupsPartie characterAtIndex:(stringCoupsPartie.length-1)] == '+') {
-            stringCoupsPartie = [stringCoupsPartie substringWithRange:NSMakeRange(0,stringCoupsPartie.length-1)];
-         }
-         
-         monConnecteur.lblEchec.cell.stringValue = @"Échec et Mat !";
-         
-         if (side == sideBlack) {
-            msgTitre = @"Les NOIRS sont Mat !";
-            msgInfo  = @"Partie terminée, Les BLANCS gagnent !";
-            stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t1-0"];
-            [monConnecteur MaJtxtCoups];
-         }
-         else if (side == sideWhite) {
-            msgTitre = @"Les BLANCS sont Mat !";
-            msgInfo  = @"Partie terminée, Les NOIRS gagnent !";
-            stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t0-1"];
-            [monConnecteur MaJtxtCoups];
-         }
-         
-         NSAlert *alertMat = [[NSAlert alloc] init];
-         [alertMat addButtonWithTitle:@"OK"];
-         [alertMat setMessageText:msgTitre];
-         [alertMat setInformativeText:msgInfo];
-         [alertMat setAlertStyle:NSAlertStyleInformational];
-         
-         NSModalResponse boutonChoisi = [alertMat runModal];
-         if (boutonChoisi == NSAlertFirstButtonReturn) {
-            stopMatOuPat = YES;
-         }
-         
-         // Message en Log
-         NSString *strRoiMat = (side == sideBlack)? @"\"Noirs\"":@"\"Blancs\"";
-         NSLog(@"\nLe Roi %@ est Mat\n", strRoiMat);
-      }
-      else {
-         // PAT DÉTECTÉ
-         stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"\n\t1/2-1/2"];
-         [monConnecteur MaJtxtCoups];
-         
-         NSString *msgTitre;
-         NSString *msgInfo;
-         
-         if (side == sideBlack) {
-            msgTitre = @"Les NOIRS sont Pat !";
-            msgInfo  = @"Le Roi Noir est Pat, la partie est déclarée nulle !";
-         }
-         else if (side == sideWhite) {
-            msgTitre = @"Les BLANCS sont Pat !";
-            msgInfo  = @"Le Roi Blanc est Pat, la partie est déclarée nulle !";
-         }
-         
-         monConnecteur.lblEchec.cell.stringValue = @"Pat !";
-         
-         NSAlert *alertPat = [[NSAlert alloc] init];
-         [alertPat addButtonWithTitle:@"OK"];
-         [alertPat setMessageText:msgTitre];
-         [alertPat setInformativeText:msgInfo];
-         [alertPat setAlertStyle:NSAlertStyleInformational];
-         
-         NSModalResponse boutonChoisi = [alertPat runModal];
-         if (boutonChoisi == NSAlertFirstButtonReturn) {
-            stopMatOuPat = YES;
-         }
-         
-         // Message en Log
-         NSString *strRoiPat = (side == sideBlack)? @"\"Noirs\"":@"\"Blancs\"";
-         NSLog(@"\nLe Roi %@ est Pat\n", strRoiPat);
-      }
-   }   */
-
 
    // ================================================================================================
    // MÉTHODE HELPER :
@@ -1252,20 +1155,6 @@ static int nbCallsIsKingCheck = 0;
          default         : return 0;
       }
    }
-   /* Ancien code
-    -(int)PieceValue:(Piece *)piece
-    {
-    switch (piece.type) {
-    case Pion: return 100;
-    case Cava:
-    case Fou:  return 300;
-    case Tour: return 500;
-    case Dame: return 900;
-    case Roi:  return 100000;
-    default:   return 0;
-    }
-    } */
-
 
 
    // ================================================================================================
@@ -1362,8 +1251,9 @@ static int nbCallsIsKingCheck = 0;
    // Méthode permettant de détecter si le Roi 'side' est en échec
    -(BOOL)IsKingInCheck:(Side)side board:(ChessBoard *)board
    {
-      nbCallsIsKingCheck++;
+      /* nbCallsIsKingCheck++;
       NSLog(@"Call n°%d from: %@",nbCallsIsKingCheck,([NSThread callStackSymbols].count > 1 ? [NSThread callStackSymbols][1] : @"inconnu"));
+      NSLog(@"Recherche du Roi: %@ sur le board: \n%@ ",(side == sideBlack)? @"Noir":@"Blanc",board); */
       
       int kingX = -1, kingY = -1;
       
@@ -1374,7 +1264,7 @@ static int nbCallsIsKingCheck = 0;
             if (p && p.type == Roi && p.side == side) {
                kingX = x;
                kingY = y;
-               NSLog(@"   --> Pièce trouvée en col:%d rang:%d = %@\n",x,y,p);
+               //NSLog(@"   --> Pièce trouvée en col:%d rang:%d = %@\n",x,y,p);
                break;                                          // On sort du 'for'
             }
          }
@@ -1581,7 +1471,7 @@ static int nbCallsIsKingCheck = 0;
          if (nx < 0 || nx > 7 || ny < 0 || ny > 7) continue;
          
          Piece *target = board->pieceCase[nx][ny];
-         if (target && target.side != p.side) {
+         if (target && target.side != p.side && target.type != Roi) { // ✅ AJOUT du filtre Roi
             
             Move *m = [Move newMoveFromX:x Y:y ToNx:nx Ny:ny];
             m.movingPiece   = p;

@@ -21,28 +21,32 @@
 
    // Propriétés ajoutées pour undo
    @property (nonatomic, strong) Piece *capturedPiece;
-   @property (nonatomic) BOOL wasPromotion;  // Ce move a t-il généré une promotion de pion
-   @property (nonatomic) PieceType oldType;
+   @property (nonatomic) BOOL          wasPromotion;  // Ce move a t-il généré une promotion de pion
+   @property (nonatomic) PieceType     oldType;
 
    // Propriétés ajoutées pour méthode SEE
    @property (nonatomic, strong) Piece *movingPiece;
-   @property (nonatomic) Square fromSquare;
-   @property (nonatomic) Square toSquare;
+   @property (nonatomic) Square        fromSquare;
+   @property (nonatomic) Square        toSquare;
 
    // Propriété pour le Move Ordering
    @property (nonatomic) BOOL isCapture;     // Ce move est-il une capture
    @property (nonatomic) BOOL givesCheck;    // Ce move provoque t-il une mise en échec
    @property (nonatomic) BOOL isCastling;    // Ce move est-il un roque
    @property (nonatomic) BOOL isPromotion;   // Ce move est-il une promotion de pion
-   @property (nonatomic) int orderingScore;
+   @property (nonatomic) int  orderingScore;
    @property (nonatomic) BOOL isEnPassant;   // Ce move est-il une prise e.p.
 
 
    // ...et une méthode initWithStart permettant d'en initialiser les valeurs
-   -(id) initWithStart:(Pos *)start Dest:(Pos *)dest;
+   -(id) initWithStart:(Pos *)start
+                  Dest:(Pos *)dest;
 
    // ✨ méthode (de classe) de confort (sucre syntaxique)
-   +(Move *) newMoveFromX:(int)x Y:(int)y ToNx:(int)nx Ny:(int)ny;
+   +(Move *) newMoveFromX:(int)x
+                        Y:(int)y
+                     ToNx:(int)nx
+                       Ny:(int)ny;
 
    // Méthode system
    -(id) copyWithZone:(NSZone *)zone;

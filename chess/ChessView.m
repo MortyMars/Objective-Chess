@@ -258,11 +258,6 @@
       [MoveToStr MettreEnFormeChaine:bestMoveIA Protagoniste:@"IA"];
       
       
-      /* REVOIR - L'UN OU L'AUTRE ######################################################################## */
-      /* // Test examinant si le coup IA met le Joueur Mat...
-       NSSet *movesPossibles = [maMinimax PossibleMovesForSide:sideJoueur board:liveBoard];
-       if (movesPossibles.count == 0) [monConnecteur AlertMsgPatMatSide:sideJoueur onBoard:liveBoard];      */
-      
       // MISE À JOUR 'STATUS BAR' HORS EVAL ET TRAIT
       [self MajStatusBarViaMove:aiMove PrecBoard:savedBoard StrCheck:strEchec];
       
@@ -279,7 +274,6 @@
       (sideCourant == sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
       
       
-      /* REVOIR - L'AUTRE OU L'UN ######################################################################## */
       // Test si le coup IA met en échec ou Pat ou Mat le Joueur et message ad-hoc
       if ([maMinimax IsKingInCheck:sideJoueur board:liveBoard]){
          // Message Echec
@@ -350,10 +344,6 @@
       // Mise en forme de la chaine
       [MoveToStr MettreEnFormeChaine:myMoveMCN Protagoniste:@"J"];
       
-      /* REVOIR - L'AUTRE OU L'UN ######################################################################## */
-      /* // Test examinant si le coup Joueur met l'IA Mat...
-       NSSet *movesPossibles = [maMinimax PossibleMovesForSide:sideIA board:liveBoard];
-       if (movesPossibles.count == 0) [monConnecteur AlertMsgPatMatSide:sideIA onBoard:liveBoard]; */
       
       // MISE À JOUR 'STATUS BAR' HORS EVAL ET TRAIT
       [self MajStatusBarViaMove:moveJoueur PrecBoard:savedBoard StrCheck:strEchecMat];
@@ -362,7 +352,6 @@
       sideCourant = (sideCourant == sideWhite) ? sideBlack : sideWhite;
       monConnecteur.lblTrait.cell.stringValue = (sideCourant == sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
       
-      /* REVOIR - L'AUTRE OU L'UN ######################################################################## */
       // Test si le coup IA met en échec ou Pat ou Mat le Joueur et message ad-hoc
       if ([maMinimax IsKingInCheck:sideIA board:liveBoard]){
          // Message Echec
@@ -430,11 +419,6 @@
       
       [MoveToStr MettreEnFormeChaine:bestMoveIA Protagoniste:(side == sideWhite)? @"B":@"N"];
       
-      /* // Test examinant si le coup IA met le Joueur Mat...
-       Side otherSide = (side == sideWhite)? sideBlack : sideWhite;
-       NSSet *movesPossibles = [maMinimax PossibleMovesForSide:otherSide board:board];
-       if (movesPossibles.count == 0) [monConnecteur AlertMsgPatMatSide:otherSide onBoard:board]; */
-      
       
       // MISE À JOUR 'STATUS BAR' HORS EVAL ET TRAIT
       [self MajStatusBarViaMove:aiMove PrecBoard:savedBoard StrCheck:strEchec];
@@ -451,7 +435,6 @@
       monConnecteur.lblTrait.cell.stringValue = (sideCourant == sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
       
       
-      /* REVOIR - L'AUTRE OU L'UN ######################################################################## */
       // Test si le coup IA met en échec ou Pat ou Mat le Joueur et message ad-hoc
       Side otherSide = (side == sideWhite)? sideBlack : sideWhite;
       if ([maMinimax IsKingInCheck:otherSide board:liveBoard]){

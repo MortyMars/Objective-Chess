@@ -17,6 +17,9 @@ typedef struct {
     Piece *captured;      // pièce capturée (ou nil)
     PieceType oldType;    // pour promotion
     BOOL wasPromotion;
+    BOOL wasEnPassant;      // ✅ AJOUT
+    int enPassantX;         // ✅ AJOUT : coordonnées du pion capturé
+    int enPassantY;         // ✅ AJOUT
 } MoveState;
 
 

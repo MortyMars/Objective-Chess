@@ -684,94 +684,131 @@
    // Méthode d'instance 'makeMove' permettant de réaliser un move de test
    -(MoveState)makeMove:(Move *)m
    {
-      MoveState st;
-      st.captured = pieceCase[m.dest.x][m.dest.y];
-      st.wasPromotion = NO;
-      st.oldType = 0;
+       
+      /* // ✅ NS LOG DE DIAGNOSTIC
+          Piece *moving = pieceCase[m.start.x][m.start.y];
+          Piece *captured = pieceCase[m.dest.x][m.dest.y];
+          
+          NSLog(@"🔧 makeMove: %@ de (%d,%d) vers (%d,%d) | Capture: %@",
+                moving, m.start.x, m.start.y, m.dest.x, m.dest.y,
+                captured ? captured : @"rien");
+          
+          // Si on capture le Roi, on veut le savoir IMMÉDIATEMENT
+          if (captured && captured.type == Roi) {
+              NSLog(@"💀 ALERTE: CAPTURE DU ROI DÉTECTÉE!");
+              NSLog(@"   Coup: %@", m);
+              NSLog(@"   Stack: %@", [NSThread callStackSymbols]);
+          }
+      // ⛔ SIGNALER LA CAPTURE DU ROI
+          NSAssert(!(captured && captured.type == Roi),
+                   @"makeMove: tentative de capture du Roi! Move: %@", m);
+      // ⛔ FIN DE SIGNALER LA CAPTURE DU ROI
+      // ✅ FIN DE NS LOG DE DIAGNOSTIC  */
       
-      Piece *moving = pieceCase[m.start.x][m.start.y];
-      NSAssert(moving != nil, @"makeMove: pas de pièce à déplacer");
-      
-      // Déplacement principal
-      pieceCase[m.dest.x][m.dest.y] = moving;
-      pieceCase[m.start.x][m.start.y] = nil;
-      
-      // ROQUE
-      if (m.isCastling) {
-         
-         int y = m.start.y;
-         
-         // Petit roque : Roi e -> g
-         if (m.dest.x == 6) {
-            Piece *rook = pieceCase[7][y];
-            pieceCase[5][y] = rook;
-            pieceCase[7][y] = nil;
-         }
-         // Grand roque : Roi e -> c
-         else if (m.dest.x == 2) {
-            Piece *rook = pieceCase[0][y];
-            pieceCase[3][y] = rook;
-            pieceCase[0][y] = nil;
-         }
-      }
-      
-      // PROMOTION
-      if (moving.type == Pion &&
-          ((moving.side == sideWhite && m.dest.y == 7) ||
-           (moving.side == sideBlack && m.dest.y == 0))) {
-         
-         st.wasPromotion = YES;
-         st.oldType = moving.type;
-         moving.type = Dame;
-      }
-      
-      // Mise à jour du compteur de coups
-      moving.numMoves++;
-      
-      return st;
+       MoveState st;
+       st.captured = pieceCase[m.dest.x][m.dest.y];
+       st.wasPromotion = NO;
+       st.oldType = 0;
+       st.wasEnPassant = NO;   // ✅ Initialisation
+       st.enPassantX = -1;
+       st.enPassantY = -1;
+       
+       Piece *moving = pieceCase[m.start.x][m.start.y];
+       NSAssert(moving != nil, @"makeMove: pas de pièce à déplacer");
+       
+       // ✅ GESTION DE LA PRISE EN PASSANT
+       if (m.isEnPassant) {
+           st.wasEnPassant = YES;
+           
+           // Le pion capturé est sur la même rangée que le départ
+           int capturedX = m.dest.x;
+           int capturedY = m.start.y;
+           
+           st.enPassantX = capturedX;
+           st.enPassantY = capturedY;
+           st.captured = pieceCase[capturedX][capturedY];
+           
+           // Retirer le pion capturé
+           pieceCase[capturedX][capturedY] = nil;
+       }
+       
+       // Déplacement principal
+       pieceCase[m.dest.x][m.dest.y] = moving;
+       pieceCase[m.start.x][m.start.y] = nil;
+       
+       // ROQUE
+       if (m.isCastling) {
+           int y = m.start.y;
+           
+           if (m.dest.x == 6) {
+               Piece *rook = pieceCase[7][y];
+               pieceCase[5][y] = rook;
+               pieceCase[7][y] = nil;
+           }
+           else if (m.dest.x == 2) {
+               Piece *rook = pieceCase[0][y];
+               pieceCase[3][y] = rook;
+               pieceCase[0][y] = nil;
+           }
+       }
+       
+       // PROMOTION
+       if (moving.type == Pion &&
+           ((moving.side == sideWhite && m.dest.y == 7) ||
+            (moving.side == sideBlack && m.dest.y == 0))) {
+           
+           st.wasPromotion = YES;
+           st.oldType = moving.type;
+           moving.type = Dame;
+       }
+       
+       moving.numMoves++;
+       
+       return st;
    }
-
 
    // ==================================================================================================
    // Méthode d'instance 'unmakeMove' permettant d'annuler un move de test et de rétablir le board
    // initial en restaurant les positions et indicateurs d'avant move
    -(void)unmakeMove:(Move *)m state:(MoveState)st
    {
-      Piece *moving = pieceCase[m.dest.x][m.dest.y];
-      NSAssert(moving != nil, @"unmakeMove: case dest vide");
-      
-      // Annuler promotion
-      if (st.wasPromotion) {
-         moving.type = st.oldType;
-      }
-      
-      // Replacer la pièce principale
-      pieceCase[m.start.x][m.start.y] = moving;
-      pieceCase[m.dest.x][m.dest.y]  = st.captured;
-      
-      // ----------------------------------------------------------------------------
-      // ANNULATION DU ROQUE
-      // ----------------------------------------------------------------------------
-      if (m.isCastling) {
-         
-         int y = m.start.y;
-         
-         // Petit roque
-         if (m.dest.x == 6) {
-            Piece *rook = pieceCase[5][y];
-            pieceCase[7][y] = rook;
-            pieceCase[5][y] = nil;
-         }
-         // Grand roque
-         else if (m.dest.x == 2) {
-            Piece *rook = pieceCase[3][y];
-            pieceCase[0][y] = rook;
-            pieceCase[3][y] = nil;
-         }
-      }
-      
-      moving.numMoves--;
+       Piece *moving = pieceCase[m.dest.x][m.dest.y];
+       NSAssert(moving != nil, @"unmakeMove: case dest vide");
+       
+       // Annuler promotion
+       if (st.wasPromotion) {
+           moving.type = st.oldType;
+       }
+       
+       // Replacer la pièce principale
+       pieceCase[m.start.x][m.start.y] = moving;
+       pieceCase[m.dest.x][m.dest.y] = st.captured;
+       
+       // ✅ ANNULATION DE LA PRISE EN PASSANT
+       if (st.wasEnPassant) {
+           // Remettre le pion capturé à sa position originale
+           pieceCase[st.enPassantX][st.enPassantY] = st.captured;
+           // La case de destination doit rester vide
+           pieceCase[m.dest.x][m.dest.y] = nil;
+       }
+       
+       // ANNULATION DU ROQUE
+       if (m.isCastling) {
+           int y = m.start.y;
+           
+           if (m.dest.x == 6) {
+               Piece *rook = pieceCase[5][y];
+               pieceCase[7][y] = rook;
+               pieceCase[5][y] = nil;
+           }
+           else if (m.dest.x == 2) {
+               Piece *rook = pieceCase[3][y];
+               pieceCase[0][y] = rook;
+               pieceCase[3][y] = nil;
+           }
+       }
+       
+       moving.numMoves--;
    }
-
 
 @end

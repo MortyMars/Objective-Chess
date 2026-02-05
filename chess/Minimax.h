@@ -79,8 +79,6 @@
    -(NSSet *)  PossibleMovesForSide:(Side)side
                               board:(ChessBoard *)board;
 
-   // Méthode notifiant s'il y a Pat ou Mat des 'side'
-   //-(void)     AlertMsgPatMatSide:(Side)side onBoard:(ChessBoard*)board;
 
    // MÉTHODES DE CLASSE MCN
    // Méthode testant si 'side' met son adversaire en échec

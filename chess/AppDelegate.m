@@ -54,7 +54,7 @@
       On note qu'ici c'est AppDelegate (self) qui envoi le message à SetDifficulty3 qui est une IBAction
       ici on choisit le niveau 2... qui correspond à fixer NUMBER_MOVE_AHEAD à 3
       (le mini = Difficulty1 -> NUMBER_MOVE_AHEAD = 0, et le maxi = Difficulty5 -> NUMBER_MOVE_AHEAD = 4) */
-      [monConnecteur SetDifficulty3:self];
+      [monConnecteur SetDifficulty2:self];
       
       
       

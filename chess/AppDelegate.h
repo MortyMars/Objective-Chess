@@ -6,7 +6,7 @@
 
 #import "Connecteur.h"
 #import "Minimax.h"
-#import "Util.h"  // Important pour accéder à monConnecteur
+#import "Util.h"        // Pour accéder à monConnecteur
 
 //Rappel au compilateur que Connecteur est une classe, définie ailleurs
 @class Connecteur;
