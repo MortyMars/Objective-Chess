@@ -1264,7 +1264,8 @@ static int nbCallsIsKingCheck = 0;
             if (p && p.type == Roi && p.side == side) {
                kingX = x;
                kingY = y;
-               //NSLog(@"   --> Pièce trouvée en col:%d rang:%d = %@\n",x,y,p);
+               /* NSLog(@"Les %@ sont en bas --> Le Roi %@ est en col:%d rang:%d = %@\n",
+                     (sideJoueur == sideWhite)? @"BLANCS":@"NOIRS",(side == sideWhite)? @"BLANC":@"NOIR",x,y,p); */
                break;                                          // On sort du 'for'
             }
          }
@@ -1658,57 +1659,119 @@ static int nbCallsIsKingCheck = 0;
       }
       
       // 2️⃣ Roque (ajouté hors des boucles de déplacement)
-      if (p.type != Roi || p.numMoves != 0)
-         return;
+      if (p.type != Roi || p.numMoves != 0 || [self IsKingInCheck:p.side board:board])
+         return;  // Si la pièce n'est pas un roi, ou qu'elle a déjà bougé, ou que le Roi est en échec, pas de Roque légal --> on sort
       
-      // Rang du Roi (blancs en bas / noirs en haut)
-      int yRoi = (p.side == sideWhite) ? 0 : 7;
+      
+      // Positions des Rois, sachant que quelle que soit l'orientation du plateau
+      // la case de coordonnées col x=0 et rang y=0 est tjs en bas à gauche de l'écran
+      int xRoi;   // colonne des rois (4 OU 3 selon orientation)
+      int yRoi;   // rangs des rois ( (0 et 7) OU (7 et 0) selon l'orientation)
+      if (sideJoueur == sideWhite) {
+         xRoi = 4;   // Les Rois sont en col 4 quand les Blancs sont en bas
+         yRoi = (p.side == sideWhite) ? 0 : 7;  // Roi Blanc en bas (0), Roi Noir en haut (7)
+      }
+      if (sideJoueur == sideBlack) {
+         xRoi = 3;   // Les Rois sont en col 3 quand les Noirs sont en bas
+         yRoi = (p.side == sideWhite) ? 7 : 0;  // Roi Noir en bas (0), Roi Blanc en haut (7)
+      }
       
       // Sécurité minimale : on doit être bien sur la case de départ
-      if (x != 4 || y != yRoi)
+      if (x != xRoi || y != yRoi)
          return;
       
-      // Petit roque (côté Roi)
-      Piece *rookH = board->pieceCase[7][yRoi];
+      Side sideEnemy = (p.side == sideWhite)? sideBlack:sideWhite;
+      
+      // Petit roque (côté Roi) -------------------------------------------------------------------
+      Piece *rookH = board->pieceCase[ (sideJoueur==sideWhite)? 7:0 ]
+                                     [yRoi]; // La colonne de la tour dépend de l'orientation
       if (rookH &&
           rookH.type == Tour &&
           rookH.side == p.side &&
           rookH.numMoves == 0) {
          
-         if (!board->pieceCase[5][yRoi] &&
-             !board->pieceCase[6][yRoi]) {
-            
-            Move *m = [Move newMoveFromX:4 Y:yRoi ToNx:6 Ny:yRoi];
-            m.isCastling = YES;
-            m.movingPiece = p;
-            m.fromSquare  = SQ(4, yRoi);
-            m.toSquare    = SQ(6, yRoi);
-            
-            [moves addObject:m];
+         // Les 2 cases entre Roi et Tour doivent être vides
+         // Ces cases ne doivent pas être sous le coup d'un échec potentiel...
+         // Les Blancs sont en bas
+         if (sideJoueur == sideWhite) {
+            if (!board->pieceCase[5][yRoi] &&
+                !board->pieceCase[6][yRoi] &&
+                ![self IsSquareAttackedAtX:5 Y:yRoi bySide:sideEnemy Board:board] &&
+                ![self IsSquareAttackedAtX:6 Y:yRoi bySide:sideEnemy Board:board]) {
+               
+               Move *m = [Move newMoveFromX:4 Y:yRoi ToNx:6 Ny:yRoi];
+               m.isCastling = YES;
+               m.movingPiece = p;
+               m.fromSquare  = SQ(4, yRoi);
+               m.toSquare    = SQ(6, yRoi);
+               
+               [moves addObject:m];
+            }
          }
-      }
+         // Les Noirs sont en bas
+         if (sideJoueur == sideBlack) {
+            if (!board->pieceCase[1][yRoi] &&
+                !board->pieceCase[2][yRoi] &&
+                ![self IsSquareAttackedAtX:1 Y:yRoi bySide:sideEnemy Board:board] &&
+                ![self IsSquareAttackedAtX:2 Y:yRoi bySide:sideEnemy Board:board]) {
+               
+               Move *m = [Move newMoveFromX:3 Y:yRoi ToNx:1 Ny:yRoi];
+               m.isCastling = YES;
+               m.movingPiece = p;
+               m.fromSquare  = SQ(3, yRoi);
+               m.toSquare    = SQ(1, yRoi);
+               
+               [moves addObject:m];
+            }
+         }
+      } // Fin de Petit Roque ---------------------------------------------------------------------
       
-      // Grand roque (côté Dame)
-      Piece *rookA = board->pieceCase[0][yRoi];
+      // Grand roque (côté Dame) ------------------------------------------------------------------
+      Piece *rookA = board->pieceCase[ (sideJoueur == sideWhite)? 0:7 ]
+                                     [yRoi]; // La colonne de la tour dépend de l'orientation
       if (rookA &&
           rookA.type == Tour &&
           rookA.side == p.side &&
           rookA.numMoves == 0) {
          
-         if (!board->pieceCase[1][yRoi] &&
-             !board->pieceCase[2][yRoi] &&
-             !board->pieceCase[3][yRoi]) {
-            
-            Move *m = [Move newMoveFromX:4 Y:yRoi ToNx:2 Ny:yRoi];
-            m.isCastling = YES;
-            m.movingPiece = p;
-            m.fromSquare  = SQ(4, yRoi);
-            m.toSquare    = SQ(2, yRoi);
-            
-            [moves addObject:m];
+         // Les 3 cases entre Roi et Tour doivent être vides
+         // Les 2 cases parcourues par le Roi ne doivent pas être sous le coup d'un échec potentiel...
+         // Les Blancs sont en bas
+         if (sideJoueur==sideWhite) {
+            if (!board->pieceCase[1][yRoi] &&
+                !board->pieceCase[2][yRoi] &&
+                !board->pieceCase[3][yRoi] &&
+                ![self IsSquareAttackedAtX:2 Y:yRoi bySide:sideEnemy Board:board] &&
+                ![self IsSquareAttackedAtX:3 Y:yRoi bySide:sideEnemy Board:board]) {
+               
+               Move *m = [Move newMoveFromX:4 Y:yRoi ToNx:2 Ny:yRoi];
+               m.isCastling = YES;
+               m.movingPiece = p;
+               m.fromSquare  = SQ(4, yRoi);
+               m.toSquare    = SQ(2, yRoi);
+               
+               [moves addObject:m];
+            }
          }
-      }
-   }
+         // Les Noirs sont en bas
+         if (sideJoueur==sideBlack) {
+            if (!board->pieceCase[4][yRoi] &&
+                !board->pieceCase[5][yRoi] &&
+                !board->pieceCase[6][yRoi] &&
+                ![self IsSquareAttackedAtX:4 Y:yRoi bySide:sideEnemy Board:board] &&
+                ![self IsSquareAttackedAtX:5 Y:yRoi bySide:sideEnemy Board:board]) {
+               
+               Move *m = [Move newMoveFromX:3 Y:yRoi ToNx:5 Ny:yRoi];
+               m.isCastling = YES;
+               m.movingPiece = p;
+               m.fromSquare  = SQ(3, yRoi);
+               m.toSquare    = SQ(5, yRoi);
+               
+               [moves addObject:m];
+            }
+         }
+      } // Fin de Grand Roque ---------------------------------------------------------------------
+   } // !GenKingMovesFromX
 
 
    // ================================================================================================
@@ -1995,6 +2058,109 @@ static int nbCallsIsKingCheck = 0;
          if (m.toSquare == sq)
             return YES;
       }
+      return NO;
+   }
+
+
+   // ================================================================================================
+   // Méthode auxiliaire : Vérifie si une case est attaquée par un camp donné
+   // (utile pour vérifier les conditions du roque)
+   -(BOOL)IsSquareAttackedAtX:(int)x
+                            Y:(int)y
+                       bySide:(Side)attackingSide
+                        Board:(ChessBoard *)board
+   {
+      // 1️⃣ Attaque par Cavalier
+      static const int knightMoves[8][2] = {
+         {1,2},{2,1},{-1,2},{-2,1},
+         {1,-2},{2,-1},{-1,-2},{-2,-1}
+      };
+      
+      for (int i = 0; i < 8; i++) {
+         int nx = x + knightMoves[i][0];
+         int ny = y + knightMoves[i][1];
+         if (nx < 0 || nx > 7 || ny < 0 || ny > 7) continue;
+         
+         Piece *p = board->pieceCase[nx][ny];
+         if (p && p.side == attackingSide && p.type == Cava)
+            return YES;
+      }
+      
+      // 2️⃣ Attaque par Pion
+      // Direction d'attaque du pion dépend de son camp ET de l'orientation du plateau
+      int pawnDir;
+      if (sideJoueur == sideWhite) {
+         pawnDir = (attackingSide == sideWhite) ? 1 : -1;
+      } else {
+         pawnDir = (attackingSide == sideWhite) ? -1 : 1;
+      }
+      
+      for (int dx = -1; dx <= 1; dx += 2) {
+         int px = x + dx;
+         int py = y - pawnDir;  // Position d'où le pion attaquerait
+         if (px < 0 || px > 7 || py < 0 || py > 7) continue;
+         
+         Piece *p = board->pieceCase[px][py];
+         if (p && p.side == attackingSide && p.type == Pion)
+            return YES;
+      }
+      
+      // 3️⃣ Attaque par Fou/Dame (diagonales)
+      static const int bishopDirs[4][2] = {{1,1},{1,-1},{-1,1},{-1,-1}};
+      
+      for (int d = 0; d < 4; d++) {
+         int dx = bishopDirs[d][0];
+         int dy = bishopDirs[d][1];
+         int nx = x + dx;
+         int ny = y + dy;
+         
+         while (nx >= 0 && nx < 8 && ny >= 0 && ny < 8) {
+            Piece *p = board->pieceCase[nx][ny];
+            if (p) {
+               if (p.side == attackingSide && (p.type == Fou || p.type == Dame))
+                  return YES;
+               break;
+            }
+            nx += dx;
+            ny += dy;
+         }
+      }
+      
+      // 4️⃣ Attaque par Tour/Dame (lignes droites)
+      static const int rookDirs[4][2] = {{1,0},{-1,0},{0,1},{0,-1}};
+      
+      for (int d = 0; d < 4; d++) {
+         int dx = rookDirs[d][0];
+         int dy = rookDirs[d][1];
+         int nx = x + dx;
+         int ny = y + dy;
+         
+         while (nx >= 0 && nx < 8 && ny >= 0 && ny < 8) {
+            Piece *p = board->pieceCase[nx][ny];
+            if (p) {
+               if (p.side == attackingSide && (p.type == Tour || p.type == Dame))
+                  return YES;
+               break;
+            }
+            nx += dx;
+            ny += dy;
+         }
+      }
+      
+      // 5️⃣ Attaque par Roi adverse (cases adjacentes)
+      for (int dx = -1; dx <= 1; dx++) {
+         for (int dy = -1; dy <= 1; dy++) {
+            if (dx == 0 && dy == 0) continue;
+            int nx = x + dx;
+            int ny = y + dy;
+            if (nx < 0 || nx > 7 || ny < 0 || ny > 7) continue;
+            
+            Piece *p = board->pieceCase[nx][ny];
+            if (p && p.side == attackingSide && p.type == Roi)
+               return YES;
+         }
+      }
+      
       return NO;
    }
 

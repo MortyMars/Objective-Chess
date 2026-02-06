@@ -93,6 +93,11 @@
    /* +(int)StaticExchangeEvaluation:(Move *)capture
                    board:(ChessBoard *)board; */
 
+   -(BOOL)IsSquareAttackedAtX:(int)x
+                            Y:(int)y
+                       bySide:(Side)attackingSide
+                        Board:(ChessBoard *)board;
+
    
 
 

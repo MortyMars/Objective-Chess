@@ -736,15 +736,16 @@
        pieceCase[m.dest.x][m.dest.y] = moving;
        pieceCase[m.start.x][m.start.y] = nil;
        
-       // ROQUE
+       // ROQUE - Gestion du déplacement de la tour concernée
        if (m.isCastling) {
            int y = m.start.y;
-           
+           // Petit Roque
            if (m.dest.x == 6) {
                Piece *rook = pieceCase[7][y];
                pieceCase[5][y] = rook;
                pieceCase[7][y] = nil;
            }
+           // Grand Roque
            else if (m.dest.x == 2) {
                Piece *rook = pieceCase[0][y];
                pieceCase[3][y] = rook;
