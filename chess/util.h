@@ -31,14 +31,14 @@
 /* 'Square' représente les cases de l'échiquier sous la forme d'un int entre 0 et 63
 La transposition en coordonnées x (colonnes) et y (rangées) s'opère grâce aux macros ci-dessus
 L'ordre de numérotation arbitraire est le suivant (les blancs sont en bas) :
-       0  1  2  3  4  5  6  7       (rangée y=0 *8=0  + colonne x=0 à 7)
-       8  9 10 11 12 13 14 15       (rangée y=1 *8=8  + colonne x=0 à 7)
-      16 17 18 19 20 21 22 23       (rangée y=2 *8=16 + colonne x=0 à 7)
-      24 25 26 27 28 29 30 31       (rangée y=3 *8=24 + colonne x=0 à 7)
-      32 33 34 35 36 37 38 39       (rangée y=4 *8=32 + colonne x=0 à 7)
-      40 41 42 43 44 45 46 47       (rangée y=5 *8=40 + colonne x=0 à 7)
-      48 49 50 51 52 53 54 55       (rangée y=6 *8=48 + colonne x=0 à 7)
-      56 57 58 59 60 61 62 63       (rangée y=7 *8=56 + colonne x=0 à 7)      */
+       56 57 58 59 60 61 62 63       (rangée y=7 --> 7*8=56 + colonne x=0 à 7)
+       48 49 50 51 52 53 54 55       (rangée y=6 --> 6*8=48 + colonne x=0 à 7)
+       40 41 42 43 44 45 46 47       (rangée y=5 --> 5*8=40 + colonne x=0 à 7)
+       32 33 34 35 36 37 38 39       (rangée y=4 --> 4*8=32 + colonne x=0 à 7)
+       24 25 26 27 28 29 30 31       (rangée y=3 --> 3*8=24 + colonne x=0 à 7)
+       16 17 18 19 20 21 22 23       (rangée y=2 --> 2*8=16 + colonne x=0 à 7)
+        8  9 10 11 12 13 14 15       (rangée y=1 --> 1*8=8  + colonne x=0 à 7)
+        0  1  2  3  4  5  6  7       (rangée y=0 --> 0*8=0  + colonne x=0 à 7)              */
 
 typedef int Square;
 

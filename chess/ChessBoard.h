@@ -14,12 +14,12 @@
 @class Piece, Move, Pos;
 
 typedef struct {
-    Piece *captured;      // pièce capturée (ou nil)
-    PieceType oldType;    // pour promotion
+    Piece *captured;    // pièce capturée (ou nil)
+    PieceType oldType;  // pour promotion
     BOOL wasPromotion;
-    BOOL wasEnPassant;      // ✅ AJOUT
-    int enPassantX;         // ✅ AJOUT : coordonnées du pion capturé
-    int enPassantY;         // ✅ AJOUT
+    BOOL wasEnPassant;
+    int enPassantX;     // coordonnées du pion capturé
+    int enPassantY;     //
 } MoveState;
 
 

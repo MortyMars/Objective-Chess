@@ -13,8 +13,8 @@ rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk e3 0 1			         |  board st
                                                                            |
 Diagrammes étudiés par l'IA contre l'IA :							   	         |
 -----------------------------------------							   	         |
-B1bqkb1r/3pp2p/p1n2p2/1Np3NQ/2P2P2/8/PP1P2PP/2B2RK1 w - - 0 1      	      |  mat réalisé par l'IA vs l'IA en 13 coups
-B1N1k1Q1/3ppn2/5p2/2p3p1/p1P1P2p/5P1N/PP4PP/6K1 w - - 0 1				      |  mat réalisé par l'IA vs l'IA en 22 coups
+B1bqkb1r/3pp2p/p1n2p2/1Np3NQ/2P2P2/8/PP1P2PP/2B2RK1 w - - 0 1      	      |  mat réalisé par IA vs IA en 13 coups
+B1N1k1Q1/3ppn2/5p2/2p3p1/p1P1P2p/5P1N/PP4PP/6K1 w - - 0 1				      |  mat réalisé par IA vs IA en 22 coups
                                                                            |
 Diagrammes à proposer à l'IA :											            |
 ------------------------------								         	         |
@@ -25,12 +25,12 @@ Nk4bR/N4Q2/8/8/8/P7/KPP5/3q2BB w - - 0 1				   				         |  w matent en 1 cou
 Diagrammes pour tests lecture seconde partie FEN :						         |
 --------------------------------------------------						         |
 8/7k/8/8/1N2b3/8/3K4/b7 w - - 47 54 								               |  Base Nalimov pour test règle des 50 coups
-8/7k/8/8/1N2b3/8/3K4/b7 w Qq - 0 1 										            |  Test affichage 'Roque'
+r3k3/8/8/8/1N2b3/8/b7/R3K3 w Qq - 0 1 										         |  Test affichage 'Roque' (grands roques OK)
 8/7k/8/8/1N2b3/8/3K4/b7 w - e4 0 1 										            |  Test affichage 'Cible e.p.'
 8/7k/8/8/1N2b3/8/3K4/b7 w Kkq h5 0 1 									            |  Test complet
 8/7k/8/8/1N2b3/8/3K4/b7 b QKqk e3 120 260								            |  Test coups et demis sur 3 chiffres
 8/7k/8/8/1N2b3/8/3K4/b7 w k e3 24 39                               		   |  Test réaliste
-r1qr1b2/1R2ppkp/3p2pN/ppnP11Q1/bn2P3/4P1NP/PBBP2P1/5RK1 b KQkq e3 99 999   |  exemple d'un champ FEN de longueur quasi max
+r1qr1b2/1R2ppkp/3p2pN/ppnP11Q1/bn2P3/4P1NP/PBBP2P1/5RK1 b KQkq e3 99 999   |  Test d'un champ FEN de longueur quasi max
                                                                            |
 Diagrammes de 4 cas de mat en 3, trait au Blancs :					            |
 -------------------------------------------------- 						      |
@@ -48,10 +48,10 @@ B7/2ppK3/2p4P/N2kp3/1P2p2R/1P2Pb2/3P4/8 w - - 0 1						         |  Cas 5 : Mat e
 4r1k1/3n1ppp/4r3/3n3q/Q2P4/5P2/PP2BP1P/R1B1R1K1 b - - 0 1                  |  Cas 9 : Mat en 3 coups, trait aux Noirs
 r1bqkb1r/pppppppp/5n2/4N3/2BQP3/8/PPP2PPP/RNB1K2R b - - 0 1                |  Cas 10 : Test détection par IA mat en 1 coup
                                                                            |
-Tests de Roque Blancs en bas (SideJoueur = SideWhite) :                    |
+Tests de Roque Blancs en BAS (SideJoueur = SideWhite) :                    |
 -------------------------------------------------------                    |
-R1BKQ2R/P1PP1PPP/3B4/3NP3/n3p3/1P1pqn2/pp1bbppp/r2k3r w QKqk e3 0 1        |
+r3k2r/p1ppqppp/3b4/3np3/N3P3/1p1PQN2/PP1BBPPP/R3K2R w QKqk e3 0 1          |  Test Roques Rois Blanc et Noir - Blancs en BAS
                                                                            |
-Tests de Roque Blancs en bas (SideJoueur = SideWhite) :                    |
+Tests de Roque Blancs en HAUT (SideJoueur = SideWhite) :                   |
 -------------------------------------------------------                    |
-
+R2K3R/P1PPQPPP/3B4/3NP3/n3p3/1P1pqn2/pp1bbppp/r2k3r w QKqk e3 0 1          |  Idem mais Noirs en BAS, Cas non géré par Diagramme

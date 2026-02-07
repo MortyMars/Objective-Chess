@@ -335,13 +335,85 @@ NSString *strPieces;
          strTraitEtRoque = [strTraitEtRoque substringWithRange:NSMakeRange(0,strTraitEtRoque.length-1)];
       }
       
-      
       // NSLog de contrôle
       NSLog(@"\nMatrice : \n%@",fenBoard);
       NSLog(@"Sous-chaîne des Pièces            : '%@'",strPieces);
       NSLog(@"Sous-chaîne de Partie             : '%@'",strTraitEtRoque);
       
       [self LireSecondPartStrFEN:strTraitEtRoque];
+      
+      /* Activation des Roques légaux selon infos de 'strTraitEtRoque' ------------------------------ */
+      // Les Blancs sont en BAS
+      if (sideJoueur == sideWhite){
+         if ([strTraitEtRoque containsString:@"K"]) {
+            Piece *K = fenBoard->pieceCase[4][0]; // Roi Blanc
+            Piece *R = fenBoard->pieceCase[7][0]; // Tour du Roi Blanc
+            if (K.type == Roi && K.side == sideWhite && R.type == Tour && R.side == sideWhite) {
+               K.numMoves = 0;
+               R.numMoves = 0;
+            }
+         }
+         if ([strTraitEtRoque containsString:@"Q"]) {
+            Piece *K = fenBoard->pieceCase[4][0]; // Roi Blanc
+            Piece *R = fenBoard->pieceCase[0][0]; // Tour de la Dame Blanche
+            if (K.type == Roi && K.side == sideWhite && R.type == Tour && R.side == sideWhite) {
+               K.numMoves = 0;
+               R.numMoves = 0;
+            }
+         }
+         if ([strTraitEtRoque containsString:@"k"]) {
+            Piece *k = fenBoard->pieceCase[4][7]; // Roi Noir
+            Piece *r = fenBoard->pieceCase[7][7]; // Tour du Roi Noir
+            if (k.type == Roi && k.side == sideWhite && r.type == Tour && r.side == sideWhite) {
+               k.numMoves = 0;
+               r.numMoves = 0;
+            }
+         }
+         if ([strTraitEtRoque containsString:@"q"]) {
+            Piece *k = fenBoard->pieceCase[4][7]; // Roi Noir
+            Piece *r = fenBoard->pieceCase[0][7]; // Tour de la Dame Noire
+            if (k.type == Roi && k.side == sideWhite && r.type == Tour && r.side == sideWhite) {
+               k.numMoves = 0;
+               r.numMoves = 0;
+            }
+         }
+      }
+      // Les Noirs sont en BAS (cas non encore géré lors du chargement d'un diagramme)
+      if (sideJoueur == sideBlack){
+         if ([strTraitEtRoque containsString:@"K"]) {
+            Piece *K = fenBoard->pieceCase[3][7]; // Roi Blanc
+            Piece *R = fenBoard->pieceCase[0][7]; // Tour du Roi Blanc
+            if (K.type == Roi && K.side == sideWhite && R.type == Tour && R.side == sideWhite) {
+               K.numMoves = 0;
+               R.numMoves = 0;
+            }
+         }
+         if ([strTraitEtRoque containsString:@"Q"]) {
+            Piece *K = fenBoard->pieceCase[3][7]; // Roi Blanc
+            Piece *R = fenBoard->pieceCase[7][7]; // Tour de la Dame Blanche
+            if (K.type == Roi && K.side == sideWhite && R.type == Tour && R.side == sideWhite) {
+               K.numMoves = 0;
+               R.numMoves = 0;
+            }
+         }
+         if ([strTraitEtRoque containsString:@"k"]) {
+            Piece *k = fenBoard->pieceCase[3][0]; // Roi Noir
+            Piece *r = fenBoard->pieceCase[0][0]; // Tour du Roi Noir
+            if (k.type == Roi && k.side == sideWhite && r.type == Tour && r.side == sideWhite) {
+               k.numMoves = 0;
+               r.numMoves = 0;
+            }
+         }
+         if ([strTraitEtRoque containsString:@"q"]) {
+            Piece *k = fenBoard->pieceCase[3][0]; // Roi Noir
+            Piece *r = fenBoard->pieceCase[7][0]; // Tour de la Dame Noire
+            if (k.type == Roi && k.side == sideWhite && r.type == Tour && r.side == sideWhite) {
+               k.numMoves = 0;
+               r.numMoves = 0;
+            }
+         }
+      }
+      /* Fin d'activation les Roques légaux --------------------------------------------------------- */
       
       // Réglages d'orientation et de trait
       sideJoueur = sideWhite; sideIA = sideBlack; sideCourant = sideWhite;
@@ -436,16 +508,27 @@ NSString *strPieces;
       monConnecteur.maChessView->liveBoard->strRoque = sRoque;
       monConnecteur.lblRoque.cell.stringValue = [NSString stringWithFormat:@"Roque : %@", sRoque];;
       NSLog(@"Sous-chaîne du Roque              : '%@'", sRoque);
+      
+      /* ChessBoard *board = Diagramme
+      if ([sRoque containsString:@"K"]) {
+         if (sideJoueur==sideWhite) {
+            Piece *p = board->pieceCase[nx][ny];
+            if (p.type == Roi && p.side == sideWhite) {pouet}
+         }
+      } */
+      
       // CibleEP
       NSString *sCibleEP = [secondStr substringWithRange:NSMakeRange(e[1]+1, e[2]-(e[1]+1))];
       monConnecteur.maChessView->liveBoard->strCibleEP = sCibleEP;
       monConnecteur.lblCibleEP.cell.stringValue = [NSString stringWithFormat:@"Cible e.p. : %@",sCibleEP];
       NSLog(@"Sous-chaîne de la CibleEP         : '%@'", sCibleEP);
+      
       // Demis
       NSString *sDemis = [secondStr substringWithRange:NSMakeRange(e[2]+1, e[3]-(e[2]+1))];
       monConnecteur.maChessView->liveBoard->nbDemis = [sDemis intValue];
       monConnecteur.lbl50Coups.cell.stringValue = [NSString stringWithFormat:@"50 demis : %@", sDemis];
       NSLog(@"Sous-chaîne du n° des Demis       : '%@'", sDemis);
+      
       // Coup : tjs dernier caractère de la chaine
       NSString *sCoup = [secondStr substringWithRange:NSMakeRange(e[3]+1,secondStr.length-(e[3]+1))];
       monConnecteur.maChessView->liveBoard->nbEntiers = [sCoup intValue];

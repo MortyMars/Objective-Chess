@@ -99,6 +99,4 @@
                         Board:(ChessBoard *)board;
 
    
-
-
 @end
