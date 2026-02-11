@@ -20,6 +20,11 @@ typedef struct {
     BOOL wasEnPassant;
     int enPassantX;     // coordonnées du pion capturé
     int enPassantY;     //
+   
+    // ajouts TT - Zobrist
+    uint8_t oldCastleRights;
+    int8_t oldEnPassantFile;
+   
 } MoveState;
 
 
@@ -36,6 +41,13 @@ ce qui permettra notamment de faire des copies d'objets ChessBoard, ...ce dont n
       @public NSString *strCibleEP;
       @public int       nbDemis;
       @public int       nbEntiers;
+   
+      // Ajouts pour Table de Transposition (TT)
+      @public uint64_t  zobristKey;       // clé Zobrist 64 bits
+      @public uint8_t   castlingRights;   // bits : 1=WK,2=WQ,4=BK,8=BQ
+      @public int8_t    enPassantFile;    // -1 ou 0..7
+      @public Side      sideToMove;
+
    }
 
    // 'lastmove' est le dernier move réalisé, déclaré ici, mais défini dans 'PerformMove'
@@ -74,5 +86,6 @@ ce qui permettra notamment de faire des copies d'objets ChessBoard, ...ce dont n
    // GPT
    -(MoveState)makeMove:(Move *)m ;
    -(void)unmakeMove:(Move *)m state:(MoveState)state;
+   -(Move *)buildMoveFrom:(Pos *)start to:(Pos *)dest board:(ChessBoard *)board;
 
 @end

@@ -35,7 +35,7 @@
       Move *move1 = [[Move alloc]initWithStart:[Pos posWithX:4 y:1] Dest:[Pos posWithX:4 y:3]];
       [testBoard PerformMove:move1]; // e2-e4 Blancs
       Move *move2 = [[Move alloc]initWithStart:[Pos posWithX:4 y:6] Dest:[Pos posWithX:4 y:4]];
-      [testBoard PerformMove:move2]; // e5-e7 Noirs
+      [testBoard PerformMove:move2]; // e7-e5 Noirs
       Move *move3 = [[Move alloc]initWithStart:[Pos posWithX:3 y:0] Dest:[Pos posWithX:7 y:4]];
       [testBoard PerformMove:move3]; // Dd1-h5 Blancs
       Move *move4 = [[Move alloc]initWithStart:[Pos posWithX:1 y:7] Dest:[Pos posWithX:2 y:5]];

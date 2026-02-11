@@ -23,6 +23,8 @@
 		83079A0727ECB7BD0047CE06 /* ChessTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 83079A0627ECB7BD0047CE06 /* ChessTests.m */; };
 		83172A4627FA0873006FB509 /* Diagramme.m in Sources */ = {isa = PBXBuildFile; fileRef = 83172A4527FA0873006FB509 /* Diagramme.m */; };
 		833949A228120B1B0043F12F /* BoardsForTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 833949A128120B1B0043F12F /* BoardsForTests.m */; };
+		8342C20C2F38CAC40063DF68 /* Zobrist.m in Sources */ = {isa = PBXBuildFile; fileRef = 8342C20B2F38CAC40063DF68 /* Zobrist.m */; };
+		8342C20D2F38CAC40063DF68 /* Zobrist.m in Sources */ = {isa = PBXBuildFile; fileRef = 8342C20B2F38CAC40063DF68 /* Zobrist.m */; };
 		8359FCE82561F309000CCF2A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8359FCE72561F309000CCF2A /* AppDelegate.m */; };
 		839B0EA62393F4E300254843 /* Util.m in Sources */ = {isa = PBXBuildFile; fileRef = 839B0EA52393F4E300254843 /* Util.m */; };
 		83A693AE28273A430098C629 /* Codes FEN.txt in Resources */ = {isa = PBXBuildFile; fileRef = 83A693AC28273A430098C629 /* Codes FEN.txt */; };
@@ -79,6 +81,8 @@
 		833949A128120B1B0043F12F /* BoardsForTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BoardsForTests.m; sourceTree = "<group>"; };
 		833949A328120B980043F12F /* BoardsForTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BoardsForTests.h; sourceTree = "<group>"; };
 		833949A428120D890043F12F /* ChessTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ChessTests.h; sourceTree = "<group>"; };
+		8342C20A2F38CAC40063DF68 /* Zobrist.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Zobrist.h; sourceTree = "<group>"; };
+		8342C20B2F38CAC40063DF68 /* Zobrist.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Zobrist.m; sourceTree = "<group>"; };
 		8359FCE62561F309000CCF2A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		8359FCE72561F309000CCF2A /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		839B0EA52393F4E300254843 /* Util.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Util.m; sourceTree = "<group>"; };
@@ -173,6 +177,8 @@
 				49AE4AE917949AD1009D59BE /* RuleBook.m */,
 				49AE4AE017948EC3009D59BE /* Util.h */,
 				839B0EA52393F4E300254843 /* Util.m */,
+				8342C20A2F38CAC40063DF68 /* Zobrist.h */,
+				8342C20B2F38CAC40063DF68 /* Zobrist.m */,
 				83A693AC28273A430098C629 /* Codes FEN.txt */,
 				83E4FD9227F4DADA007F62F9 /* piecesMCN.png */,
 				49AE4ABB17948BAD009D59BE /* Images.xcassets */,
@@ -319,6 +325,7 @@
 				49C031A31794B4D6001A2048 /* Move.m in Sources */,
 				83B442B2254F17A00008D95C /* Connecteur.m in Sources */,
 				49AE4AD917948BB8009D59BE /* ChessView.m in Sources */,
+				8342C20D2F38CAC40063DF68 /* Zobrist.m in Sources */,
 				49AE4ADC17948D73009D59BE /* ChessBoard.m in Sources */,
 				49AE4AE51794909A009D59BE /* Piece.m in Sources */,
 				839B0EA62393F4E300254843 /* Util.m in Sources */,
@@ -336,6 +343,7 @@
 			files = (
 				833949A228120B1B0043F12F /* BoardsForTests.m in Sources */,
 				83079A0727ECB7BD0047CE06 /* ChessTests.m in Sources */,
+				8342C20C2F38CAC40063DF68 /* Zobrist.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -8,9 +8,23 @@
 //  par opposition à la classe ChessView qui traite la représentation graphique du 'board'
 
 #import "ChessBoard.h"
+#import "Zobrist.h"
 
+// Pour mode verbeux du moteur -----------------------------------------------*
+#define LOG_EP(fmt, ...) \
+    if (kVerboseMoveDebug) NSLog(@"🟡 EP  " fmt, ##__VA_ARGS__)
 
-//static int depthCounter = 0;
+#define LOG_CASTLE(fmt, ...) \
+    if (kVerboseMoveDebug) NSLog(@"🔵 ROQUE " fmt, ##__VA_ARGS__)
+
+#define LOG_PROMO(fmt, ...) \
+    if (kVerboseMoveDebug) NSLog(@"🟣 PROMO " fmt, ##__VA_ARGS__)
+
+#define LOG_UNMAKE(fmt, ...) \
+    if (kVerboseMoveDebug) NSLog(@"↩️ UNMAKE " fmt, ##__VA_ARGS__)
+
+BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
+// Fin de mode verbeux du moteur ---------------------------------------------*
 
 
 @implementation ChessBoard
@@ -30,6 +44,12 @@
          nbDemis     = 0;
          //nbDemis     = 49; // pour tester NSAlert50coups
          nbEntiers   = 1;
+         
+         // Init pour TT
+         sideToMove = sideWhite;
+         castlingRights = 0b1111;   // KQkq
+         enPassantFile = -1;
+         
       }
       return self;
    }
@@ -51,6 +71,11 @@
          self->pieceCase[x][7] = nil;   // effacement rangée 7
       }
       
+      // Ajouts pour séparation UI / moteur
+      sideJoueur = sideWhite;
+      sideIA     = sideBlack;
+      monConnecteur.maChessView.uiFlipped  = NO;
+      
       // RAZ indicateurs
       nbDemis   = 0;
       nbEntiers = 1;
@@ -70,6 +95,29 @@
       NSLog(@"a1 = %@", pieceCase[0][0]);
       NSLog(@"h8 = %@", pieceCase[7][7]);
       
+      /* Initialisation de la clé Zobrist -----------------------------------*/
+      self->zobristKey = 0;
+      
+      for (int x = 0; x < 8; x++) {
+         for (int y = 0; y < 8; y++) {
+            Piece *p = self->pieceCase[x][y];
+            if (p) {
+               int sq = y * 8 + x;
+               self->zobristKey ^= zobristPiece[p.side][p.type][sq];
+            }
+         }
+      }
+      
+      self->zobristKey ^= zobristCastle[self->castlingRights];
+      
+      if (self->enPassantFile != -1)
+         self->zobristKey ^= zobristEnPassant[self->enPassantFile];
+      
+      if (self->sideToMove == sideBlack)
+         self->zobristKey ^= zobristSide;
+      /* Fin d'initialisation de la clé Zobrist -----------------------------*/
+      
+      
       
       // Chargement du board dans la vue active et rafraichissement
       monConnecteur.maChessView->liveBoard = self;
@@ -78,6 +126,12 @@
       //MàJ des menus
       monConnecteur.menuPoursuivre.title = @"Poursuivre avec les Noirs";
       monConnecteur.menuPoursuivre.enabled = YES;
+      
+      // DEBUG *********** Test d'involution ************ DEBUG
+      engineIsBusy = YES;
+      TestInvolution();
+      engineIsBusy = NO;
+      
       
    }
 
@@ -89,14 +143,20 @@
       // Effacement d'un éventuel précédent board déjà construit
       for (int x=0; x < 8; x ++) {
          self->pieceCase[x][0] = nil;   // effacement rangée 0
-         self->pieceCase[x][1] = nil;   // effacement rangée 1
-         self->pieceCase[x][2] = nil;   // effacement rangée 2
-         self->pieceCase[x][3] = nil;   // effacement rangée 3
-         self->pieceCase[x][4] = nil;   // effacement rangée 4
-         self->pieceCase[x][5] = nil;   // effacement rangée 5
-         self->pieceCase[x][6] = nil;   // effacement rangée 6
-         self->pieceCase[x][7] = nil;   // effacement rangée 7
+         self->pieceCase[x][1] = nil;   // ...
+         self->pieceCase[x][2] = nil;
+         self->pieceCase[x][3] = nil;
+         self->pieceCase[x][4] = nil;
+         self->pieceCase[x][5] = nil;
+         self->pieceCase[x][6] = nil;
+         self->pieceCase[x][7] = nil;
       }
+      
+      // Ajouts pour séparation UI / moteur
+      sideJoueur = sideBlack;
+      sideIA     = sideWhite;
+      monConnecteur.maChessView.uiFlipped  = YES;
+      
       
       // RAZ indicateurs
       nbDemis   = 0;
@@ -116,6 +176,28 @@
       [self SetupPieces];
       NSLog(@"a1 = %@", pieceCase[0][0]);
       NSLog(@"h8 = %@", pieceCase[7][7]);
+      
+      /* Initialisation de la clé Zobrist -----------------------------------*/
+      self->zobristKey = 0;
+      
+      for (int x = 0; x < 8; x++) {
+         for (int y = 0; y < 8; y++) {
+            Piece *p = self->pieceCase[x][y];
+            if (p) {
+               int sq = y * 8 + x;
+               self->zobristKey ^= zobristPiece[p.side][p.type][sq];
+            }
+         }
+      }
+      
+      self->zobristKey ^= zobristCastle[self->castlingRights];
+      
+      if (self->enPassantFile != -1)
+         self->zobristKey ^= zobristEnPassant[self->enPassantFile];
+      
+      if (self->sideToMove == sideBlack)
+         self->zobristKey ^= zobristSide;
+      /* Fin d'initialisation de la clé Zobrist -----------------------------*/
       
       
       // Chargement du board dans la vue active et rafraichissement
@@ -143,7 +225,8 @@
          for (int y=0; y<8; y++){
             if (boardA->pieceCase[x][y])
                
-               boardB->pieceCase[7-x][7-y] = [[Piece alloc] initWithType:boardA->pieceCase[x][y].type                                                                         side:boardA->pieceCase[x][y].side];
+               boardB->pieceCase[7-x][7-y] =
+               [[Piece alloc] initWithType:boardA->pieceCase[x][y].type                                                                          side:boardA->pieceCase[x][y].side];
          }
       }
       
@@ -192,39 +275,33 @@
    // Cette METHODE est appelée dans ChessView.m
    -(void)SetupPieces
    {
-      // Détermination des couleurs JOUEUR et IA, avant construction de l'échiquier
-      //[self DefCouleurJoueur]; // La méthode d'instance est implémentée plus bas
       
-      // Initialisation des éléments du tableau à 2 entrées représentant le positionnement des pièces
-      // Première rangée (ligne 0) des pièces du JOUEUR en début de partie
-      pieceCase[0][0] = [[Piece alloc] initWithType:Tour side:sideJoueur];
-      pieceCase[1][0] = [[Piece alloc] initWithType:Cava side:sideJoueur];
-      pieceCase[2][0] = [[Piece alloc] initWithType:Fou  side:sideJoueur];
+      /* On est dans le périmètre moteur, les coordonnées x et y doivent
+       respecter le caractère canonique du repère (0, x, y) de référence.
+       Dans ce contexte, les Blancs -vus du moteur- sont en bas, TOUJOURS */
+      pieceCase[0][0] = [[Piece alloc] initWithType:Tour side:sideWhite];
+      pieceCase[1][0] = [[Piece alloc] initWithType:Cava side:sideWhite];
+      pieceCase[2][0] = [[Piece alloc] initWithType:Fou  side:sideWhite];
+      pieceCase[3][0] = [[Piece alloc] initWithType:Dame side:sideWhite];
+      pieceCase[4][0] = [[Piece alloc] initWithType:Roi  side:sideWhite];
+      pieceCase[5][0] = [[Piece alloc] initWithType:Fou  side:sideWhite];
+      pieceCase[6][0] = [[Piece alloc] initWithType:Cava side:sideWhite];
+      pieceCase[7][0] = [[Piece alloc] initWithType:Tour side:sideWhite];
       
-      // MCN - Selon l'orientation de l'échiquier la ligne 0 reçoit les Blancs ou les Noirs
-      // et les positions de la Reine et du Roi sont à adapter en conséquence
-      pieceCase[3][0] = [[Piece alloc] initWithType:(sideJoueur == sideWhite)? Dame : Roi side:sideJoueur];
-      pieceCase[4][0] = [[Piece alloc] initWithType:(sideJoueur == sideWhite)? Roi : Dame side:sideJoueur];
-      pieceCase[5][0] = [[Piece alloc] initWithType:Fou  side:sideJoueur];
-      pieceCase[6][0] = [[Piece alloc] initWithType:Cava side:sideJoueur];
-      pieceCase[7][0] = [[Piece alloc] initWithType:Tour side:sideJoueur];
-      
-      // Balayage horizontal, de l'abcisse x=0 à l'abcisse x=7
-      for (int x = 0; x < 8; x++)
-      {
-         // Pions JOUEUR en ligne 1
-         pieceCase[x][1] = [[Piece alloc] initWithType:Pion  side:sideJoueur];
-         // Pions IA en ligne 6
-         pieceCase[x][6] = [[Piece alloc] initWithType:Pion  side:sideIA];
-         
-         // Puis recopie de la ligne 0 en ligne 7, pour les pièces de l'IA
-         // Pas besoin de s'inquiéter de l'orientation de l'échiquier puisque les Dames et les Rois se font tjs face
-         pieceCase[x][7] = [[Piece alloc] initWithType:pieceCase[x][0].type side:sideIA];
+      for (int x = 0; x < 8; x++) {
+         pieceCase[x][1] = [[Piece alloc] initWithType:Pion side:sideWhite];
+         pieceCase[x][6] = [[Piece alloc] initWithType:Pion side:sideBlack];
+         pieceCase[x][7] = [[Piece alloc] initWithType:pieceCase[x][0].type side:sideBlack];
       }
       
-      // MCN - FORCER L'IA À JOUER EN PREMIER QUAND ELLE A LES BLANCS
-      // L'appel à la méthode idoine placé ici, anachroniquement, mais juste après initialisation de l'échiquier,
-      // garantit qu'il ne sera fait qu'une seule fois dans la partie, et en tout début.
+      
+      
+      /* FORCER L'IA À JOUER EN PREMIER QUAND ELLE A LES BLANCS
+       L'appel à la méthode idoine placé ici, un peu anachroniquement, mais juste
+       après initialisation de l'échiquier, garantit qu'il ne sera fait qu'une seule
+       fois dans la partie, et au tout début.
+       Le test introduisant 'sideJoueur' n'est a priori pas 'new engine compatible.
+       Il sera peut-être nécessaire d'y revenir plus tard ...                     */
       if (sideJoueur == sideBlack) {
          [self PremCoupAIBlancs];
       } // Fin de Forcer l'IA à jouer
@@ -248,80 +325,58 @@
    // retourne la pièce positionnée en 'pos'
    -(Piece *)pieceAtPos:(Pos *)pos
    {
-      int x = pos.x, y = pos.y;
-      if (x < 0 || y < 0 || x > 7 || y > 7) return nil;
-      return pieceCase[x][y];
+       if (!pos) return nil;
+
+       // garde ultra-importante
+       if (![pos isKindOfClass:[Pos class]]) return nil;
+
+       int x = pos.x, y = pos.y;
+       if (x < 0 || y < 0 || x > 7 || y > 7) return nil;
+
+       return pieceCase[x][y];
    }
+
 
 
    // ==================================================================================================
    // Méthode d'instance
    -(void)PerformMove:(Move *)move
    {
-      // MCN - Sauvegarde du board avant le move, pour test de prise en passant un peu plus bas
-      ChessBoard *boardEP = self.copy;
-      enPassant = NO;
-      
       /* DÉPLACEMENT DE PIÈCES DANS LE CAS GÉNÉRAL
        NB: 'MovePieceDeStart' déplace la pièce sur le nouvel emplacement et la supprime de l'ancien */
-      Piece *piece = [self MovePieceDeStart:move.start ADest:move.dest];
+      //Piece *piece = [self MovePieceDeStart:move.start ADest:move.dest];
+      [self MovePieceDeStart:move.start ADest:move.dest];
       
-      /* 1er Complément au 'move' ci avant, pour gérer le roque s'il y a lieu, car quand
-       le Roi JOUEUR roque, la tour concernée se déplace également
-       RAZ indicateurs de roque avant tests */
-      petitRoque = NO;        grandRoque = NO;
-      if (piece.type == Roi && abs(move.dest.x - move.start.x) > 1) {
-         // if MCN : le joueur a les Blancs
-         if (sideJoueur == sideWhite) {
-            // si la dest du Roi est la case 2, c'est la Tour de G qui est concernée (grand roque)
-            // sinon c'est la tour D qui est concernée (petit roque)
-            int rookX = (move.dest.x == 2) ? 0 : 7; // rookX : case de départ de la Tour G (0) ou D (7)
-            // la Tour de G bascule en case 3, ou la Tour de D bascule en case 5
-            int rookDestX = (rookX == 0) ? 3 : 5; // rookDestX : case d'arrivée de la Tour G = 3, ou D = 5
-            
-            petitRoque = (rookX == 0) ? NO : YES;
-            grandRoque = (rookX == 0) ? YES : NO;
-            
-            [self MovePieceDeStart:[Pos posWithX:rookX y:move.dest.y] ADest:[Pos posWithX:rookDestX y:move.dest.y]];
-         } // Fin if MCN
+      // === GESTION DU ROQUE (nouveau moteur) ===============================
+      if (move.isCastling) {
          
-         // Modif. MCN, second traitement gérant le cas du JOUEUR ayant les Noirs
-         if (sideJoueur == sideBlack) {
-            /* si la dest du Roi est la case 1 c'est la Tour de G qui est concernée (petit roque)
-             sinon c'est la Tour D qui est concernée (grand roque) */
-            int rookX = (move.dest.x == 1) ? 0 : 7;
-            // la Tour de G bascule en case 2, ou la Tour de D bascule en case 4
-            int rookDestX = (rookX == 0) ? 2 : 4;
-            
-            petitRoque = (rookX == 0) ? YES : NO;
-            grandRoque = (rookX == 0) ? NO : YES;
-            
-            [self MovePieceDeStart:[Pos posWithX:rookX y:move.dest.y] ADest:[Pos posWithX:rookDestX y:move.dest.y]];
+         int y = move.dest.y;          // rangée du Roi
+         int rookStartX, rookDestX;
+         
+         // Petit roque : Roi se déplace vers la droite (e → g)
+         if (move.dest.x > move.start.x) {
+            rookStartX = 7;   // tour h
+            rookDestX  = 5;   // tour → f
          }
+         // Grand roque : Roi se déplace vers la gauche (e → c)
+         else {
+            rookStartX = 0;   // tour a
+            rookDestX  = 3;   // tour → d
+         }
+         
+         [self MovePieceDeStart:[Pos posWithX:rookStartX y:y]
+                          ADest:[Pos posWithX:rookDestX  y:y]];
       }
       
-      /* MCN - PRISE E.P.
-       2ème Complément au 'move' du cas général, pour gérer la prise en passant caractérisée par le fait
-       que c'est le seul cas de figure où le pion avance en diagonale sans prise de pièce.
-       Cette seule particularité de déplacement est suffisante pour caractériser la prise e.p.
-       C'est donc l'objet du test ci-après
-       On raisonne sur le boardEP, càd avant le move du pion...
-       Si la pièce est un pion... */
-      if (piece.type == Pion) {
-         // qui se déplace en diagonale...
-         if (abs(move.start.x - move.dest.x) == 1) {
-            // pour atterrir sur une case où il n'y avait pas de pièce...
-            if ([boardEP pieceAtPos:move.dest].type == Invalide) {
-               /* ... alors on est bien dans le cas d'une prise e.p.
-                on supprime alors le pion adverse (faire un croquis pour la compréhension des ordo visées ;-)
-                NB : pour rappel 'pieceCase' est une variable d'instance de la classe 'ChessBoard' */
-               pieceCase[move.dest.x][move.start.y] = nil;
-               // et on positionne l'indicateur e.p. sur YES
-               enPassant = YES;
-            }
-         }
-      } // Fin de MCN PRISE E.P.
-      
+      /* GESTION PRISE EN PASSANT SUPPRIMÉE car double emploi avec makeMove --> pb Zobrist
+       // === PRISE EN PASSANT ================================================
+       if (move.isEnPassant) {
+       
+       int capX = move.dest.x;
+       int capY = move.start.y;   // le pion capturé est resté sur le rang de départ
+       
+       pieceCase[capX][capY] = nil;
+       } --------------------------------------------------------------------------------*/
       
       // Sauvegarde du move comme étant le dernier du board
       self.lastMove = move;
@@ -407,12 +462,12 @@
          else {
             sideJoueur = sideBlack;}
          
-         /*  NB : La boite d'alerte est modale et interdit donc la poursuite du programme
+         /* NB : La boite d'alerte est modale et interdit donc la poursuite du programme
           avant d'avoir choisi la couleur que l'on souhaite jouer dans cette partie.
           Lorsque la boite d'alerte se ferme et perd le focus de premier plan,
           la fenêtre de l'échiquier ne le récupère pas systématiquement et dans la
           négative il faut penser à aller chercher l'application qui tourne
-          souvent dans l'arrière plan de X-Code lui-même                              */
+          souvent dans l'arrière plan de X-Code lui-même                               */
          
          // sideIA prend la couleur laissée par le JOUEUR
          sideIA = (sideJoueur == sideWhite) ? sideBlack : sideWhite;
@@ -429,7 +484,6 @@
 
 
    // ==================================================================================================
-   // MCN
    // Méthode d'instance, appelée en fin d'initialisation du plateau quand l'IA a les blancs
    // LE TOUT PREMIER COUP DE LA PARTIE REVIENT À L'IA QUAND ELLE A LES BLANCS
    -(void)PremCoupAIBlancs
@@ -465,8 +519,7 @@
 
 
    // ============================================================================================
-   // MCN - Méthode d'instance
-   // Gérant la promotion d'un pion parvenant sur sa dernière rangée
+   // Méthode d'instance gérant la promotion d'un pion parvenant sur sa dernière rangée
    -(NSString *) SelectPromoPion:(Piece*)piece auRang:(int)rang
    {
       NSString *promoDTFC = @"";
@@ -474,28 +527,28 @@
       NSString *msgInfo   = @"";
       
       // Orientation classique Blancs en bas --> Pion blanc en rang 7 ou pion noir en rang 0 = promo
-      if(sideJoueur == sideWhite) {
-         if (rang == 7) {  // Pion Blanc Joueur
-            msgTitre = @"Pion Blanc éligible à promotion";
-            msgInfo  = @"Choisissez la promotion souhaitée pour votre Pion...";
-         }
-         if (rang == 0) {  // Pion Noir IA
-            msgTitre = @"Pion Noir éligible à promotion";
-            msgInfo  = @"Il vous revient de choisir en toute bonne foi, la promotion pour le Pion de l'IA...";
-         }
+      //if(sideJoueur == sideWhite) {
+      if (rang == 7) {  // Pion Blanc
+         msgTitre = @"Pion Blanc éligible à promotion";
+         msgInfo  = @"Choisissez la promotion souhaitée pour votre Pion...";
       }
+      if (rang == 0) {  // Pion Noir
+         msgTitre = @"Pion Noir éligible à promotion";
+         msgInfo  = @"Il vous revient de choisir en toute bonne foi, la promotion pour le Pion de l'IA...";
+      }
+      //}
       
       // Orientation inversée Noirs en bas --> Pion blanc en rang 0 ou pion noir en rang 7 = promo
-      if(sideJoueur == sideBlack) {
-         if (rang == 7) {  // Pion Noir Joueur
-            msgTitre = @"Pion Noir éligible à promotion";
-            msgInfo  = @"Choisissez la promotion souhaitée pour votre Pion...";
-         }
-         if (rang == 0) {  // Pion Blanc IA
-            msgTitre = @"Pion Blanc éligible à promotion";
-            msgInfo  = @"Il vous revient de choisir en toute bonne foi, la promotion pour le Pion de l'IA...";
-         }
-      }
+      /* if(sideJoueur == sideBlack) {
+       if (rang == 7) {  // Pion Noir Joueur
+       msgTitre = @"Pion Noir éligible à promotion";
+       msgInfo  = @"Choisissez la promotion souhaitée pour votre Pion...";
+       }
+       if (rang == 0) {  // Pion Blanc IA
+       msgTitre = @"Pion Blanc éligible à promotion";
+       msgInfo  = @"Il vous revient de choisir en toute bonne foi, la promotion pour le Pion de l'IA...";
+       }
+       } */
       
       NSAlert *promoPion = [[NSAlert alloc] init];
       [promoPion addButtonWithTitle:@"Dame"];
@@ -522,7 +575,7 @@
 
 
    // ==================================================================================================
-   // MCN - Méthode d'instance permettant de déterminer la chaine décrivant les possibilités de Roque
+   // Méthode d'instance permettant de déterminer la chaine décrivant les possibilités de Roque
    -(void) CalculerStrRoque {
       
       /* La situation du Roque est dépendante de 6 pièces : les 2 rois et les 4 tours...
@@ -536,7 +589,8 @@
          
          NSString *strProvRoque = @"";
          
-         if (sideJoueur == sideWhite) {
+         //if (sideJoueur == sideWhite) {
+         if (!monConnecteur.maChessView.uiFlipped) {
             if (([self piece_colX:4 rangY:0].numMoves == 0) && ([self piece_colX:7 rangY:0].numMoves == 0) &&
                 ([self piece_colX:4 rangY:0].type == Roi)   && ([self piece_colX:7 rangY:0].type == Tour))
                strProvRoque = [strProvRoque stringByAppendingString:@"K"];
@@ -555,7 +609,8 @@
             
             if ([strProvRoque isEqual:@""]) strProvRoque = [strProvRoque stringByAppendingString:@"-"];
          }
-         else if (sideJoueur == sideBlack) {
+         //else if (sideJoueur == sideBlack) {
+         else {
             if (([self piece_colX:3 rangY:7].numMoves == 0) && ([self piece_colX:0 rangY:7].numMoves == 0) &&
                 ([self piece_colX:3 rangY:7].type == Roi) && ([self piece_colX:0 rangY:7].type == Tour))
                strProvRoque = [strProvRoque stringByAppendingString:@"K"];
@@ -582,7 +637,7 @@
 
 
    // ==================================================================================================
-   // MCN - Méthode permettant de déterminer la cible d'une prise en passant potentielle.
+   // Méthode permettant de déterminer la cible d'une prise en passant potentielle.
    // NB : La cible e.p. à laquelle il est fait référence, notamment dans un code FEN, correspond de fait
    // à la case traversée par le pion pris avançant de 2 cases, case qui sera occupée par le pion prenant.
    // C'est donc cette case traversée qui est indiquée comme cible, qu'un pion adverse soit suffisamment
@@ -624,18 +679,18 @@
       }
       monConnecteur.maChessView->liveBoard->strCibleEP = cibleEP;
       
-   } // Fin de Méthode DeterminerCibleEP
+   } // !DeterminerCibleEP
 
 
    // ==================================================================================================
-   // MCN - Méthode d'instance permettant de compatiliser les demi-coups entre prise et/ou mvt de pion
+   // Méthode d'instance permettant de compatiliser les demi-coups entre prise et/ou mvt de pion
    -(void) CompterDemiCoups:(Move *)move {
       
       if (([self pieceAtPos:move.dest].type != Invalide) || ([self pieceAtPos:move.start].type == Pion))
          monConnecteur.maChessView->liveBoard->nbDemis = 0;
       else  monConnecteur.maChessView->liveBoard->nbDemis ++;
       
-   } // Fin de Méthode CompterDemiCoups
+   } // !CompterDemiCoups
 
 
    // ==================================================================================================
@@ -663,7 +718,8 @@
             monConnecteur.lbl50Coups.cell.stringValue = [NSString stringWithFormat:@"50 demis : %d", self->nbDemis];
             break;
       }
-   } // Fin de Méthode 'NotifieNulle50Coups'
+      
+   } // !NotifieNulle50Coups
 
 
    // ==================================================================================================
@@ -683,168 +739,283 @@
    // Méthode d'instance 'makeMove' permettant de réaliser un move de test
    -(MoveState)makeMove:(Move *)m
    {
+      NSAssert(m.fromSquare == m.start.y * 8 + m.start.x, @"Move incohérent: fromSquare");
+      NSAssert(m.toSquare   == m.dest.y  * 8 + m.dest.x, @"Move incohérent: toSquare");
       
-      /* // ✅ NS LOG DE DIAGNOSTIC
-       Piece *moving = pieceCase[m.start.x][m.start.y];
-       Piece *captured = pieceCase[m.dest.x][m.dest.y];
-       
-       NSLog(@"🔧 makeMove: %@ de (%d,%d) vers (%d,%d) | Capture: %@",
-       moving, m.start.x, m.start.y, m.dest.x, m.dest.y,
-       captured ? captured : @"rien");
-       
-       // Si on capture le Roi, on veut le savoir IMMÉDIATEMENT
-       if (captured && captured.type == Roi) {
-       NSLog(@"💀 ALERTE: CAPTURE DU ROI DÉTECTÉE!");
-       NSLog(@"   Coup: %@", m);
-       NSLog(@"   Stack: %@", [NSThread callStackSymbols]);
-       }
-       // ⛔ SIGNALER LA CAPTURE DU ROI
-       NSAssert(!(captured && captured.type == Roi),
-       @"makeMove: tentative de capture du Roi! Move: %@", m);
-       // ⛔ FIN DE SIGNALER LA CAPTURE DU ROI
-       // ✅ FIN DE NS LOG DE DIAGNOSTIC  */
       
-      MoveState st;
-      st.captured = pieceCase[m.dest.x][m.dest.y];
-      st.wasPromotion = NO;
-      st.oldType = 0;
-      st.wasEnPassant = NO;   // ✅ Initialisation
-      st.enPassantX = -1;
-      st.enPassantY = -1;
+      MoveState st = {0};
+      st.oldCastleRights   = castlingRights;
+      st.oldEnPassantFile  = enPassantFile;
       
-      Piece *moving = pieceCase[m.start.x][m.start.y];
-      NSAssert(moving != nil, @"makeMove: pas de pièce à déplacer");
+      int fx = SQ_X(m.fromSquare);
+      int fy = SQ_Y(m.fromSquare);
+      int tx = SQ_X(m.toSquare);
+      int ty = SQ_Y(m.toSquare);
       
-      // ✅ GESTION DE LA PRISE EN PASSANT
+      int fromSq = m.fromSquare;
+      int toSq   = m.toSquare;
+      
+      Piece *moving = pieceCase[fx][fy];
+      NSAssert(moving, @"makeMove: pas de pièce à déplacer");
+      
+      /*----------------------- ZOBRIST — EP ancien -------------------------------*/
+      if (enPassantFile != -1)
+         zobristKey ^= zobristEnPassant[enPassantFile];
+      enPassantFile = -1;
+      
+      /*----------------------- ZOBRIST — retirer pièce source --------------------*/
+      zobristKey ^= zobristPiece[moving.side][moving.type][fromSq];
+      
+      /*----------------------- CAPTURE / EN PASSANT ------------------------------*/
       if (m.isEnPassant) {
          st.wasEnPassant = YES;
          
-         // Le pion capturé est sur la même rangée que le départ
-         int capturedX = m.dest.x;
-         int capturedY = m.start.y;
+         int cx = tx;
+         int cy = fy;
          
-         st.enPassantX = capturedX;
-         st.enPassantY = capturedY;
-         st.captured = pieceCase[capturedX][capturedY];
+         st.enPassantX = cx;
+         st.enPassantY = cy;
          
-         // Retirer le pion capturé
-         pieceCase[capturedX][capturedY] = nil;
+         st.captured = pieceCase[cx][cy];
+         pieceCase[cx][cy] = nil;
+         
+         int capSq = cy * 8 + cx;
+         zobristKey ^= zobristPiece[st.captured.side][st.captured.type][capSq];
+         
+         // Mode verbeux Prise EP ---------------------------------------*
+         LOG_EP(@"%@ pawn from (%d,%d) captures pawn at (%d,%d)",
+                (moving.side == sideWhite ? @"White" : @"Black"),
+                m.start.x, m.start.y,
+                cx, cy);
+         // Fin de mode verbeux -----------------------------------------*
+      } else {
+         st.captured = pieceCase[tx][ty];
+         if (st.captured) {
+            zobristKey ^= zobristPiece[st.captured.side][st.captured.type][toSq];
+         }
+      }
+
+      /*----------------------- DÉPLACEMENT PRINCIPAL -----------------------------*/
+      pieceCase[tx][ty] = moving;
+      pieceCase[fx][fy] = nil;
+      
+      zobristKey ^= zobristPiece[moving.side][moving.type][toSq];
+      
+      /*----------------------- EN PASSANT (double pas) ---------------------------*/
+      if (moving.type == Pion && abs(ty - fy) == 2) {
+         enPassantFile = fx;
+         zobristKey ^= zobristEnPassant[enPassantFile];
       }
       
-      // Déplacement principal
-      pieceCase[m.dest.x][m.dest.y] = moving;
-      pieceCase[m.start.x][m.start.y] = nil;
-      
-      
-      // ✅ ROQUE - Gestion du déplacement de la tour concernée
+      /*----------------------- ROQUE (tour) --------------------------------------*/
       if (m.isCastling) {
-         if (sideJoueur == sideWhite) {
-            int y = m.start.y;
-            // Petit Roque
-            if (m.dest.x == 6) {
-               Piece *rook = pieceCase[7][y];
-               pieceCase[5][y] = rook;
-               pieceCase[7][y] = nil;
-            }
-            // Grand Roque
-            else if (m.dest.x == 2) {
-               Piece *rook = pieceCase[0][y];
-               pieceCase[3][y] = rook;
-               pieceCase[0][y] = nil;
-            }
-         }
-         if (sideJoueur == sideBlack) {
-            int y = m.start.y;
-            // Petit Roque
-            if (m.dest.x == 1) {
-               Piece *rook = pieceCase[0][y];
-               pieceCase[2][y] = rook;
-               pieceCase[0][y] = nil;
-            }
-            // Grand Roque
-            else if (m.dest.x == 5) {
-               Piece *rook = pieceCase[7][y];
-               pieceCase[4][y] = rook;
-               pieceCase[7][y] = nil;
-            }
-         }
+         int y = fy;
+         BOOL kingSide = (tx == 6);
+         
+         int rookFromX = kingSide ? 7 : 0;
+         int rookToX   = kingSide ? 5 : 3;
+         
+         Piece *rook = pieceCase[rookFromX][y];
+         NSAssert(rook && rook.type == Tour, @"Roque: tour absente");
+         
+         pieceCase[rookToX][y]   = rook;
+         pieceCase[rookFromX][y] = nil;
+         
+         int rookFromSq = y * 8 + rookFromX;
+         int rookToSq   = y * 8 + rookToX;
+         
+         zobristKey ^= zobristPiece[rook.side][Tour][rookFromSq];
+         zobristKey ^= zobristPiece[rook.side][Tour][rookToSq];
+         
+         LOG_CASTLE(@"%@ castles %@ side (king %d,%d → %d,%d)",
+                        (moving.side == sideWhite ? @"White" : @"Black"),
+                        kingSide ? @"KING" : @"QUEEN",
+                        m.start.x, m.start.y,
+                        m.dest.x, m.dest.y);
       }
       
-      // PROMOTION
+      /*----------------------- PROMOTION -----------------------------------------*/
       if (moving.type == Pion &&
-          ((moving.side == sideWhite && m.dest.y == 7) ||
-           (moving.side == sideBlack && m.dest.y == 0))) {
-         
+          ((moving.side == sideWhite && ty == 7) ||
+           (moving.side == sideBlack && ty == 0)))
+      {
          st.wasPromotion = YES;
          st.oldType = moving.type;
+         
+         zobristKey ^= zobristPiece[moving.side][Pion][toSq];
          moving.type = Dame;
+         zobristKey ^= zobristPiece[moving.side][Dame][toSq];
+         
+         LOG_PROMO(@"%@ pawn promotes at (%d,%d)",
+                       (moving.side == sideWhite ? @"White" : @"Black"),
+                       m.dest.x, m.dest.y);
       }
       
-      moving.numMoves++;
+      /*----------------------- DROITS DE ROQUE -----------------------------------*/
+      zobristKey ^= zobristCastle[st.oldCastleRights];
+      // mise à jour de castlingRights ici
+      zobristKey ^= zobristCastle[castlingRights];
       
+      /*----------------------- SIDE TO MOVE --------------------------------------*/
+      zobristKey ^= zobristSide;
+      sideToMove = (sideToMove == sideWhite) ? sideBlack : sideWhite;
+      
+      
+      if (moving.type == Roi && abs(m.dest.x - m.start.x) == 2) {
+          NSLog(@"👀 ROQUE détecté implicitement : %@", m);
+      }
+
+      moving.numMoves++;
       return st;
-   }
+      
+   } // !makeMove
 
    // ==================================================================================================
    // Méthode d'instance 'unmakeMove' permettant d'annuler un move de test et de rétablir le board
    // initial en restaurant les positions et indicateurs d'avant move
    -(void)unmakeMove:(Move *)m state:(MoveState)st
    {
-      Piece *moving = pieceCase[m.dest.x][m.dest.y];
-      NSAssert(moving != nil, @"unmakeMove: case dest vide");
+      LOG_UNMAKE(@"moving back from toSq=%d (%d,%d) start=(%d,%d) dest=(%d,%d)",
+                 m.toSquare,
+                 m.dest.x, m.dest.y,
+                 m.start.x, m.start.y,
+                 m.dest.x, m.dest.y);
+
+      int fx = SQ_X(m.fromSquare);
+      int fy = SQ_Y(m.fromSquare);
+      int tx = SQ_X(m.toSquare);
+      int ty = SQ_Y(m.toSquare);
       
-      // Annuler promotion
+      int fromSq = m.fromSquare;
+      int toSq   = m.toSquare;
+      
+      Piece *moving = pieceCase[tx][ty];
+      NSLog(@"UNMAKE moving at toSq=%d (%d,%d) start=(%d,%d) dest=(%d,%d)",
+            m.toSquare, tx, ty,
+            m.start.x, m.start.y,
+            m.dest.x, m.dest.y);
+      
+      NSAssert(moving, @"unmakeMove: pièce absente");
+      
+      /*----------------------- SIDE TO MOVE --------------------------------------*/
+      sideToMove = (sideToMove == sideWhite) ? sideBlack : sideWhite;
+      zobristKey ^= zobristSide;
+      
+      /*----------------------- DROITS DE ROQUE -----------------------------------*/
+      zobristKey ^= zobristCastle[castlingRights];
+      castlingRights = st.oldCastleRights;
+      zobristKey ^= zobristCastle[castlingRights];
+      
+      /*----------------------- PROMOTION -----------------------------------------*/
       if (st.wasPromotion) {
+         zobristKey ^= zobristPiece[moving.side][Dame][toSq];
          moving.type = st.oldType;
+         zobristKey ^= zobristPiece[moving.side][Pion][toSq];
+         
+         LOG_PROMO(@"UNMAKE promotion at (%d,%d) restoring pawn",
+                       m.dest.x, m.dest.y);
       }
       
-      // Replacer la pièce principale
-      pieceCase[m.start.x][m.start.y] = moving;
-      pieceCase[m.dest.x][m.dest.y] = st.captured;
-      
-      // ✅ ANNULATION DE LA PRISE EN PASSANT
-      if (st.wasEnPassant) {
-         // Remettre le pion capturé à sa position originale
-         pieceCase[st.enPassantX][st.enPassantY] = st.captured;
-         // La case de destination doit rester vide
-         pieceCase[m.dest.x][m.dest.y] = nil;
-      }
-      
-      // ✅ ANNULATION DU ROQUE
+      /*----------------------- ROQUE (tour) --------------------------------------*/
       if (m.isCastling) {
-         // Les Blancs sont en BAS
-         if (sideJoueur == sideWhite) {
-            int y = m.start.y;
-            
-            if (m.dest.x == 6) {
-               Piece *rook = pieceCase[5][y];
-               pieceCase[7][y] = rook;
-               pieceCase[5][y] = nil;
-            }
-            else if (m.dest.x == 2) {
-               Piece *rook = pieceCase[3][y];
-               pieceCase[0][y] = rook;
-               pieceCase[3][y] = nil;
-            }
-         }
-         // Les Noirs sont en BAS
-         if (sideJoueur == sideBlack) {
-            int y = m.start.y;
-            
-            if (m.dest.x == 1) {
-               Piece *rook = pieceCase[2][y];
-               pieceCase[0][y] = rook;
-               pieceCase[2][y] = nil;
-            }
-            else if (m.dest.x == 5) {
-               Piece *rook = pieceCase[4][y];
-               pieceCase[7][y] = rook;
-               pieceCase[4][y] = nil;
-            }
+         int y = fy;
+         BOOL kingSide = (tx == 6);
+         
+         int rookFromX = kingSide ? 5 : 3;
+         int rookToX   = kingSide ? 7 : 0;
+         
+         Piece *rook = pieceCase[rookFromX][y];
+         NSAssert(rook && rook.type == Tour, @"Unroque: tour absente");
+         
+         pieceCase[rookToX][y]   = rook;
+         pieceCase[rookFromX][y] = nil;
+         
+         int rookFromSq = y * 8 + rookFromX;
+         int rookToSq   = y * 8 + rookToX;
+         
+         zobristKey ^= zobristPiece[rook.side][Tour][rookFromSq];
+         zobristKey ^= zobristPiece[rook.side][Tour][rookToSq];
+         
+         LOG_CASTLE(@"UNMAKE roque %@ side for %@",
+                        kingSide ? @"KING" : @"QUEEN",
+                        (moving.side == sideWhite ? @"White" : @"Black"));
+      }
+      
+      /*----------------------- DÉPLACEMENT PRINCIPAL -----------------------------*/
+      pieceCase[fx][fy] = moving;
+      
+      /*----------------------- CAPTURE / EN PASSANT ------------------------------*/
+      if (st.wasEnPassant) {
+         pieceCase[tx][ty] = nil;
+         pieceCase[st.enPassantX][st.enPassantY] = st.captured;
+         
+         int capSq = st.enPassantY * 8 + st.enPassantX;
+         zobristKey ^= zobristPiece[st.captured.side][st.captured.type][capSq];
+         
+         LOG_EP(@"UNMAKE EP: restoring pawn at (%d,%d)",
+                    st.enPassantX, st.enPassantY);
+      }
+      else {
+         pieceCase[tx][ty] = st.captured;
+         if (st.captured) {
+            zobristKey ^= zobristPiece[st.captured.side][st.captured.type][toSq];
          }
       }
+      
+      /*----------------------- ZOBRIST — pièce déplacée --------------------------*/
+      zobristKey ^= zobristPiece[moving.side][moving.type][toSq];
+      zobristKey ^= zobristPiece[moving.side][moving.type][fromSq];
+      
+      /*----------------------- EN PASSANT FILE -----------------------------------*/
+      if (enPassantFile != -1)
+         zobristKey ^= zobristEnPassant[enPassantFile];
+      
+      enPassantFile = st.oldEnPassantFile;
+      
+      if (enPassantFile != -1)
+         zobristKey ^= zobristEnPassant[enPassantFile];
       
       moving.numMoves--;
+      
+      if (pieceCase[m.dest.x][m.dest.y] &&
+          pieceCase[m.dest.x][m.dest.y] == moving) {
+          NSLog(@"❌ ERREUR: pièce encore présente sur dest après unmake %@", m);
+      }
+
+      
+   } // !unmakeMove
+
+
+   // ==================================================================================================
+   // Nouvelle Méthode de construction d'un move complet (avec ses attributs)
+   - (Move *)buildMoveFrom:(Pos *)start to:(Pos *)dest board:(ChessBoard *)board
+   {
+      Move *m = [[Move alloc] initWithStart:start Dest:dest];
+      
+      Piece *p = [board pieceAtPos:start];
+      m.movingPiece = p;
+      
+      m.fromSquare = start.y * 8 + start.x;
+      m.toSquare   = dest.y  * 8 + dest.x;
+      
+      // Roque
+      if (p.type == Roi && abs(dest.x - start.x) == 2)
+         m.isCastling = YES;
+      
+      // Promotion
+      if (p.type == Pion && (dest.y == 0 || dest.y == 7))
+         m.isPromotion = YES;
+      
+      // Capture
+      if ([board pieceAtPos:dest])
+         m.isCapture = YES;
+      
+      // En passant (si applicable)
+      // m.isEnPassant = ...
+      
+      return m;
    }
+
+
 
 @end

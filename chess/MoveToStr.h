@@ -28,15 +28,14 @@ NB : c'est également le cas des très respectables classes 'Minimax' et 'RuleBo
                                        Board:(ChessBoard *) board;
 
    
-    // Méthode mettant en forme ordonnée la chaine ci-dessus
-    +(void)              MettreEnFormeChaine:(NSString *) moveToStr
-                                Protagoniste:(NSString *) strJ_IA;
-                     
-   
-    // Méthode modifiant le repérage des cases en 'a1 à g8'
-    +(NSString *)        Modif00EnA1:(Move *)move
-                            surBoard:(ChessBoard*)board;
+   // Méthode mettant en forme ordonnée la chaine ci-dessus
+   +(void) MettreEnFormeChaine:(NSString *) moveToStr
+                  Protagoniste:(NSString *) strJ_IA;
 
+
+   // Méthode modifiant le repérage des cases en 'a1 à g8'
+   +(NSString *) Modif00EnA1:(Move *)move
+                    surBoard:(ChessBoard*)board;
 
 
 @end

@@ -25,4 +25,6 @@
    // Déclaration de l'unique méthode d'instance
    - (void)applicationDidFinishLaunching:(NSNotification *)aNotification;
 
+
 @end
+

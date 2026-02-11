@@ -43,7 +43,7 @@
       
       
       NSLog(@"\n\nBoard de départ standard créé : \n%@\n",testBoard);
-      int negaMax =[Minimax NegamaxForSide:sideBlack board:testBoard depth:3 alpha:-INT_MAX beta:INT_MAX];
+      int negaMax =[maMinimax NegamaxForSide:sideBlack board:testBoard depth:3 alpha:-INT_MAX beta:INT_MAX];
       XCTAssertTrue(negaMax < 103900);
       NSLog(@"\n\n Valeur de retour de NegamaxFS = %d \n\n",negaMax);
    }
@@ -73,12 +73,12 @@
       /* Lancement de la boucle des coups successifs, limitée à 5 coups, Blancs au trait
       Sauf bug ou erreur grossière du moteur, un seul coup suffit sur ce cas basique ...*/
       int compteur = 0;
-      while (([Minimax PossibleMovesForSide:sideWhite board:testBoard].count!=0) &&
-             ([Minimax PossibleMovesForSide:sideBlack board:testBoard].count!=0) &&
+      while (([maMinimax PossibleMovesForSide:sideWhite board:testBoard].count!=0) &&
+             ([maMinimax PossibleMovesForSide:sideBlack board:testBoard].count!=0) &&
              (compteur < 5)) {
          
          [testView MakeIAMoveForSide:sideWhite Board:testBoard];
-         if ([Minimax PossibleMovesForSide:sideBlack board:testBoard].count!=0) {
+         if ([maMinimax PossibleMovesForSide:sideBlack board:testBoard].count!=0) {
             [testView MakeIAMoveForSide:sideBlack Board:testBoard];}
          
          compteur += 1;
@@ -165,8 +165,8 @@
       int compteur = 0;
       /* Tant que Blancs non Pat ou Mat ET Noirs non Pat ou Mat ET compteur inférieur à 10
       (mais dès que l'un des trois, on sort de la boucle)   */
-      while (([Minimax PossibleMovesForSide:sideWhite board:testBoard].count!=0) &&
-             ([Minimax PossibleMovesForSide:sideBlack board:testBoard].count!=0) &&
+      while (([maMinimax PossibleMovesForSide:sideWhite board:testBoard].count!=0) &&
+             ([maMinimax PossibleMovesForSide:sideBlack board:testBoard].count!=0) &&
              (compteur < 20)) {
          
          // On lance le coup Blancs puisqu'ils ne sont pas Pat ou Mat (test fait ci-dessus)
@@ -175,7 +175,7 @@
          [testView displayIfNeeded];
          
          // On ne lance le coup Noirs que s'ils ne sont pas Pat ou Mat après le coup Blancs
-         if ([Minimax PossibleMovesForSide:sideBlack board:testBoard].count!=0) {
+         if ([maMinimax PossibleMovesForSide:sideBlack board:testBoard].count!=0) {
             
             [testView MakeIAMoveForSide:sideBlack Board:testBoard];
             
@@ -268,12 +268,12 @@
       
       // Lancement de la boucle des coups successifs, limitée à 50 coups, Blancs au trait
       int compteur = 0;
-      while (([Minimax PossibleMovesForSide:sideWhite board:testBoard].count!=0) &&
-             ([Minimax PossibleMovesForSide:sideBlack board:testBoard].count!=0) &&
+      while (([maMinimax PossibleMovesForSide:sideWhite board:testBoard].count!=0) &&
+             ([maMinimax PossibleMovesForSide:sideBlack board:testBoard].count!=0) &&
              (compteur < 50)) {
          
          [testView MakeIAMoveForSide:sideWhite Board:testBoard];
-         if ([Minimax PossibleMovesForSide:sideBlack board:testBoard].count!=0) {
+         if ([maMinimax PossibleMovesForSide:sideBlack board:testBoard].count!=0) {
             [testView MakeIAMoveForSide:sideBlack Board:testBoard];}
          testView.needsDisplay = YES;
          
@@ -336,7 +336,7 @@
       // This is an example of a performance test case.
       [self measureBlock:^{
          // Put the code you want to measure the time of here.
-         [Minimax PossibleMovesForSide:sideWhite board:[BoardsForTests ConfigBoardMatEn3Cas2]];
+         [maMinimax PossibleMovesForSide:sideWhite board:[BoardsForTests ConfigBoardMatEn3Cas2]];
       }];
       
       /* Résultat du test réalisé le 20/04/22 :
@@ -390,7 +390,7 @@
       // This is an example of a performance test case.
       [self measureBlock:^{
          // Put the code you want to measure the time of here.
-         [Minimax EvalBoardForSide:sideWhite board:[BoardsForTests ConfigBoardMatEn3Cas2]];
+         [maMinimax EvalBoardForSide:sideWhite board:[BoardsForTests ConfigBoardMatEn3Cas2]];
       }];
       
       /* Résultat du test réalisé le :
@@ -414,7 +414,7 @@
       // This is an example of a performance test case.
       [self measureBlock:^{
          // Put the code you want to measure the time of here.
-         [Minimax NegamaxForSide:sideWhite
+         [maMinimax NegamaxForSide:sideWhite
                            board:[BoardsForTests ConfigBoardMatEn3Cas2]
                            depth:4
                            alpha:-INT_MAX
@@ -478,5 +478,73 @@
       XCTAssertTrue(evalDisplay == -300); */
       
    }
+
+// ==================================================================================================
+// Test de performance
+-(void)testPerformanceTestEchecRoiSide {
+   // This is an example of a performance test case.
+   [self measureBlock:^{
+      // Put the code you want to measure the time of here.
+      [maMinimax TestEchecRoiSide:sideWhite inBoard:[BoardsForTests ConfigBoardCoupDuBerger]];
+   }];
+   
+   /* Résultat du test réalisé le :
+    0.330 */
+   
+   /* Résultat du test réalisé le :
+    */
+   
+   /* Résultat du test réalisé le  :
+    */
+}
+
+// Test de performance
+-(void)testPerformanceIsKingInCheck {
+   // This is an example of a performance test case.
+   [self measureBlock:^{
+      // Put the code you want to measure the time of here.
+      [maMinimax IsKingInCheck:sideWhite board:[BoardsForTests ConfigBoardCoupDuBerger]];
+   }];
+   
+   /* Résultat du test réalisé le :
+    0.348 */
+   
+   /* Résultat du test réalisé le :
+    */
+   
+   /* Résultat du test réalisé le  :
+    */
+}
+
+
+- (void)testrunEngineSelfTest
+{
+   
+   
+    ChessBoard *board = [[ChessBoard alloc] init];
+    [board SetupPieces];
+   
+   Move *m = nil;
+   MoveState st = [board makeMove:nil];
+
+    for (int i = 0; i < 1000; i++) {
+        //TestInvolution(board);
+
+        m = [maMinimax BestMoveForSide:sideWhite Board:board];
+        st = [board makeMove:m];
+        //[history push:m state:st];
+       [board unmakeMove:m state:st];
+    }
+
+    //while (![history empty]) {
+        [board unmakeMove:m state:st];
+    //}
+
+    NSLog(@"✅ Self-test moteur terminé");
+}
+
+
+
+
 
 @end

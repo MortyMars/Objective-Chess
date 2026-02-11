@@ -9,12 +9,19 @@
 
 #import "ChessView.h"
 #import "AppDelegate.h"
+#import "Util.h"
+
+
+BOOL engineIsBusy = NO;
+
 
 
 @implementation ChessView
 
 
-@synthesize delegate;
+   @synthesize delegate;
+
+   @synthesize uiFlipped;
 
 
    // ==================================================================================================
@@ -49,6 +56,9 @@
    // ChessView nécessite d'être dessinée ou mise à jour...
    -(void)drawBoard
    {
+      if (engineIsBusy) return;
+
+      
       /* 'self.bounds.size' pointe sur les dimensions de la vue ChessView contenant l'échiquier
        La vue ChessView est définie à 600x600 (cf. le fichier xib)
        Chaque case fait donc 600/8 de large et de haut, elle est donc au format 75x75 */
@@ -65,15 +75,20 @@
       for (int x = 0; x < 8; x++) {
          for (int y = 0; y < 8; y++) {
             
+            // Détermination des coordonnées moteur (ex et ey)
+            int ex = self.uiFlipped ? 7 - x : x;
+            int ey = self.uiFlipped ? 7 - y : y;
+
+            
             // Dessin des cases de l'échiquier
             CGRect destRect = CGRectMake(x * tileWidth, y * tileHeight, tileWidth, tileHeight);
             
-            if (isThereTileSelected && selTile.x == x && selTile.y == y) { // case de la pièce sélectionnée
+            if (isThereTileSelected && selTile.x == ex && selTile.y == ey) { // case de la pièce sélectionnée
                // (0.12, 0.63, 0.33, 1) = VERT opaque    (0.72, 0.12, 0.06, 1) = ROUGE opaque
                CGContextSetRGBFillColor(context, 0, 0, 1, 1);              // --> BLEU opaque
             }
             
-            else if ([PosAcceptees containsObject:[Pos posWithX:x y:y]]) { // déplacts autorisés pour la pièce
+            else if ([PosAcceptees containsObject:[Pos posWithX:ex y:ey]]) { // déplacts autorisés pour la pièce
                // (0.72, 0.12, 0.06, 1) = ROUGE opaque
                CGContextSetRGBFillColor(context, 0.12, 0.63, 0.33, 1);  // --> VERT opaque
             }
@@ -91,7 +106,7 @@
             CGContextFillRect(context, destRect);
             
             // Dessin des pièces sur l'échiquier, tout au long de la partie
-            Piece *piece = [liveBoard pieceAtPos:[Pos posWithX:x y:y]];
+            Piece *piece = [liveBoard pieceAtPos:[Pos posWithX:ex y:ey]];
             Side side = piece.side;
             
             if (piece) {    // si une pièce (invisible à ce stade) existe sur la case active, alors on la dessine
@@ -138,10 +153,18 @@
       
       /* 'Pos *tilePos = [Pos posWithX:x y:y]' = Ancienne formule à modifier car, ayant décalé l'échiquier
        de 75x75, càd d'1 case complète, il faut corriger la position du curseur de -1 case en x et en y   */
-      Pos *tilePos = [Pos posWithX:x -1 y:y -1];
+      //Pos *tilePos = [Pos posWithX:x -1 y:y -1];
+      
+      Pos *uiPos = [Pos posWithX:x -1 y:y -1];
+
+      // Conversion UI → moteur
+      int ex = self.uiFlipped ? 7 - uiPos.x : uiPos.x;
+      int ey = self.uiFlipped ? 7 - uiPos.y : uiPos.y;
+
+      Pos *enginePos = [Pos posWithX:ex y:ey];
       
       // Initialisation de variables
-      Piece *selPiece = [liveBoard pieceAtPos:tilePos]; // selPiece est la pièce sélectionnée
+      Piece *selPiece = [liveBoard pieceAtPos:enginePos]; // selPiece est la pièce sélectionnée
       
       /* Modif. MCN - sideCourant, déclaré dans Util.h, prend la valeur de la couleur de la dernière pièce
        valide sélectionnée. Si selPiece est nil, sideCourant sera sideInvalid et le move de AI sera shunté */
@@ -150,23 +173,23 @@
        (pour que l'expression soit Vraie il faut que le basculeur logique 'isThereTileSelected' soit Faux) */
       if (!isThereTileSelected) {
          // S'il y a une pièce sur la case où on a cliqué
-         if ([liveBoard pieceAtPos:tilePos]) {
-            selTile = tilePos;         // la case sélectionnée devient la case cliquée
+         if ([liveBoard pieceAtPos:enginePos]) {
+            selTile = enginePos;         // la case sélectionnée devient la case cliquée
             isThereTileSelected = YES; // le BOOL notant la sélection de case est placé sur YES pour la suite
             
             // puis on calcule les position acceptées pour la pièce à partir de son emplacement
-            PosAcceptees = [RuleBook PosLegalesForPiece:selPiece atPos:tilePos inBoard:liveBoard];
+            PosAcceptees = [RuleBook PosLegalesForPiece:selPiece atPos:enginePos inBoard:liveBoard];
          }
       } // Fin de if --> on file sur 'self.needsDisplay=YES' en ligne 258
       
       // AU CONTRAIRE, SI UNE CASE (DESTINATION) EST SÉLECTIONNÉE : C'EST LE CAS AU SECOND CLIC
       else {
          // le mouvement demandé doit figurer dans les mouvements autorisés
-         if (tilePos.x != selTile.x || tilePos.y != selTile.y)
+         if (enginePos.x != selTile.x || enginePos.y != selTile.y)
          {
-            if ([PosAcceptees containsObject:tilePos]) // le test ne marche pas sur un NSMutableSet...
+            if ([PosAcceptees containsObject:enginePos]) // le test ne marche pas sur un NSMutableSet...
             {
-               [self MakeJoueurMoveVersDest:tilePos];
+               [self MakeJoueurMoveVersDest:enginePos];
                [maMinimax EvalBoardForSide:sideJoueur board:liveBoard];
                self.needsDisplay = YES;
                
@@ -204,9 +227,10 @@
 
    // ==================================================================================================
    // REALISATION DU DEPLACEMENT CALCULE PAR L'AI
-   // Noter que dans la version initiale l'AI ne réalise que des mouvements du côté des Noirs et
-   // que l'on ne peut jouer contre l'ordinateur qu'avec les Blancs...
-   -(void) MakeComputerMove // MCN nouvelle méthode permettant à l'AI de jouer des deux côtés
+   // Dans la version initiale on ne pouvait jouer contre l'ordinateur qu'avec les Blancs, l'AI ne
+   // réalisait donc que des mouvements pour les Noirs.
+   // La présente méthode permet à l'AI de jouer les Noirs ou les Blancs
+   -(void) MakeComputerMove
    {
       // AVANT TOUT MVT ON MET À JOUR L'AFFICHAGE DE L'ÉVAL POUR VALORISER LE MOVE JOUEUR QUI VIENT D'ÊTRE RÉALISÉ
       int liveEvalWhitePOV;
@@ -268,7 +292,6 @@
       NSLog(@"#### Coup IA     => liveEvalWhitePOV = %d, Indicator = %@\n", liveEvalWhitePOV, liveStrEvalBoard);
       
       // L'IA ayant joué on inverse sideCourant
-      //sideCourant = (sideIA == sideWhite) ? sideBlack : sideWhite;
       sideCourant = (sideCourant == sideWhite) ? sideBlack : sideWhite;
       monConnecteur.lblTrait.cell.stringValue =
       (sideCourant == sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
@@ -298,9 +321,11 @@
    -(void) MakeJoueurMoveVersDest:(Pos *) dest
    {
       /* Le paramètre attendu par la méthode est la case sélectionnée par le second clic
-       Elle a été controlée comme appartenant ou non aux déplacements autorisés
-       Si OK on peut alors préparer et réaliser le 'Move' Joueur */
-      Move *moveJoueur = [[Move alloc] initWithStart:selTile Dest:dest];
+      Elle a été controlée comme appartenant ou non aux déplacements autorisés
+      Si OK on peut alors préparer et réaliser le 'Move' Joueur */
+      //Move *moveJoueur = [[Move alloc] initWithStart:selTile Dest:dest];
+      Move *moveJoueur =
+      [liveBoard buildMoveFrom:selTile to:dest board:liveBoard];
       
       /* Sauvegarde du board avant PerformMove, pour que ConvertEnStringMove (Modif00EnA1 en fait) puisse
        déterminer la pièce jouée et la pièce éventuellement prise */
@@ -315,10 +340,10 @@
       BOOL roque = petitRoque;          BOOL ROQUE = grandRoque;          BOOL ENPASS = enPassant;
       
       /* AJOUT DU COUP JOUEUR À LA LISTE DE CEUX DÉJÀ JOUÉS
-       EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard
+      EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard
        
-       Vérification s'il y a une promo de pion à réaliser
-       Test à faire avant 'TestEchecFavSide' car la promo peut générer un échec */
+      Vérification s'il y a une promo de pion à réaliser
+      Test à faire avant 'TestEchecFavSide' car la promo peut générer un échec */
       Piece *pionPromo = [liveBoard pieceAtPos:moveJoueur.dest];      NSString *promPion = @"";
       if (pionPromo.type == Pion) {
          if (moveJoueur.dest.y == 0 || moveJoueur.dest.y == 7)
@@ -329,11 +354,11 @@
       NSString *strEchecMat = [maMinimax TestEchecFavSide:sideCourant Board:liveBoard];
       
       /* // Mise à jour 'Status Bar'
-       if ([strEchecMat isEqual:@"Echec"]) {
-       if (checkCount >1) monConnecteur.lblEchec.cell.stringValue = @"Échec : ++";
-       else               monConnecteur.lblEchec.cell.stringValue = @"Échec : +";
-       }
-       else monConnecteur.lblEchec.cell.stringValue = @"Échec :"; */
+      if ([strEchecMat isEqual:@"Echec"]) {
+      if (checkCount >1) monConnecteur.lblEchec.cell.stringValue = @"Échec : ++";
+      else               monConnecteur.lblEchec.cell.stringValue = @"Échec : +";
+      }
+      else monConnecteur.lblEchec.cell.stringValue = @"Échec :"; */
       
       // Restauration des indicateurs de Roque et de Prise e.p.
       petitRoque = roque;        grandRoque = ROQUE;        enPassant = ENPASS;
@@ -383,14 +408,14 @@
       [board PerformMove:aiMove];
       
       /* Sauvegarde des indicateurs de roque  et de prise e.p. car RAZ plus loin par 'TestEchecFavSide' (???)
-       avant de pouvoir les exploiter dans 'ConvertEnStringMove' */
+      avant de pouvoir les exploiter dans 'ConvertEnStringMove' */
       BOOL roque = petitRoque;         BOOL ROQUE = grandRoque;         BOOL ENPASS = enPassant;
       
       /* MCN - AJOUT DU COUP IA À LA LISTE DE CEUX DÉJÀ JOUÉS
-       EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard
+      EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard
        
-       Vérification s'il y a une promo de pion à réaliser
-       Test à faire avant 'TestEchecFavSide' car la promo peut générer une mise en échec */
+      Vérification s'il y a une promo de pion à réaliser
+      Test à faire avant 'TestEchecFavSide' car la promo peut générer une mise en échec */
       Piece *pionPromo = [board pieceAtPos:aiMove.dest];       NSString *promPion = @"";
       if (pionPromo.type == Pion) {
          if (aiMove.dest.y == 0 || aiMove.dest.y == 7)
@@ -398,7 +423,7 @@
       }
       
       /* Récup info d'une mise en échec éventuelle et de Prise e.p. pour renseigner 'ConvertEnStringMove'
-       Bizarrement 'TestEchecForSide' RAZ les indic de Roque et de Prise e.p., d'où la sauvegarde ci-avant */
+      Bizarrement 'TestEchecForSide' RAZ les indic de Roque et de Prise e.p., d'où la sauvegarde ci-avant */
       NSString *strEchec = [maMinimax TestEchecFavSide:side Board:board];
       
       /* // Mise à jour 'Status Bar'
@@ -542,4 +567,23 @@
       return evalString;
    }
 
+   // Ajout méthodes de retourne des coordonnées pour l'UI
+   - (int)engineXFromUIX:(int)x {
+       return uiFlipped ? 7 - x : x;
+   }
+
+   - (int)engineYFromUIY:(int)y {
+       return uiFlipped ? 7 - y : y;
+   }
+
+
 @end
+
+
+static inline int engineX(int uiX, BOOL flipped) {
+    return flipped ? 7 - uiX : uiX;
+}
+
+static inline int engineY(int uiY, BOOL flipped) {
+    return flipped ? 7 - uiY : uiY;
+}

@@ -5,7 +5,6 @@
 //  Optimized New Engine (makeMove/unmakeMove based) by MCN in 2026
 
 
-
 // =====================================================================================================
 // DEFINE ET MACROS
 
@@ -129,8 +128,21 @@ extern Minimax *maMinimax;
 
 
 
+
+
+
 // ===============================================================================================================
 // MÉTHODES GLOBALES
 
 // Méthode globale 'DoEvents'
 extern void DoEvents(void);
+
+@class ChessBoard;
+extern void TestInvolution(void);
+
+// Pour test d'involubilité
+extern BOOL engineIsBusy;
+
+// Pour moteur verbeux
+extern BOOL kVerboseMoveDebug;
+

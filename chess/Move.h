@@ -21,13 +21,13 @@
 
    // Propriétés ajoutées pour undo
    @property (nonatomic, strong) Piece *capturedPiece;
-   @property (nonatomic) BOOL          wasPromotion;  // Ce move a t-il généré une promotion de pion
-   @property (nonatomic) PieceType     oldType;
+   @property (nonatomic)         BOOL  wasPromotion;  // Ce move a t-il généré une promotion de pion
+   @property (nonatomic)         PieceType oldType;
 
    // Propriétés ajoutées pour méthode SEE
    @property (nonatomic, strong) Piece *movingPiece;
-   @property (nonatomic) Square        fromSquare;
-   @property (nonatomic) Square        toSquare;
+   @property (nonatomic)         Square fromSquare;
+   @property (nonatomic)         Square toSquare;
 
    // Propriété pour le Move Ordering
    @property (nonatomic) BOOL isCapture;     // Ce move est-il une capture
@@ -47,6 +47,8 @@
                         Y:(int)y
                      ToNx:(int)nx
                        Ny:(int)ny;
+   
+   +(Move *)opMove:(Move *) move;
 
    // Méthode system
    -(id) copyWithZone:(NSZone *)zone;

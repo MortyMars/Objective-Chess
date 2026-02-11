@@ -223,6 +223,11 @@ static int nbCallsIsKingCheck = 0;
    {
       nodes++;
       
+      #ifdef DEBUG_ZOBRIST
+      uint64_t keyEntry = board->zobristKey;
+      #endif
+
+      
       if (depth <= 0) {
          return [self QuiescenceForSide:side
                                   board:board
@@ -246,6 +251,11 @@ static int nbCallsIsKingCheck = 0;
       
       // Traiter le cas où 'moves' est vide, càd si Mat ou Pat
       if (moves.count == 0) {
+         
+         #ifdef DEBUG_ZOBRIST
+         NSAssert(board->zobristKey == keyEntry,
+                  @"Zobrist corrompu : sortie Negamax sans coups");
+         #endif
          if ([self IsKingInCheck:side board:board]) {
             // Mat : très mauvais pour le camp qui joue
             return -100000 + (NUMBER_MOVES_AHEAD - depth);
@@ -261,7 +271,27 @@ static int nbCallsIsKingCheck = 0;
       
       for (Move *m in moves) {
          
+         // TEST ZOBRIST (DEBUG) AVANT makeMove ***************************************************
+         uint64_t keyBefore = board->zobristKey;
+         
          MoveState st = [board makeMove:m];
+         
+         #ifdef DEBUG_ZOBRIST
+         uint64_t z2;
+         #endif
+
+         #ifdef DEBUG_ZOBRIST
+         z2 = recomputeZobrist(board);
+         if (z2 != board->zobristKey) {
+             NSLog(@"❌ Zobrist mismatch après makeMove %@", m);
+             NSLog(@"Side=%d EP=%d Castle=%d",
+                   board->sideToMove,
+                   board->enPassantFile,
+                   board->castlingRights);
+         }
+         NSAssert(z2 == board->zobristKey, @"Zobrist corrompu");
+         #endif
+
          
          // 🔴 FILTRE LÉGALITÉ — MANQUANT JUSQU’ICI
          if (![self IsKingInCheck:side board:board]) {
@@ -275,13 +305,32 @@ static int nbCallsIsKingCheck = 0;
             if (score > alpha) alpha = score;
          }
          
+         
+         
+         #ifdef DEBUG_ZOBRIST
+         z2 = recomputeZobrist(board);
+         NSAssert(z2 == board->zobristKey, @"Zobrist corrompu");
+         #endif
+
+         
          [board unmakeMove:m state:st];
+         
+         #ifdef DEBUG_ZOBRIST
+         z2 = recomputeZobrist(board);
+         NSAssert(z2 == board->zobristKey, @"Zobrist corrompu");
+         #endif
+         
+         // TEST ZOBRIST (DEBUG) APRÈS unmakeMove (doit être identive à clé d'avant makeMove ******
+         NSAssert(board->zobristKey == keyBefore, @"❌ Zobrist incohérent");
          
          if (alpha >= beta)
             break;
       }
       
-      
+      #ifdef DEBUG_ZOBRIST
+      NSAssert(board->zobristKey == keyEntry,
+               @"Zobrist corrompu : sortie Negamax normale");
+      #endif
       return alpha;
    } // !NegamaxForSide
 
@@ -1170,6 +1219,11 @@ static int nbCallsIsKingCheck = 0;
    {
       nodes++;
       
+      #ifdef DEBUG_ZOBRIST
+      uint64_t keyEntry = board->zobristKey;
+      #endif
+
+      
       Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
       
       BOOL inCheck = [self IsKingInCheck:side board:board];
@@ -1180,13 +1234,24 @@ static int nbCallsIsKingCheck = 0;
       if (!inCheck) {
          standPat = [self EvalBoardForSide:side board:board];
          
-         if (standPat >= beta) return beta;
+         if (standPat >= beta) {
+            #ifdef DEBUG_ZOBRIST
+            NSAssert(board->zobristKey == keyEntry,
+                     @"Zobrist corrompu : QS stand-pat cutoff");
+            #endif
+            
+            return beta;}
          
          if (standPat > alpha) alpha = standPat;
       }
       
       // 2️⃣ Limite QS (mais jamais en échec)
-      if (qsDepth >= QS_MAX_DEPTH && !inCheck) return alpha;
+      if (qsDepth >= QS_MAX_DEPTH && !inCheck) {
+         #ifdef DEBUG_ZOBRIST
+         NSAssert(board->zobristKey == keyEntry,
+                  @"Zobrist corrompu : QS stand-pat cutoff");
+         #endif
+         return alpha;}
       
       // 3️⃣ Génération des coups
       NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:32];
@@ -1222,7 +1287,16 @@ static int nbCallsIsKingCheck = 0;
          }
          
          // On peut y aller
+         #ifdef DEBUG_ZOBRIST
+         uint64_t keyBefore = board->zobristKey;
+         #endif
+         
          MoveState st = [board makeMove:m];
+         
+         #ifdef DEBUG_ZOBRIST
+         NSAssert(board->zobristKey == keyEntry,
+                  @"Zobrist corrompu : QS stand-pat cutoff");
+         #endif
          
          if (![self IsKingInCheck:side board:board]) {
             
@@ -1234,13 +1308,28 @@ static int nbCallsIsKingCheck = 0;
             
             [board unmakeMove:m state:st];
             
-            if (score >= beta) return beta;
+            #ifdef DEBUG_ZOBRIST
+            NSAssert(board->zobristKey == keyEntry,
+                     @"Zobrist corrompu : QS stand-pat cutoff");
+            #endif
+            
+            if (score >= beta) {
+               #ifdef DEBUG_ZOBRIST
+               NSAssert(board->zobristKey == keyEntry,
+                        @"Zobrist corrompu : QS stand-pat cutoff");
+               #endif
+               return beta;}
             
             if (score > alpha) alpha = score;
             
          }
          else [board unmakeMove:m state:st];
       }
+      
+      #ifdef DEBUG_ZOBRIST
+      NSAssert(board->zobristKey == keyEntry,
+               @"Zobrist corrompu : QS stand-pat cutoff");
+      #endif
       
       return alpha;
       
@@ -1423,25 +1512,13 @@ static int nbCallsIsKingCheck = 0;
                       board:(ChessBoard *)board
                        into:(NSMutableArray<Move *> *)moves
    {
-      /* Le nouveau moteur basé sur make/unmake est désynchronisé de l'UI quant aux déplacements des pièces
-      car il est toujours calé sur l'orientation classique 'Blancs en bas' et se trouve donc en 'inversion'
-      relative lorsque l'on joue les Noirs et que l'UI retourne le board. Cette 'inversion' n'a cependant
-      aucun effet sur le déplacement des pièces qui peuvent 'avancer' ou 'reculer', càd toutes à l'exception
-      du pion qui est la seule pièce orientée. L'inversion du sens de déplacement des pions lorsque les noirs
-      sont en bas, permet ainsi aux pions blancs de progresser vers le bas et aux pions noirs vers le haut.
-      C'est le but du bloc ci-dessous, qui modifie au passage la définition des rangs de départ à partir
-      desquels un pion peut avancer de 2 cases                                                             */
-      int dir;
-      int startRank;
-      if (sideJoueur == sideWhite) {
-         dir = (p.side == sideWhite) ? 1 : -1;
-         startRank = (p.side == sideWhite) ? 1 : 6;
-      }
-      else {
-         dir = (p.side == sideWhite) ? -1 : 1;
-         startRank = (p.side == sideWhite) ? 6 : 1;
-      }
-      /* Fin de modif du sens de déplacement des pions pour new engine ----------------------------------- */
+      /* RAPPEL : SEULE L'UI (CHESSVIEW) EST CONCERNÉE PAR UN RETOURNEMENT DU BOARD ET EST SEULE À LE GÉRER
+      Le moteur canonique basé sur make/unmake est désynchronisé de l'UI quant aux déplacements des pièces.
+      Il est toujours calé sur l'orientation classique 'Blancs en bas' ----------------------------------*/
+      
+      int dir = (p.side == sideWhite) ? 1 : -1;
+      int startRank = (p.side == sideWhite) ? 1 : 6;
+      
       
       // 1️⃣ Avance simple
       int ny = y + dir;
@@ -1667,14 +1744,14 @@ static int nbCallsIsKingCheck = 0;
       // la case de coordonnées col x=0 et rang y=0 est tjs en bas à gauche de l'écran
       int xRoi;   // colonne des rois (4 OU 3 selon orientation)
       int yRoi;   // rangs des rois ( (0 et 7) OU (7 et 0) selon l'orientation)
-      if (sideJoueur == sideWhite) {
+      //if (sideJoueur == sideWhite) {
          xRoi = 4;   // Les Rois sont en col 4 quand les Blancs sont en bas
          yRoi = (p.side == sideWhite) ? 0 : 7;  // Roi Blanc en bas (0), Roi Noir en haut (7)
-      }
-      if (sideJoueur == sideBlack) {
+      //}
+      /* if (sideJoueur == sideBlack) {
          xRoi = 3;   // Les Rois sont en col 3 quand les Noirs sont en bas
          yRoi = (p.side == sideWhite) ? 7 : 0;  // Roi Noir en bas (0), Roi Blanc en haut (7)
-      }
+      } */
       
       // Sécurité minimale : on doit être bien sur la case de départ
       if (x != xRoi || y != yRoi)
@@ -1683,8 +1760,7 @@ static int nbCallsIsKingCheck = 0;
       Side sideEnemy = (p.side == sideWhite)? sideBlack:sideWhite;
       
       // Petit roque (côté Roi) -------------------------------------------------------------------
-      Piece *rookH = board->pieceCase[ (sideJoueur==sideWhite)? 7:0 ]
-                                     [yRoi]; // La colonne de la tour dépend de l'orientation
+      Piece *rookH = board->pieceCase[7][yRoi];
       if (rookH &&
           rookH.type == Tour &&
           rookH.side == p.side &&
@@ -1692,8 +1768,8 @@ static int nbCallsIsKingCheck = 0;
          
          // Les 2 cases entre Roi et Tour doivent être vides
          // Ces cases ne doivent pas être sous le coup d'un échec potentiel...
-         // Les Blancs sont en bas
-         if (sideJoueur == sideWhite) {
+         // Les Blancs sont TOUJOURS en bas
+         //if (sideJoueur == sideWhite) {
             if (!board->pieceCase[5][yRoi] &&
                 !board->pieceCase[6][yRoi] &&
                 ![self IsSquareAttackedAtX:5 Y:yRoi bySide:sideEnemy Board:board] &&
@@ -1707,9 +1783,9 @@ static int nbCallsIsKingCheck = 0;
                
                [moves addObject:m];
             }
-         }
+         // }
          // Les Noirs sont en bas
-         if (sideJoueur == sideBlack) {
+         /* if (sideJoueur == sideBlack) {
             if (!board->pieceCase[1][yRoi] &&
                 !board->pieceCase[2][yRoi] &&
                 ![self IsSquareAttackedAtX:1 Y:yRoi bySide:sideEnemy Board:board] &&
@@ -1723,12 +1799,11 @@ static int nbCallsIsKingCheck = 0;
                
                [moves addObject:m];
             }
-         }
+         } */
       } // Fin de Petit Roque ---------------------------------------------------------------------
       
       // Grand roque (côté Dame) ------------------------------------------------------------------
-      Piece *rookA = board->pieceCase[ (sideJoueur == sideWhite)? 0:7 ]
-                                     [yRoi]; // La colonne de la tour dépend de l'orientation
+      Piece *rookA = board->pieceCase[0][yRoi];
       if (rookA &&
           rookA.type == Tour &&
           rookA.side == p.side &&
@@ -1736,8 +1811,8 @@ static int nbCallsIsKingCheck = 0;
          
          // Les 3 cases entre Roi et Tour doivent être vides
          // Les 2 cases parcourues par le Roi ne doivent pas être sous le coup d'un échec potentiel...
-         // Les Blancs sont en bas
-         if (sideJoueur==sideWhite) {
+         // Les Blancs sont TOUJOURS en bas
+         // if (sideJoueur==sideWhite) {
             if (!board->pieceCase[1][yRoi] &&
                 !board->pieceCase[2][yRoi] &&
                 !board->pieceCase[3][yRoi] &&
@@ -1752,9 +1827,9 @@ static int nbCallsIsKingCheck = 0;
                
                [moves addObject:m];
             }
-         }
+         // }
          // Les Noirs sont en bas
-         if (sideJoueur==sideBlack) {
+         /* if (sideJoueur==sideBlack) {
             if (!board->pieceCase[4][yRoi] &&
                 !board->pieceCase[5][yRoi] &&
                 !board->pieceCase[6][yRoi] &&
@@ -1769,7 +1844,7 @@ static int nbCallsIsKingCheck = 0;
                
                [moves addObject:m];
             }
-         }
+         } */
       } // Fin de Grand Roque ---------------------------------------------------------------------
    } // !GenKingMovesFromX
 
@@ -1834,22 +1909,11 @@ static int nbCallsIsKingCheck = 0;
                        board:(ChessBoard *)board
                         into:(NSMutableArray<Move *> *)moves
    {
-      /* Le nouveau moteur basé sur make/unmake est désynchronisé de l'UI quant aux déplacements des pièces
-      car il est toujours calé sur l'orientation classique 'Blancs en bas' et se trouve donc en 'inversion'
-      relative lorsque l'on joue les Noirs et que l'UI retourne le board. Cette 'inversion' n'a cependant
-      aucun effet sur le déplacement des pièces qui peuvent 'avancer' ou 'reculer', càd toutes à l'exception
-      du pion qui est la seule pièce orientée. L'inversion du sens de déplacement des pions lorsque les noirs
-      sont en bas, permet ainsi aux pions blancs de progresser vers le bas et aux pions noirs vers le haut.
-      C'est le but du bloc ci-dessous.                                                                     */
-      int dir;
-      if (sideJoueur == sideWhite) {
-         dir = (p.side == sideWhite) ? 1 : -1;
-      }
-      else {
-         dir = (p.side == sideWhite) ? -1 : 1;
-      }
-      /* Fin de modif du sens de déplacement des pions pour new engine ----------------------------------- */
+      /* RAPPEL : SEULE L'UI (CHESSVIEW) EST CONCERNÉE PAR UN RETOURNEMENT DU BOARD ET EST SEULE À LE GÉRER
+      Le moteur canonique basé sur make/unmake est désynchronisé de l'UI quant aux déplacements des pièces.
+      Il est toujours calé sur l'orientation classique 'Blancs en bas' -----------------------------------*/
       
+      int dir = (p.side == sideWhite) ? 1 : -1;
       
       int ny = y + dir;
       
@@ -2166,3 +2230,40 @@ static int nbCallsIsKingCheck = 0;
 
 
 @end
+
+
+#ifdef DEBUG_ZOBRIST
+
+uint64_t recomputeZobrist(ChessBoard *board)
+{
+    uint64_t key = 0;
+
+    // 🔹 Pièces sur l’échiquier
+    for (int x = 0; x < 8; x++) {
+        for (int y = 0; y < 8; y++) {
+            Piece *p = board->pieceCase[x][y];
+            if (!p) continue;
+
+            int sq = y * 8 + x;
+            key ^= zobristPiece[p.side][p.type][sq];
+        }
+    }
+
+    // 🔹 Side to move
+    if (board->sideToMove == sideBlack) {
+        key ^= zobristSide;
+    }
+
+    // 🔹 Droits de roque
+    key ^= zobristCastle[board->castlingRights];
+
+    // 🔹 En-passant
+    if (board->enPassantFile != -1) {
+        key ^= zobristEnPassant[board->enPassantFile];
+    }
+
+    return key;
+}
+
+#endif
+

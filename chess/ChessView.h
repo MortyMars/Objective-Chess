@@ -18,13 +18,16 @@
     
    {
       // Déclaration des variables d'instance utiles
-      @public ChessBoard *liveBoard; // déclarée public MCN (ligne originale : 'ChessBoard *board;')
+      @public ChessBoard *liveBoard; // déclarée publique
       BOOL isThereTileSelected;
       Pos *selTile;
       NSSet *PosAcceptees;
+      //@public BOOL uiFlipped; // ajout séparation UI / Moteur
    }
 
    @property (weak) id <ChessViewDelegate> delegate;
+
+   @property BOOL uiFlipped;
 
    // Déclaration de méthodes devant être appelées à l'ext de la classe (dans ChessTests pour le coup...)
    -(id)   initWithFrame:(NSRect)frame;
@@ -47,5 +50,16 @@
 
    +(NSString *)VisualIndicator:(int)evalWhitePOV;
 
+   // Méthode de retournement du board pour l'UI
+   -(int)engineXFromUIX:(int)x;
+   -(int)engineYFromUIY:(int)y ;
+
 
 @end
+
+
+
+static inline int engineX(int uiX, BOOL flipped);
+
+static inline int engineY(int uiY, BOOL flipped);
+

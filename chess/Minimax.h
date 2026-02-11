@@ -8,9 +8,12 @@
 #import "MoveToStr.h"
 #import "Piece.h"
 #import "Move.h"
+#import "Zobrist.h"
 
 #define INF 1000000     // Définit le score infini pour limiter sans contraindre
 #define QS_MAX_DEPTH 4  // Profondeur choisie pour la Quiescence
+
+#define DEBUG_ZOBRIST   // Pour activer le debug Zobrist mis en place dans Negamax et Quiescence
 
 // extern const int pieceValue[];   // Valeur des pièces, définie dans Minimax.m
 
@@ -100,3 +103,7 @@
 
    
 @end
+
+#ifdef DEBUG_ZOBRIST
+uint64_t recomputeZobrist(ChessBoard *board);
+#endif

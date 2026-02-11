@@ -54,7 +54,8 @@
 
 
    // ==================================================================================================
-   // MCN - Méthode de Classe Quasi-Clone de 'PosLegalesForPiece' en version SAR, càd sans appel récursif
+   // MISE À JOUR NEW ENGINE (MÀJNE)
+   // Méthode de Classe Quasi-Clone de 'PosLegalesForPiece' en version SAR, càd sans appel récursif
    // Elle est appelée PAR 'TestEchecRoiSideSAR' pour y déterminer le jeu des position acceptées nécessaire
    // au test de mise en échec
    // Plutôt que de faire appel à cette version renommée on aurait pu copier le code dans TestEchecRoiSide,

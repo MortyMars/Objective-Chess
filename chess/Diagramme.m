@@ -75,8 +75,10 @@ NSString *strPieces;
                sleep(1);
                //sideIA = sideWhite; sideJoueur = sideBlack; /* pour éval cohérente */
                [self SilentMakeIAMoveForSide:sideWhite Board:boardEC];
+               
                /* Test pour provoquer une sortie de boucle si nécessaire */
                if ([maMinimax PossibleMovesForSide:sideBlack board:boardEC].count == 0) compteur = 101;
+               
                /* Forcement du thread principal pour MàJ ChessView et liste coups */
                dispatch_async(dispatch_get_main_queue(), ^{
                   [viewEC setNeedsDisplay:YES];
@@ -86,11 +88,14 @@ NSString *strPieces;
                /* Si les Noirs ne se retrouvent pas Pat ou Mat après le coup Blancs ci-dessus... */
                if ([maMinimax PossibleMovesForSide:sideBlack board:boardEC].count!=0) {
                   sleep(1);
+                  
                   /* ...alors on joue un coup Noirs */
                   //sideIA = sideBlack; sideJoueur = sideWhite; /* pour éval cohérente */
                   [self SilentMakeIAMoveForSide:sideBlack Board:boardEC];
+                  
                   /* Test pour provoquer une sortie de boucle si nécessaire */
                   if ([maMinimax PossibleMovesForSide:sideWhite board:boardEC].count == 0) compteur = 101;
+                  
                   /* Forcement du thread principal pour MàJ ChessView et liste coups */
                   dispatch_async(dispatch_get_main_queue(), ^{
                      [viewEC setNeedsDisplay:YES];
@@ -128,8 +133,10 @@ NSString *strPieces;
                 sleep(1);
                 //sideIA = sideWhite; sideJoueur = sideBlack; /* pour éval cohérente */
                 [self SilentMakeIAMoveForSide:sideBlack Board:boardEC];
+                
                 /* Test pour provoquer une sortie de boucle si nécessaire */
                 if ([maMinimax PossibleMovesForSide:sideWhite board:boardEC].count == 0) compteur = 101;
+                
                 /* Forcement du thread principal pour MàJ ChessView et liste coups */
                 dispatch_async(dispatch_get_main_queue(), ^{
                    [viewEC setNeedsDisplay:YES];
@@ -139,11 +146,14 @@ NSString *strPieces;
                 /* Si les Blancs ne se retrouvent pas Pat ou Mat après le coup Noirs ci-dessus... */
                 if ([maMinimax PossibleMovesForSide:sideWhite board:boardEC].count!=0) {
                    sleep(1);
+                   
                    /* ...alors on joue un coup Blancs */
                    //sideIA = sideWhite; sideJoueur = sideBlack; /* pour éval cohérente */
                    [self SilentMakeIAMoveForSide:sideWhite Board:boardEC];
+                   
                    /* Test pour provoquer une sortie de boucle si nécessaire */
                    if ([maMinimax PossibleMovesForSide:sideBlack board:boardEC].count == 0) compteur = 101;
+                   
                    /* Forcement du thread principal pour MàJ ChessView et liste coups */
                    dispatch_async(dispatch_get_main_queue(), ^{
                       [viewEC setNeedsDisplay:YES];

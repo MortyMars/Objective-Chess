@@ -71,7 +71,8 @@
       
       // FIN TRANSFORMATION
       return moveMCN;
-   } // Fin de ConvertEnStringMove
+      
+   } // !ConvertEnStringMove
 
 
    // ==================================================================================================
@@ -107,7 +108,7 @@
       // Mise à jour du contrôle 'txtView' affichant la liste des coups
       [monConnecteur MaJtxtCoups];
       
-   } // Fin de 'MettreEnFormeChaine'
+   } // !MettreEnFormeChaine
 
 
    // ==================================================================================================
@@ -124,52 +125,40 @@
          [strDuMove appendString:(petitRoque) ? @"o-o     " : @"o-o-o   "];
       }
       else {
-            // Il n'y a pas roque --> on s'oblige à la description complète du coup
-            
-            movVerStr = [NSMutableString stringWithFormat:@"%@",move];
-            
-            int typPrenante = [board pieceAtPos:move.start].type;
-            int typPrise    = [board pieceAtPos:move.dest] .type;
-            NSString *strType[6] = {@"",@"C",@"F",@"T",@"D",@"R"}; // notation française (sic)
-            
-            movVerStr = [NSString stringWithFormat:@"%@",move]; //movVerStr reçoit le move au format NSString
-            
-            /* Ajout du type de la pièce
-            NB : le type d'une pièce est issu d'une 'enum' ; c'est donc un indice dans une liste
-            [typPrenante-1] permet d'accéder au bon indice dans le tableau  */
-            if (typPrenante) [strDuMove appendString:strType[typPrenante-1]];
-            
-            // 1er cas - Le JOUEUR a les BLANCS
-            if (sideJoueur == sideWhite) {
-                  // Ajout de la case de départ
-                  [strDuMove appendString:[movVerStr substringWithRange:NSMakeRange(0, 2)]];
-                  
-                  // Ajout de l'indication de prise ou pas, et si oui, de la piece prise
-                  if (typPrise)
-                       [strDuMove appendString:[@"x" stringByAppendingString:strType[typPrise-1]]];
-                  else [strDuMove appendString: @"-"];
-                  
-                  // Ajout de la case destination
-                  [strDuMove appendString:[movVerStr substringWithRange:NSMakeRange(3, 2)]];
-            } // Fin de JOUEUR a les BLANCS
-            
-            // 2ème cas - Le JOUEUR a les NOIRS
-            else {
-                  // Ajout de la case départ
-                  [strDuMove appendString:[movVerStr substringWithRange:NSMakeRange(0, 2)]];
-                  
-                  // Ajout de l'indication de prise ou pas, et si oui, de la piece prise
-                  if (typPrise)
-                       [strDuMove appendString:[@"x" stringByAppendingString:strType[typPrise-1]]];
-                  else [strDuMove appendString: @"-"];
-                  
-                  // Ajout de la case destination
-                  [strDuMove appendString:[movVerStr substringWithRange:NSMakeRange(3, 2)]];
-            }   // Fin de JOUEUR a les NOIRS
+         // Il n'y a pas roque --> on s'oblige à la description complète du coup
+         movVerStr = [NSMutableString stringWithFormat:@"%@",move];
+         
+         int typPrenante = [board pieceAtPos:move.start].type;
+         int typPrise    = [board pieceAtPos:move.dest] .type;
+         NSString *strType[6] = {@"",@"C",@"F",@"T",@"D",@"R"}; // notation française (sic)
+         
+         // Si le plateau est retourné on traitera 'moveOpposed' au lieu de 'move' pour un
+         // affichage correct des coups joués
+         Move *moveOpposed = [Move opMove:move];
+         movVerStr = [NSString stringWithFormat:@"%@",
+                      (!monConnecteur.maChessView.uiFlipped)? move:moveOpposed]; //movVerStr reçoit move ou moveOpposed
+         
+         /* Ajout du type de la pièce
+          NB : le type d'une pièce est issu d'une 'enum' ; c'est donc un indice dans une liste
+          [typPrenante-1] permet d'accéder au bon indice dans le tableau  */
+         if (typPrenante) [strDuMove appendString:strType[typPrenante-1]];
+         
+         // Ajout de la case de départ
+         [strDuMove appendString:[movVerStr substringWithRange:NSMakeRange(0, 2)]];
+         
+         // Ajout de l'indication de prise ou pas, et si oui, de la piece prise
+         if (typPrise)
+            [strDuMove appendString:[@"x" stringByAppendingString:strType[typPrise-1]]];
+         else [strDuMove appendString: @"-"];
+         
+         // Ajout de la case destination
+         [strDuMove appendString:[movVerStr substringWithRange:NSMakeRange(3, 2)]];
+         
       } // Fin de Else
       
       return strDuMove;
-   } // Fin de Méthode 'MoveEnStr'
+      
+   } // !Modif00EnA1
 
 
 @end

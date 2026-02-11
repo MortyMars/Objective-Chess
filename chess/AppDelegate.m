@@ -5,6 +5,7 @@
 //  Updated by MCN in 2020
 
 #import "AppDelegate.h"
+#import "Zobrist.h"
 
 @implementation AppDelegate
 
@@ -74,6 +75,20 @@
       // MCN - NSLog de contrôle
       NSLog(@"Interface initialisée et chargée\n");
       
-   } // Fin de Méthode 'applicationDidFinishLaunching'
+      // Initialisation de la clé de hachage Zobrist
+      InitZobrist();
+      
+      // DEBUG *********** Test d'involution ************ DEBUG
+      //TestInvolution(monConnecteur.maChessView->liveBoard);
+
+      
+   } // !applicationDidFinishLaunching
+
+
+
 
 @end
+
+
+
+
