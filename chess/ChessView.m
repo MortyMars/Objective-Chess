@@ -567,23 +567,24 @@ BOOL engineIsBusy = NO;
       return evalString;
    }
 
-   // Ajout méthodes de retourne des coordonnées pour l'UI
-   - (int)engineXFromUIX:(int)x {
+   // Ajout méthodes de retournement des coordonnées pour l'UI
+   -(int)engineXFromUIX:(int)x {
        return uiFlipped ? 7 - x : x;
    }
 
-   - (int)engineYFromUIY:(int)y {
+   -(int)engineYFromUIY:(int)y {
        return uiFlipped ? 7 - y : y;
    }
 
 
 @end
 
-
-static inline int engineX(int uiX, BOOL flipped) {
-    return flipped ? 7 - uiX : uiX;
-}
-
-static inline int engineY(int uiY, BOOL flipped) {
-    return flipped ? 7 - uiY : uiY;
-}
+/*
+ static inline int engineX(int uiX, BOOL flipped) {
+ return flipped ? 7 - uiX : uiX;
+ }
+ 
+ static inline int engineY(int uiY, BOOL flipped) {
+ return flipped ? 7 - uiY : uiY;
+ }
+ */

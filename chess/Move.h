@@ -16,28 +16,27 @@
 @interface Move : NSObject <NSCopying>
 
    // ...comprenant 2 propriétés, start et dest...
-   @property (nonatomic, strong) Pos *start;
-   @property (nonatomic, strong) Pos *dest;
+   @property (nonatomic, strong) Pos         *start;
+   @property (nonatomic, strong) Pos         *dest;
 
-   // Propriétés ajoutées pour undo
-   @property (nonatomic, strong) Piece *capturedPiece;
-   @property (nonatomic)         BOOL  wasPromotion;  // Ce move a t-il généré une promotion de pion
-   @property (nonatomic)         PieceType oldType;
+   @property (nonatomic)         Square      fromSquare;
+   @property (nonatomic)         Square      toSquare;
 
-   // Propriétés ajoutées pour méthode SEE
-   @property (nonatomic, strong) Piece *movingPiece;
-   @property (nonatomic)         Square fromSquare;
-   @property (nonatomic)         Square toSquare;
+   @property (nonatomic, strong) Piece       *movingPiece;
+   @property (nonatomic, strong) Piece       *capturedPiece;
+   
+   @property (nonatomic)         PieceType   oldType;       // type avant promotion
 
-   // Propriété pour le Move Ordering
-   @property (nonatomic) BOOL isCapture;     // Ce move est-il une capture
-   @property (nonatomic) BOOL givesCheck;    // Ce move provoque t-il une mise en échec
-   @property (nonatomic) BOOL isCastling;    // Ce move est-il un roque
-   @property (nonatomic) BOOL isPromotion;   // Ce move est-il une promotion de pion
-   @property (nonatomic) int  orderingScore;
-   @property (nonatomic) BOOL isEnPassant;   // Ce move est-il une prise e.p.
+   @property (nonatomic)         BOOL        isCapture;     // Ce move est-il une capture
+   @property (nonatomic)         BOOL        givesCheck;    // Ce move provoque t-il une mise en échec
+   @property (nonatomic)         BOOL        isCastling;    // Ce move est-il un roque
+   @property (nonatomic)         BOOL        isPromotion;   // Ce move est-il une promotion de pion
+   @property (nonatomic)         BOOL        wasPromotion;  // Ce move a t-il généré une promotion de pion
+   @property (nonatomic)         BOOL        isEnPassant;   // Ce move est-il une prise e.p.
 
+   @property (nonatomic)         int         orderingScore;
 
+   
    // ...et une méthode initWithStart permettant d'en initialiser les valeurs
    -(id) initWithStart:(Pos *)start
                   Dest:(Pos *)dest;

@@ -17,25 +17,24 @@
    {
       self = [super init];
       if (self) {
-         //_start = start;
-         //_dest = dest;
          
-         self.start = start;
-         self.dest  = dest;
+         _start = start;
+         _dest  = dest;
 
-         self.fromSquare = start.y * 8 + start.x;
-         self.toSquare   = dest.y  * 8 + dest.x;
+         _fromSquare = start.y * 8 + start.x;
+         _toSquare   = dest.y  * 8 + dest.x;
          
-         _capturedPiece = nil;
          _movingPiece   = nil;
+         _capturedPiece = nil;
          
          _isCapture     = NO;
          _isPromotion   = NO;
          _wasPromotion  = NO;
          _isCastling    = NO;
          _givesCheck    = NO;
-         _isEnPassant    = NO;
+         _isEnPassant   = NO;
          
+         _oldType       = 0;
          _orderingScore = 0;
       }
       return self;

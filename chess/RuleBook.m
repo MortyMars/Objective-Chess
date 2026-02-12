@@ -50,11 +50,11 @@
       }
       
       return result;
-   }
+      
+   } // !PosLegalesForPiece
 
 
    // ==================================================================================================
-   // MISE À JOUR NEW ENGINE (MÀJNE)
    // Méthode de Classe Quasi-Clone de 'PosLegalesForPiece' en version SAR, càd sans appel récursif
    // Elle est appelée PAR 'TestEchecRoiSideSAR' pour y déterminer le jeu des position acceptées nécessaire
    // au test de mise en échec
@@ -93,7 +93,8 @@
       }
       
       return result;
-   }
+      
+   } // !PosLegalesForPieceSAR
 
 
    // ==================================================================================================
@@ -164,15 +165,17 @@
                            roiSideEnEchec = YES;
                            //NSLog(@"\nLes %@ SONT Échec",(side==1)?@"Noirs":@"Blancs");
                            return roiSideEnEchec;
-                        } // fin if
-                     } // fin if
-                  }  // fin for
-               }  // fin if
-            } // fin if
-         } // fin for y
-      } // fin for x
+                        }
+                     }
+                  }  // !for
+               }  // !if
+            } // !if
+         } // !for y
+      } // !for x
+      
       return roiSideEnEchec;
-   } // Fin de Méthode 'TestEchecRoiSideSAR'
+      
+   } // !TestEchecRoiSideSAR
 
 
 @end

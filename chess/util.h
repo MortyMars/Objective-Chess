@@ -126,7 +126,11 @@ globale permettant de garder le contrôle sur l'instance (unique dans une partie
 @class Minimax;
 extern Minimax *maMinimax;
 
+// Pour test d'involubilité
+extern BOOL engineIsBusy;
 
+// Pour moteur verbeux
+extern BOOL kVerboseMoveDebug;
 
 
 
@@ -137,12 +141,7 @@ extern Minimax *maMinimax;
 // Méthode globale 'DoEvents'
 extern void DoEvents(void);
 
-@class ChessBoard;
+
 extern void TestInvolution(void);
 
-// Pour test d'involubilité
-extern BOOL engineIsBusy;
-
-// Pour moteur verbeux
-extern BOOL kVerboseMoveDebug;
 

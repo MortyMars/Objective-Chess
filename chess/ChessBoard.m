@@ -579,18 +579,18 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
    -(void) CalculerStrRoque {
       
       /* La situation du Roque est dépendante de 6 pièces : les 2 rois et les 4 tours...
-       Il est donc nécessaire de vérifier que ces pièces sont présentes sur leur position d'origine
-       et qu'elles n'ont pas bougé entretemps
-       On passe par une String provisoire   */
+      Il est donc nécessaire de vérifier que ces pièces sont présentes sur leur position d'origine
+      et qu'elles n'ont pas bougé entretemps
+      On passe par une String provisoire   */
       
       /* Si, dans la partie, strRoque est déjà positionnée sur '-' c'est que plus aucun roque n'est autorisé
-       Pas la peine alors de rééxécuter la méthode à chaque move...   */
+      Pas la peine alors de rééxécuter la méthode à chaque move...   */
       if (!([monConnecteur.maChessView->liveBoard->strRoque isEqual:@"-"])) {
          
          NSString *strProvRoque = @"";
          
          //if (sideJoueur == sideWhite) {
-         if (!monConnecteur.maChessView.uiFlipped) {
+         //if (!monConnecteur.maChessView.uiFlipped) {
             if (([self piece_colX:4 rangY:0].numMoves == 0) && ([self piece_colX:7 rangY:0].numMoves == 0) &&
                 ([self piece_colX:4 rangY:0].type == Roi)   && ([self piece_colX:7 rangY:0].type == Tour))
                strProvRoque = [strProvRoque stringByAppendingString:@"K"];
@@ -608,9 +608,9 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
                strProvRoque = [strProvRoque stringByAppendingString:@"q"];
             
             if ([strProvRoque isEqual:@""]) strProvRoque = [strProvRoque stringByAppendingString:@"-"];
-         }
+         //}
          //else if (sideJoueur == sideBlack) {
-         else {
+         /*else {
             if (([self piece_colX:3 rangY:7].numMoves == 0) && ([self piece_colX:0 rangY:7].numMoves == 0) &&
                 ([self piece_colX:3 rangY:7].type == Roi) && ([self piece_colX:0 rangY:7].type == Tour))
                strProvRoque = [strProvRoque stringByAppendingString:@"K"];
@@ -628,7 +628,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
                strProvRoque = [strProvRoque stringByAppendingString:@"q"];
             
             if ([strProvRoque isEqual:@""]) strProvRoque = [strProvRoque stringByAppendingString:@"-"];
-         }
+         } */
          
          // Affectation de la valeur trouvée à la variable d'instance ad-hoc
          monConnecteur.maChessView->liveBoard->strRoque = strProvRoque;
@@ -853,7 +853,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       
       /*----------------------- DROITS DE ROQUE -----------------------------------*/
       zobristKey ^= zobristCastle[st.oldCastleRights];
-      // mise à jour de castlingRights ici
+      // calcul de mise à jour de castlingRights à insérer ici (fonction à créer
       zobristKey ^= zobristCastle[castlingRights];
       
       /*----------------------- SIDE TO MOVE --------------------------------------*/

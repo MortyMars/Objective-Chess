@@ -162,17 +162,6 @@ static int nbCallsIsKingCheck = 0;
          ChessBoard *newBoard = board.copy;
          [newBoard PerformMove:moveEnCours];
          
-         // Procédure de vérif MCN shuntée
-         /*DÉTECTION RAPIDE DU MAT */
-         /*if ([self PossibleMovesForSide:otherSide board:newBoard].count == 0) {
-          if ([self TestEchecRoiSide:otherSide inBoard:newBoard]) {
-          NSTimeInterval elapsed = [[NSDate date] timeIntervalSinceDate:startTime];
-          NSLog(@"✓ MAT trouvé : %@ (%.1fs, %d nœuds)\n",
-          moveEnCours, elapsed, nodeCount);
-          return moveEnCours;
-          }
-          } */
-         
          /* Appel à Negamax */
          int negaMax = [self NegamaxForSide:side
                                       board:newBoard
@@ -192,20 +181,6 @@ static int nbCallsIsKingCheck = 0;
       NSLog(@"✅ Coup choisi : %@ (score=%d, %.1fs, %d nœuds, %.0f n/s)\n",
             bestMove, bestScore, elapsed, nodeCount, nodeCount/elapsed);
       
-      /* // Log de PROFILLING
-      NSLog(@"\n📊 PROFILING :");
-      NSLog(@"   EvalBoard : %d appels, %.2fs total, %.1fms/appel",
-            evalCount, evalTotalTime, evalCount > 0 ? (evalTotalTime * 1000.0) / evalCount : 0);
-      NSLog(@"   MoveGen   : %d appels, %.2fs total, %.1fms/appel",
-            moveGenCount, moveGenTotalTime, moveGenCount > 0 ? (moveGenTotalTime * 1000.0) / moveGenCount : 0);
-      NSLog(@"   CopyBoard : %d copies", copyBoardCount);
-      
-      double percentEval = evalTotalTime / elapsed * 100.0;
-      double percentMoveGen = moveGenTotalTime / elapsed * 100.0;
-      NSLog(@"   Répartition : EvalBoard=%.0f%%, MoveGen=%.0f%%\n", percentEval, percentMoveGen);
-      
-      // Profilling du nombre de coups élagué
-      NSLog(@"📊 Élagages : %d cutoffs sur %d nœuds (%.1f%%)", nbElag, nodeCount, (100.0 * nbElag / nodeCount)); */
       
       return bestMove;
       
@@ -223,11 +198,10 @@ static int nbCallsIsKingCheck = 0;
    {
       nodes++;
       
-      #ifdef DEBUG_ZOBRIST
-      uint64_t keyEntry = board->zobristKey;
-      #endif
+               #ifdef DEBUG_ZOBRIST
+               uint64_t keyEntry = board->zobristKey;
+               #endif
 
-      
       if (depth <= 0) {
          return [self QuiescenceForSide:side
                                   board:board
@@ -252,10 +226,11 @@ static int nbCallsIsKingCheck = 0;
       // Traiter le cas où 'moves' est vide, càd si Mat ou Pat
       if (moves.count == 0) {
          
-         #ifdef DEBUG_ZOBRIST
-         NSAssert(board->zobristKey == keyEntry,
-                  @"Zobrist corrompu : sortie Negamax sans coups");
-         #endif
+               #ifdef DEBUG_ZOBRIST
+               NSAssert(board->zobristKey == keyEntry,
+                        @"Zobrist corrompu : sortie Negamax sans coups");
+               #endif
+         
          if ([self IsKingInCheck:side board:board]) {
             // Mat : très mauvais pour le camp qui joue
             return -100000 + (NUMBER_MOVES_AHEAD - depth);
@@ -271,26 +246,26 @@ static int nbCallsIsKingCheck = 0;
       
       for (Move *m in moves) {
          
-         // TEST ZOBRIST (DEBUG) AVANT makeMove ***************************************************
+         // GÉNÉRATION CLÉ ZOBRIST AVANT makeMove #################################################
          uint64_t keyBefore = board->zobristKey;
          
          MoveState st = [board makeMove:m];
          
-         #ifdef DEBUG_ZOBRIST
-         uint64_t z2;
-         #endif
+               #ifdef DEBUG_ZOBRIST
+               uint64_t z2;
+               #endif
 
-         #ifdef DEBUG_ZOBRIST
-         z2 = recomputeZobrist(board);
-         if (z2 != board->zobristKey) {
-             NSLog(@"❌ Zobrist mismatch après makeMove %@", m);
-             NSLog(@"Side=%d EP=%d Castle=%d",
-                   board->sideToMove,
-                   board->enPassantFile,
-                   board->castlingRights);
-         }
-         NSAssert(z2 == board->zobristKey, @"Zobrist corrompu");
-         #endif
+               #ifdef DEBUG_ZOBRIST
+               z2 = recomputeZobrist(board);
+               if (z2 != board->zobristKey) {
+                   NSLog(@"❌ Zobrist mismatch après makeMove %@", m);
+                   NSLog(@"Side=%d EP=%d Castle=%d",
+                         board->sideToMove,
+                         board->enPassantFile,
+                         board->castlingRights);
+               }
+               NSAssert(z2 == board->zobristKey, @"Zobrist corrompu");
+               #endif
 
          
          // 🔴 FILTRE LÉGALITÉ — MANQUANT JUSQU’ICI
@@ -305,34 +280,178 @@ static int nbCallsIsKingCheck = 0;
             if (score > alpha) alpha = score;
          }
          
-         
-         
-         #ifdef DEBUG_ZOBRIST
-         z2 = recomputeZobrist(board);
-         NSAssert(z2 == board->zobristKey, @"Zobrist corrompu");
-         #endif
+               #ifdef DEBUG_ZOBRIST
+               z2 = recomputeZobrist(board);
+               NSAssert(z2 == board->zobristKey, @"Zobrist corrompu");
+               #endif
 
-         
          [board unmakeMove:m state:st];
          
-         #ifdef DEBUG_ZOBRIST
-         z2 = recomputeZobrist(board);
-         NSAssert(z2 == board->zobristKey, @"Zobrist corrompu");
-         #endif
+               #ifdef DEBUG_ZOBRIST
+               z2 = recomputeZobrist(board);
+               NSAssert(z2 == board->zobristKey, @"Zobrist corrompu");
+               #endif
          
-         // TEST ZOBRIST (DEBUG) APRÈS unmakeMove (doit être identive à clé d'avant makeMove ******
-         NSAssert(board->zobristKey == keyBefore, @"❌ Zobrist incohérent");
+         // COMPARAISON CLÉ ZOBRIST APRÈS unmakeMove ##############################################
+         NSAssert(board->zobristKey == keyBefore, @"❌ Negamax Zobrist make/unmake incohérent");
          
          if (alpha >= beta)
             break;
       }
       
-      #ifdef DEBUG_ZOBRIST
-      NSAssert(board->zobristKey == keyEntry,
-               @"Zobrist corrompu : sortie Negamax normale");
-      #endif
+               #ifdef DEBUG_ZOBRIST
+               NSAssert(board->zobristKey == keyEntry,
+                        @"Zobrist corrompu : sortie Negamax normale");
+               #endif
+      
       return alpha;
+      
    } // !NegamaxForSide
+
+
+   // ================================================================================================
+   // Méthode de Quiescence
+   // La quiescence est utilisée pour étendre la recherche sur les nœuds instables dans les arbres Minimax.
+   // Elle permet de reporter l'évaluation jusqu'à ce que la position soit suffisamment stable pour être
+   // évaluée statiquement, c'est-à-dire sans tenir compte de l'historique de la position ou des futurs moves.
+   - (int)QuiescenceForSide:(Side)side
+                      board:(ChessBoard *)board
+                      alpha:(int)alpha
+                       beta:(int)beta
+                    qsDepth:(int)qsDepth
+   {
+      nodes++;
+      
+               #ifdef DEBUG_ZOBRIST
+               uint64_t keyEntry = board->zobristKey;
+               #endif
+
+      
+      Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
+      
+      BOOL inCheck = [self IsKingInCheck:side board:board];
+      
+      int standPat = -INF;
+      
+      // 1️⃣ Stand-pat uniquement hors échec
+      if (!inCheck) {
+         standPat = [self EvalBoardForSide:side board:board];
+         
+         if (standPat >= beta) {
+            
+               #ifdef DEBUG_ZOBRIST
+               NSAssert(board->zobristKey == keyEntry,
+                        @"Zobrist corrompu : QS stand-pat cutoff");
+               #endif
+            
+            return beta;}
+         
+         if (standPat > alpha) alpha = standPat;
+      }
+      
+      // 2️⃣ Limite QS (mais jamais en échec)
+      if (qsDepth >= QS_MAX_DEPTH && !inCheck) {
+         
+               #ifdef DEBUG_ZOBRIST
+               NSAssert(board->zobristKey == keyEntry,
+                        @"Zobrist corrompu : QS stand-pat cutoff");
+               #endif
+         
+         return alpha;}
+      
+      // 3️⃣ Génération des coups
+      NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:32];
+      
+      if (inCheck) {
+         [self GenMovesForSide:side board:board into:moves];
+      } else {
+         [self GenCapturForSide:side board:board into:moves];
+      }
+      
+      // 4️⃣ Boucle QS
+      for (Move *m in moves) {
+         
+         // 🔹 DELTA PRUNING
+         if (!inCheck) {
+            int gain = [self ValueOfPiece:m.capturedPiece.type];
+            if (standPat + gain + DELTA_MARGIN < alpha)
+               continue;
+         }
+         
+         // 🔹 SEE FILTER
+         if (!inCheck) {
+            int see = [self SEEForMove:m board:board];
+            if (see < 0)
+               continue;
+         }
+         
+         // 🔴 INTERDICTION DES SUICIDES DE DAME
+         if (!inCheck && m.movingPiece.type == Dame && ![self IsSquareDefended:m.toSquare
+                                                                        bySide:side
+                                                                         board:board]) {
+            continue;
+         }
+         
+         // On peut y aller
+         
+               #ifdef DEBUG_ZOBRIST
+               // GÉNÉRATION CLÉ ZOBRIST AVANT MAKEMOVE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+               uint64_t keyBefore = board->zobristKey;
+               #endif
+         
+         MoveState st = [board makeMove:m];
+         
+               #ifdef DEBUG_ZOBRIST
+               NSAssert(board->zobristKey == keyEntry,
+                        @"Zobrist corrompu : QS stand-pat cutoff");
+               #endif
+         
+         if (![self IsKingInCheck:side board:board]) {
+            
+            int score = -[self QuiescenceForSide:otherSide
+                                           board:board
+                                           alpha:-beta
+                                            beta:-alpha
+                                         qsDepth:qsDepth + 1];
+            
+            [board unmakeMove:m state:st];
+            
+               #ifdef DEBUG_ZOBRIST
+               // COMPARAISON CLÉ ZOBRIST APRÈS UNMAKEMOVE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+               NSAssert(board->zobristKey == keyBefore, @"❌ Quiescence Zobrist make/unmake incohérent");
+               #endif
+               
+               #ifdef DEBUG_ZOBRIST
+               NSAssert(board->zobristKey == keyEntry,
+                        @"Zobrist corrompu : QS stand-pat cutoff");
+               #endif
+            
+            if (score >= beta) {
+               
+                  #ifdef DEBUG_ZOBRIST
+                  NSAssert(board->zobristKey == keyEntry,
+                           @"Zobrist corrompu : QS stand-pat cutoff");
+                  #endif
+               
+               return beta;
+            }
+            
+            if (score > alpha) alpha = score;
+            
+         } // !if !IsKingInCheck
+         
+         else [board unmakeMove:m state:st]; // si IsKingInCheck on annule le coup
+         
+      } // !for move
+      
+               #ifdef DEBUG_ZOBRIST
+               NSAssert(board->zobristKey == keyEntry,
+                        @"Zobrist corrompu : QS return final");
+               #endif
+      
+      return alpha;
+      
+   } // !QuiescenceForSide
 
 
    // ================================================================================================
@@ -703,24 +822,6 @@ static int nbCallsIsKingCheck = 0;
             }
          } // fin de for 'y'
       } // fin de for 'x' et fin de parcours de l'échiquier
-      
-      /* Log peu utile désactivé
-       // Compter les dames pour vérifier les promotions
-       int queensWhite = 0, queensBlack = 0;
-       for (int x = 0; x < 8; x++) {
-       for (int y = 0; y < 8; y++) {
-       Piece *p = [board piece_colX:x rangY:y];
-       if (p && p.type == Dame) {
-       if (p.side == sideWhite) queensWhite++;
-       else queensBlack++;
-       }
-       }
-       }
-       
-       if (queensWhite > 1 || queensBlack > 1)
-       NSLog(@"🔍 EvalBFS - PROMOTION DÉTECTÉE : Blancs= %d Dames, Noirs= %d Dames", queensWhite, queensBlack);
-       */
-      
       
       // PARTIE 2 désactivée
       
@@ -1206,136 +1307,7 @@ static int nbCallsIsKingCheck = 0;
    }
 
 
-   // ================================================================================================
-   // Méthode de Quiescence
-   // La quiescence est utilisée pour étendre la recherche sur les nœuds instables dans les arbres Minimax.
-   // Elle permet de reporter l'évaluation jusqu'à ce que la position soit suffisamment stable pour être
-   // évaluée statiquement, c'est-à-dire sans tenir compte de l'historique de la position ou des futurs moves.
-   - (int)QuiescenceForSide:(Side)side
-                      board:(ChessBoard *)board
-                      alpha:(int)alpha
-                       beta:(int)beta
-                    qsDepth:(int)qsDepth
-   {
-      nodes++;
-      
-      #ifdef DEBUG_ZOBRIST
-      uint64_t keyEntry = board->zobristKey;
-      #endif
-
-      
-      Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
-      
-      BOOL inCheck = [self IsKingInCheck:side board:board];
-      
-      int standPat = -INF;
-      
-      // 1️⃣ Stand-pat uniquement hors échec
-      if (!inCheck) {
-         standPat = [self EvalBoardForSide:side board:board];
-         
-         if (standPat >= beta) {
-            #ifdef DEBUG_ZOBRIST
-            NSAssert(board->zobristKey == keyEntry,
-                     @"Zobrist corrompu : QS stand-pat cutoff");
-            #endif
-            
-            return beta;}
-         
-         if (standPat > alpha) alpha = standPat;
-      }
-      
-      // 2️⃣ Limite QS (mais jamais en échec)
-      if (qsDepth >= QS_MAX_DEPTH && !inCheck) {
-         #ifdef DEBUG_ZOBRIST
-         NSAssert(board->zobristKey == keyEntry,
-                  @"Zobrist corrompu : QS stand-pat cutoff");
-         #endif
-         return alpha;}
-      
-      // 3️⃣ Génération des coups
-      NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:32];
-      
-      if (inCheck) {
-         [self GenMovesForSide:side board:board into:moves];
-      } else {
-         [self GenCapturForSide:side board:board into:moves];
-      }
-      
-      // 4️⃣ Boucle QS
-      for (Move *m in moves) {
-         
-         // 🔹 DELTA PRUNING
-         if (!inCheck) {
-            int gain = [self ValueOfPiece:m.capturedPiece.type];
-            if (standPat + gain + DELTA_MARGIN < alpha)
-               continue;
-         }
-         
-         // 🔹 SEE FILTER
-         if (!inCheck) {
-            int see = [self SEEForMove:m board:board];
-            if (see < 0)
-               continue;
-         }
-         
-         // 🔴 INTERDICTION DES SUICIDES DE DAME
-         if (!inCheck && m.movingPiece.type == Dame && ![self IsSquareDefended:m.toSquare
-                                                                        bySide:side
-                                                                         board:board]) {
-            continue;
-         }
-         
-         // On peut y aller
-         #ifdef DEBUG_ZOBRIST
-         uint64_t keyBefore = board->zobristKey;
-         #endif
-         
-         MoveState st = [board makeMove:m];
-         
-         #ifdef DEBUG_ZOBRIST
-         NSAssert(board->zobristKey == keyEntry,
-                  @"Zobrist corrompu : QS stand-pat cutoff");
-         #endif
-         
-         if (![self IsKingInCheck:side board:board]) {
-            
-            int score = -[self QuiescenceForSide:otherSide
-                                           board:board
-                                           alpha:-beta
-                                            beta:-alpha
-                                         qsDepth:qsDepth + 1];
-            
-            [board unmakeMove:m state:st];
-            
-            #ifdef DEBUG_ZOBRIST
-            NSAssert(board->zobristKey == keyEntry,
-                     @"Zobrist corrompu : QS stand-pat cutoff");
-            #endif
-            
-            if (score >= beta) {
-               #ifdef DEBUG_ZOBRIST
-               NSAssert(board->zobristKey == keyEntry,
-                        @"Zobrist corrompu : QS stand-pat cutoff");
-               #endif
-               return beta;}
-            
-            if (score > alpha) alpha = score;
-            
-         }
-         else [board unmakeMove:m state:st];
-      }
-      
-      #ifdef DEBUG_ZOBRIST
-      NSAssert(board->zobristKey == keyEntry,
-               @"Zobrist corrompu : QS stand-pat cutoff");
-      #endif
-      
-      return alpha;
-      
-   } // !QuiescenceForSide
-
-
+   
    // ================================================================================================
    // Méthode permettant de détecter si le Roi 'side' est en échec
    -(BOOL)IsKingInCheck:(Side)side board:(ChessBoard *)board
@@ -1470,35 +1442,22 @@ static int nbCallsIsKingCheck = 0;
             
             switch (p.type) {
                   
-               case Pion:
-                  [self GenPawnMovesFromX:x y:y piece:p board:board into:moves];
-                  break;
+               case Pion: [self GenPawnMovesFromX:x y:y piece:p board:board into:moves]; break;
                   
-               case Cava:
-                  [self GenKnightMovesFromX:x y:y piece:p board:board into:moves];
-                  break;
+               case Cava: [self GenKnightMovesFromX:x y:y piece:p board:board into:moves]; break;
                   
-               case Fou:
-                  [self GenSlideMovesFromX:x y:y piece:p board:board
-                                      dirs:bishopDirs dirCount:4 into:moves];
-                  break;
+               case Fou: [self GenSlideMovesFromX:x y:y piece:p board:board
+                                             dirs:bishopDirs dirCount:4 into:moves]; break;
                   
-               case Tour:
-                  [self GenSlideMovesFromX:x y:y piece:p board:board
-                                      dirs:rookDirs dirCount:4 into:moves];
-                  break;
+               case Tour: [self GenSlideMovesFromX:x y:y piece:p board:board
+                                              dirs:rookDirs dirCount:4 into:moves]; break;
                   
-               case Dame:
-                  [self GenSlideMovesFromX:x y:y piece:p board:board
-                                      dirs:queenDirs dirCount:8 into:moves];
-                  break;
+               case Dame: [self GenSlideMovesFromX:x y:y piece:p  board:board
+                                              dirs:queenDirs   dirCount:8 into:moves]; break;
                   
-               case Roi:
-                  [self GenKingMovesFromX:x y:y piece:p board:board into:moves];
-                  break;
+               case Roi: [self GenKingMovesFromX:x y:y piece:p board:board into:moves]; break;
                   
-               default:
-                  break;
+               default: break;
             }
          }
       }
@@ -1768,38 +1727,20 @@ static int nbCallsIsKingCheck = 0;
          
          // Les 2 cases entre Roi et Tour doivent être vides
          // Ces cases ne doivent pas être sous le coup d'un échec potentiel...
-         // Les Blancs sont TOUJOURS en bas
-         //if (sideJoueur == sideWhite) {
-            if (!board->pieceCase[5][yRoi] &&
-                !board->pieceCase[6][yRoi] &&
-                ![self IsSquareAttackedAtX:5 Y:yRoi bySide:sideEnemy Board:board] &&
-                ![self IsSquareAttackedAtX:6 Y:yRoi bySide:sideEnemy Board:board]) {
-               
-               Move *m = [Move newMoveFromX:4 Y:yRoi ToNx:6 Ny:yRoi];
-               m.isCastling = YES;
-               m.movingPiece = p;
-               m.fromSquare  = SQ(4, yRoi);
-               m.toSquare    = SQ(6, yRoi);
-               
-               [moves addObject:m];
-            }
-         // }
-         // Les Noirs sont en bas
-         /* if (sideJoueur == sideBlack) {
-            if (!board->pieceCase[1][yRoi] &&
-                !board->pieceCase[2][yRoi] &&
-                ![self IsSquareAttackedAtX:1 Y:yRoi bySide:sideEnemy Board:board] &&
-                ![self IsSquareAttackedAtX:2 Y:yRoi bySide:sideEnemy Board:board]) {
-               
-               Move *m = [Move newMoveFromX:3 Y:yRoi ToNx:1 Ny:yRoi];
-               m.isCastling = YES;
-               m.movingPiece = p;
-               m.fromSquare  = SQ(3, yRoi);
-               m.toSquare    = SQ(1, yRoi);
-               
-               [moves addObject:m];
-            }
-         } */
+         if (!board->pieceCase[5][yRoi] &&
+             !board->pieceCase[6][yRoi] &&
+             ![self IsSquareAttackedAtX:5 Y:yRoi bySide:sideEnemy Board:board] &&
+             ![self IsSquareAttackedAtX:6 Y:yRoi bySide:sideEnemy Board:board]) {
+            
+            Move *m = [Move newMoveFromX:4 Y:yRoi ToNx:6 Ny:yRoi];
+            m.isCastling  = YES;
+            m.movingPiece = p;
+            m.fromSquare  = SQ(4, yRoi);
+            m.toSquare    = SQ(6, yRoi);
+            
+            [moves addObject:m];
+         }
+         
       } // Fin de Petit Roque ---------------------------------------------------------------------
       
       // Grand roque (côté Dame) ------------------------------------------------------------------
@@ -1811,40 +1752,20 @@ static int nbCallsIsKingCheck = 0;
          
          // Les 3 cases entre Roi et Tour doivent être vides
          // Les 2 cases parcourues par le Roi ne doivent pas être sous le coup d'un échec potentiel...
-         // Les Blancs sont TOUJOURS en bas
-         // if (sideJoueur==sideWhite) {
-            if (!board->pieceCase[1][yRoi] &&
-                !board->pieceCase[2][yRoi] &&
-                !board->pieceCase[3][yRoi] &&
-                ![self IsSquareAttackedAtX:2 Y:yRoi bySide:sideEnemy Board:board] &&
-                ![self IsSquareAttackedAtX:3 Y:yRoi bySide:sideEnemy Board:board]) {
-               
-               Move *m = [Move newMoveFromX:4 Y:yRoi ToNx:2 Ny:yRoi];
-               m.isCastling = YES;
-               m.movingPiece = p;
-               m.fromSquare  = SQ(4, yRoi);
-               m.toSquare    = SQ(2, yRoi);
-               
-               [moves addObject:m];
-            }
-         // }
-         // Les Noirs sont en bas
-         /* if (sideJoueur==sideBlack) {
-            if (!board->pieceCase[4][yRoi] &&
-                !board->pieceCase[5][yRoi] &&
-                !board->pieceCase[6][yRoi] &&
-                ![self IsSquareAttackedAtX:4 Y:yRoi bySide:sideEnemy Board:board] &&
-                ![self IsSquareAttackedAtX:5 Y:yRoi bySide:sideEnemy Board:board]) {
-               
-               Move *m = [Move newMoveFromX:3 Y:yRoi ToNx:5 Ny:yRoi];
-               m.isCastling = YES;
-               m.movingPiece = p;
-               m.fromSquare  = SQ(3, yRoi);
-               m.toSquare    = SQ(5, yRoi);
-               
-               [moves addObject:m];
-            }
-         } */
+         if (!board->pieceCase[1][yRoi] &&
+             !board->pieceCase[2][yRoi] &&
+             !board->pieceCase[3][yRoi] &&
+             ![self IsSquareAttackedAtX:2 Y:yRoi bySide:sideEnemy Board:board] &&
+             ![self IsSquareAttackedAtX:3 Y:yRoi bySide:sideEnemy Board:board]) {
+            
+            Move *m = [Move newMoveFromX:4 Y:yRoi ToNx:2 Ny:yRoi];
+            m.isCastling  = YES;
+            m.movingPiece = p;
+            m.fromSquare  = SQ(4, yRoi);
+            m.toSquare    = SQ(2, yRoi);
+            
+            [moves addObject:m];
+         }
       } // Fin de Grand Roque ---------------------------------------------------------------------
    } // !GenKingMovesFromX
 
@@ -1866,35 +1787,22 @@ static int nbCallsIsKingCheck = 0;
             
             switch (p.type) {
                   
-               case Pion:
-                  [self GenPawnCapturFromX:x y:y piece:p board:board into:moves];
-                  break;
+               case Pion: [self GenPawnCapturFromX:x y:y piece:p board:board into:moves]; break;
                   
-               case Cava:
-                  [self GenKnightCapturFromX:x y:y piece:p board:board into:moves];
-                  break;
+               case Cava: [self GenKnightCapturFromX:x y:y piece:p board:board into:moves]; break;
                   
-               case Fou:
-                  [self GenSlideCapturFromX:x y:y piece:p board:board
-                                       dirs:bishopDirs dirCount:4 into:moves];
-                  break;
+               case Fou: [self GenSlideCapturFromX:x y:y piece:p board:board
+                                              dirs:bishopDirs dirCount:4 into:moves]; break;
                   
-               case Tour:
-                  [self GenSlideCapturFromX:x y:y piece:p board:board
-                                       dirs:rookDirs dirCount:4 into:moves];
-                  break;
+               case Tour: [self GenSlideCapturFromX:x y:y piece:p board:board
+                                               dirs:rookDirs dirCount:4 into:moves]; break;
                   
-               case Dame:
-                  [self GenSlideCapturFromX:x y:y piece:p board:board
-                                       dirs:queenDirs dirCount:8 into:moves];
-                  break;
+               case Dame: [self GenSlideCapturFromX:x y:y piece:p board:board
+                                               dirs:queenDirs dirCount:8 into:moves]; break;
                   
-               case Roi:
-                  [self GenKingCapturFromX:x y:y piece:p board:board into:moves];
-                  break;
+               case Roi: [self GenKingCapturFromX:x y:y piece:p board:board into:moves]; break;
                   
-               default:
-                  break;   // Pièce invalide ou futur type
+               default: break;   // Pièce invalide ou futur type
                   
             }
          }
@@ -2105,7 +2013,6 @@ static int nbCallsIsKingCheck = 0;
                [moves addObject:m];
                
             }
-            
          }
       }
    }
@@ -2127,7 +2034,7 @@ static int nbCallsIsKingCheck = 0;
 
 
    // ================================================================================================
-   // Méthode auxiliaire : Vérifie si une case est attaquée par un camp donné
+   // Méthode détectant si une case est attaquée
    // (utile pour vérifier les conditions du roque)
    -(BOOL)IsSquareAttackedAtX:(int)x
                             Y:(int)y
@@ -2233,37 +2140,36 @@ static int nbCallsIsKingCheck = 0;
 
 
 #ifdef DEBUG_ZOBRIST
+   // Fonction recalculant la clé Zobrist
+   uint64_t recomputeZobrist(ChessBoard *board)
+   {
+       uint64_t key = 0;
 
-uint64_t recomputeZobrist(ChessBoard *board)
-{
-    uint64_t key = 0;
+       // 🔹 Pièces sur l’échiquier
+       for (int x = 0; x < 8; x++) {
+           for (int y = 0; y < 8; y++) {
+               Piece *p = board->pieceCase[x][y];
+               if (!p) continue;
 
-    // 🔹 Pièces sur l’échiquier
-    for (int x = 0; x < 8; x++) {
-        for (int y = 0; y < 8; y++) {
-            Piece *p = board->pieceCase[x][y];
-            if (!p) continue;
+               int sq = y * 8 + x;
+               key ^= zobristPiece[p.side][p.type][sq];
+           }
+       }
 
-            int sq = y * 8 + x;
-            key ^= zobristPiece[p.side][p.type][sq];
-        }
-    }
+       // 🔹 Side to move
+       if (board->sideToMove == sideBlack) {
+           key ^= zobristSide;
+       }
 
-    // 🔹 Side to move
-    if (board->sideToMove == sideBlack) {
-        key ^= zobristSide;
-    }
+       // 🔹 Droits de roque
+       key ^= zobristCastle[board->castlingRights];
 
-    // 🔹 Droits de roque
-    key ^= zobristCastle[board->castlingRights];
+       // 🔹 En-passant
+       if (board->enPassantFile != -1) {
+           key ^= zobristEnPassant[board->enPassantFile];
+       }
 
-    // 🔹 En-passant
-    if (board->enPassantFile != -1) {
-        key ^= zobristEnPassant[board->enPassantFile];
-    }
-
-    return key;
-}
-
+       return key;
+   }
 #endif
 

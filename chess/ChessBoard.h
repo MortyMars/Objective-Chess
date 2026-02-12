@@ -14,16 +14,16 @@
 @class Piece, Move, Pos;
 
 typedef struct {
-    Piece *captured;    // pièce capturée (ou nil)
-    PieceType oldType;  // pour promotion
-    BOOL wasPromotion;
-    BOOL wasEnPassant;
-    int enPassantX;     // coordonnées du pion capturé
-    int enPassantY;     //
+    Piece      *captured;     // pièce capturée (ou nil)
+    PieceType  oldType;       // type avant promotion
+    BOOL       wasPromotion;
+    BOOL       wasEnPassant;
+    int        enPassantX;    // coordonnées du pion capturé
+    int        enPassantY;    //
    
     // ajouts TT - Zobrist
-    uint8_t oldCastleRights;
-    int8_t oldEnPassantFile;
+    uint8_t    oldCastleRights;
+    int8_t     oldEnPassantFile;
    
 } MoveState;
 
@@ -44,7 +44,8 @@ ce qui permettra notamment de faire des copies d'objets ChessBoard, ...ce dont n
    
       // Ajouts pour Table de Transposition (TT)
       @public uint64_t  zobristKey;       // clé Zobrist 64 bits
-      @public uint8_t   castlingRights;   // bits : 1=WK,2=WQ,4=BK,8=BQ
+      @public uint8_t   castlingRights;   // bits : 1=K,2=Q,4=k,8=q
+                                          // 15 -> KQkq
       @public int8_t    enPassantFile;    // -1 ou 0..7
       @public Side      sideToMove;
 

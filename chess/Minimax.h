@@ -13,9 +13,14 @@
 #define INF 1000000     // Définit le score infini pour limiter sans contraindre
 #define QS_MAX_DEPTH 4  // Profondeur choisie pour la Quiescence
 
-#define DEBUG_ZOBRIST   // Pour activer le debug Zobrist mis en place dans Negamax et Quiescence
 
-// extern const int pieceValue[];   // Valeur des pièces, définie dans Minimax.m
+
+/*========= LIGNE À COMMENTER /DÉCOMMENTER EN FONCTION DES BESOINS DE DEBUG ==========*/
+/*                                                                                    */
+#define DEBUG_ZOBRIST   // DEBUG_ZOBRIST mis en place dans Negamax et Quiescence       /
+/*                                                                                    */
+/*============== FIN D'ACTIVATION /DÉSACTIVATION DE DEBUG_ZOBRIST ====================*/
+
 
 
 @class Move, ChessBoard; // compte tenu de l'appel de ces 2 classes dans la classe Minimax
@@ -69,12 +74,13 @@
    -(BOOL)IsKingInCheck:(Side)side board:(ChessBoard *)board;
 
    
-// DÉCLARATION DES MÉTHODES D'INSTANCE
-   // Méthode de classe déterminant le meilleur coup pour 'side''
+   // DÉCLARATION DES MÉTHODES D'INSTANCE
+
+   // Méthode déterminant le meilleur coup pour 'side''
    -(Move *)   BestMoveForSide:(Side)side             // côté blanc ou côté noir
                          Board:(ChessBoard *)board;   // et selon la configuration de l'échiquier courant
 
-   // Méthode de classe évaluant l'échiquier à un moment donné de la partie
+   // Méthode évaluant l'échiquier à un moment donné de la partie
    -(int)      EvalBoardForSide:(Side)side
                           board:(ChessBoard *)board;
 
@@ -104,6 +110,8 @@
    
 @end
 
+
+// Déclaration fonction de recalcul Zobrist 
 #ifdef DEBUG_ZOBRIST
 uint64_t recomputeZobrist(ChessBoard *board);
 #endif
