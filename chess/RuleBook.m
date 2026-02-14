@@ -19,40 +19,95 @@
    // étapes, avec les déplacements autorisés pour la pièce concernée
    // Contrairement à son quasi clone 'PosLegalesForPieceSAR' cette méthode intègre la suppression des
    // positions générant la mise en échec de son Roi
-   +(NSSet<Pos *> *)PosLegalesForPiece:(Piece *)piece
++(NSSet<Pos *> *)PosLegalesForPiece:(Piece *)piece
                                  atPos:(Pos *)pos
                                inBoard:(ChessBoard *)board
-   {
-      NSMutableSet<Pos *> *result = [NSMutableSet set];
-      
-      NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:32];
-      
-      // Génération moderne
-      [maMinimax GenMovesForSide:piece.side board:board into:moves];
-      
-      for (Move *m in moves) {
-         
-         // Ce coup concerne-t-il la pièce demandée ?
-         if (m.start.x != pos.x || m.start.y != pos.y)
+{
+    NSMutableSet<Pos *> *result = [NSMutableSet set];
+    
+    #ifdef DEBUG_ZOBRIST
+    uint64_t hashEntree = board->zobristKey;
+    uint64_t recalcEntree = recomputeZobrist(board);
+    NSLog(@"🔵 PosLegales DÉBUT pour %@ en (%d,%d): hash=%llx (recalc=%llx)",
+          piece, pos.x, pos.y, hashEntree, recalcEntree);
+    if (hashEntree != recalcEntree) {
+        NSLog(@"⚠️ Hash DÉJÀ corrompu en entrée de PosLegales !");
+    }
+    #endif
+    
+    NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:32];
+    
+    // Génération moderne
+    [maMinimax GenMovesForSide:piece.side board:board into:moves];
+    
+    for (Move *m in moves) {
+        
+        // Ce coup concerne-t-il la pièce demandée ?
+        if (m.start.x != pos.x || m.start.y != pos.y)
             continue;
-         
-         // Vérification légale via make/unmake
-         MoveState st = [board makeMove:m];
-         
-         BOOL illegal = [maMinimax IsKingInCheck:piece.side board:board];
-         [board unmakeMove:m state:st];
-         
-         if (illegal)
+        
+        #ifdef DEBUG_ZOBRIST
+        uint64_t hashAvantMake = board->zobristKey;
+        #endif
+        
+        // Vérification légale via make/unmake
+        MoveState st = [board makeMove:m];
+        
+        #ifdef DEBUG_ZOBRIST
+        uint64_t hashApresMake = board->zobristKey;
+        uint64_t recalcApresMake = recomputeZobrist(board);
+        if (hashApresMake != recalcApresMake) {
+            NSLog(@"❌ PosLegales: makeMove %@ corrompt le hash", m);
+            NSLog(@"   Après make=%llx, recalc=%llx", hashApresMake, recalcApresMake);
+        }
+        #endif
+        
+        BOOL illegal = [maMinimax IsKingInCheck:piece.side board:board];
+        
+        [board unmakeMove:m state:st];
+        
+        #ifdef DEBUG_ZOBRIST
+        uint64_t hashApresUnmake = board->zobristKey;
+        uint64_t recalcApresUnmake = recomputeZobrist(board);
+        
+        if (hashApresUnmake != recalcApresUnmake) {
+            NSLog(@"❌ PosLegales: unmakeMove %@ corrompt le hash", m);
+            NSLog(@"   Avant make  : %llx", hashAvantMake);
+            NSLog(@"   Après unmake: %llx", hashApresUnmake);
+            NSLog(@"   Recalculé   : %llx", recalcApresUnmake);
+            NSLog(@"   Diff        : %llx", hashApresUnmake ^ recalcApresUnmake);
+        }
+        
+        if (hashApresUnmake != hashAvantMake) {
+            NSLog(@"💥 PosLegales: unmakeMove ne restaure pas le hash pour %@", m);
+            NSLog(@"   Avant make  : %llx", hashAvantMake);
+            NSLog(@"   Après unmake: %llx", hashApresUnmake);
+            NSLog(@"   Diff        : %llx", hashAvantMake ^ hashApresUnmake);
+        }
+        #endif
+        
+        if (illegal)
             continue;
-         
-         // Coup légal → on ajoute la destination
-         [result addObject:m.dest];
-      }
-      
-      return result;
-      
-   } // !PosLegalesForPiece
-
+        
+        // Coup légal → on ajoute la destination
+        [result addObject:m.dest];
+    }
+    
+    #ifdef DEBUG_ZOBRIST
+    uint64_t hashSortie = board->zobristKey;
+    uint64_t recalcSortie = recomputeZobrist(board);
+    NSLog(@"🔵 PosLegales FIN: hash=%llx (recalc=%llx)", hashSortie, recalcSortie);
+    if (hashSortie != hashEntree) {
+        NSLog(@"💥💥💥 PosLegales a changé le hash global !");
+        NSLog(@"   Entrée: %llx", hashEntree);
+        NSLog(@"   Sortie: %llx", hashSortie);
+        NSLog(@"   Diff  : %llx", hashEntree ^ hashSortie);
+    }
+    #endif
+    
+    return result;
+    
+} // !PosLegalesForPiece
 
    // ==================================================================================================
    // Méthode de Classe Quasi-Clone de 'PosLegalesForPiece' en version SAR, càd sans appel récursif

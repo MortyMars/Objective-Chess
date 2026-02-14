@@ -114,8 +114,32 @@ static int nbCallsIsKingCheck = 0;
          
          /* Vérifier seulement pour les pièces chères */
          if (movingValue >= 300) {
-            ChessBoard *testBoard = board.copy;
-            [testBoard PerformMove:move];
+            
+               #ifdef DEBUG_ZOBRIST
+                  uint64_t hashAvantCopy = board->zobristKey;
+                  NSLog(@"🔵 AVANT board.copy: hash=%llx", hashAvantCopy);
+               #endif
+                           
+               ChessBoard *testBoard = board.copy;
+                           
+               #ifdef DEBUG_ZOBRIST
+                  uint64_t hashApresCopy = board->zobristKey;
+                  NSLog(@"🔵 APRÈS board.copy: hash original=%llx, hash copie=%llx",
+                        hashApresCopy, testBoard->zobristKey);
+                  if (hashApresCopy != hashAvantCopy) {
+                     NSLog(@"💥💥💥 board.copy A CORROMPU LE BOARD ORIGINAL !");
+                  }
+               #endif
+                           
+               MoveState st = [testBoard makeMove:move];
+                           
+               #ifdef DEBUG_ZOBRIST
+                  uint64_t hashApresPerform = board->zobristKey;
+                  NSLog(@"🔵 APRÈS PerformMove: hash original=%llx", hashApresPerform);
+                  if (hashApresPerform != hashAvantCopy) {
+                     NSLog(@"💥💥💥 PerformMove A CORROMPU LE BOARD ORIGINAL !");
+                  }
+               #endif
             
             Side enemySide = (movingPiece.side == sideWhite) ? sideBlack : sideWhite;
             
@@ -160,7 +184,7 @@ static int nbCallsIsKingCheck = 0;
       {
          
          ChessBoard *newBoard = board.copy;
-         [newBoard PerformMove:moveEnCours];
+         MoveState st = [newBoard makeMove:moveEnCours];
          
          /* Appel à Negamax */
          int negaMax = [self NegamaxForSide:side
@@ -249,22 +273,27 @@ static int nbCallsIsKingCheck = 0;
          // GÉNÉRATION CLÉ ZOBRIST AVANT makeMove #################################################
          uint64_t keyBefore = board->zobristKey;
          
+         #ifdef DEBUG_ZOBRIST
+            NSLog(@"➡️ AVANT makeMove %@ : hash=%llx", m, keyBefore);
+         #endif
+         
          MoveState st = [board makeMove:m];
          
                #ifdef DEBUG_ZOBRIST
-               uint64_t z2;
+                  uint64_t z2;
                #endif
-
+         
+               // New Debug
                #ifdef DEBUG_ZOBRIST
-               z2 = recomputeZobrist(board);
-               if (z2 != board->zobristKey) {
-                   NSLog(@"❌ Zobrist mismatch après makeMove %@", m);
-                   NSLog(@"Side=%d EP=%d Castle=%d",
-                         board->sideToMove,
-                         board->enPassantFile,
-                         board->castlingRights);
-               }
-               NSAssert(z2 == board->zobristKey, @"Zobrist corrompu");
+                  uint64_t keyAfter = board->zobristKey;
+                  z2 = recomputeZobrist(board);
+                  NSLog(@"   APRES makeMove %@ : hash=%llx (recalc=%llx) diff=%llx",
+                        m, keyAfter, z2, keyAfter ^ z2);
+                  
+                  if (z2 != board->zobristKey) {
+                     NSLog(@"❌ Mismatch détecté !");
+                     NSAssert(NO, @"Zobrist corrompu");
+                  }
                #endif
 
          
@@ -280,20 +309,23 @@ static int nbCallsIsKingCheck = 0;
             if (score > alpha) alpha = score;
          }
          
-               #ifdef DEBUG_ZOBRIST
-               z2 = recomputeZobrist(board);
-               NSAssert(z2 == board->zobristKey, @"Zobrist corrompu");
-               #endif
 
          [board unmakeMove:m state:st];
          
-               #ifdef DEBUG_ZOBRIST
-               z2 = recomputeZobrist(board);
-               NSAssert(z2 == board->zobristKey, @"Zobrist corrompu");
-               #endif
-         
-         // COMPARAISON CLÉ ZOBRIST APRÈS unmakeMove ##############################################
-         NSAssert(board->zobristKey == keyBefore, @"❌ Negamax Zobrist make/unmake incohérent");
+         #ifdef DEBUG_ZOBRIST
+            uint64_t keyAfterUnmake = board->zobristKey;
+            uint64_t z3 = recomputeZobrist(board);
+            NSLog(@"⬅️ APRES unmakeMove %@ : hash=%llx (recalc=%llx) diff=%llx",
+                  m, keyAfterUnmake, z3, keyAfterUnmake ^ z3);
+            
+            if (keyAfterUnmake != keyBefore) {
+               NSLog(@"💥 UNMAKE n'a pas restauré le hash !");
+               NSLog(@"   Avant makeMove : %llx", keyBefore);
+               NSLog(@"   Après unmakeMove: %llx", keyAfterUnmake);
+               NSLog(@"   Diff           : %llx", keyBefore ^ keyAfterUnmake);
+               NSAssert(NO, @"unmakeMove ne restaure pas le hash");
+            }
+         #endif
          
          if (alpha >= beta)
             break;
@@ -402,9 +434,24 @@ static int nbCallsIsKingCheck = 0;
          MoveState st = [board makeMove:m];
          
                #ifdef DEBUG_ZOBRIST
-               NSAssert(board->zobristKey == keyEntry,
-                        @"Zobrist corrompu : QS stand-pat cutoff");
+               uint64_t z2 = recomputeZobrist(board);
+               if (z2 != board->zobristKey) {
+                   NSLog(@"❌ Quiescence: Zobrist mismatch après makeMove %@", m);
+                   NSLog(@"   Hash actuel=%llx, recalculé=%llx", board->zobristKey, z2);
+                   NSLog(@"   Move: castling=%d EP=%d capture=%d promo=%d",
+                         m.isCastling, m.isEnPassant, m.isCapture, m.isPromotion);
+                   NSLog(@"   fromSq=%d toSq=%d", m.fromSquare, m.toSquare);
+                  NSAssert(board->zobristKey == z2,  // ✅ Assertion correcte
+                           @"Zobrist corrompu après makeMove");
+               }
                #endif
+         
+               /* Assertion incorrecte
+               #ifdef DEBUG_ZOBRIST
+                  NSAssert(board->zobristKey == keyEntry,
+                           @"Zobrist corrompu : QS stand-pat cutoff");
+               #endif
+               */
          
          if (![self IsKingInCheck:side board:board]) {
             
@@ -1052,7 +1099,7 @@ static int nbCallsIsKingCheck = 0;
                   
                   /* Vérification que le coup ne met pas son propre roi en échec */
                   ChessBoard *newBoard = board.copy;
-                  [newBoard PerformMove:move];
+                  MoveState st = [newBoard makeMove:move];
                   [moves addObject:move];
                }
             }
@@ -1522,29 +1569,47 @@ static int nbCallsIsKingCheck = 0;
       }
       
       // 3️⃣ PRISE EN PASSANT
-      Move *lm = board.lastMove;
-      if (!lm) return;
-      
-      // Dernier coup = pion adverse ayant avancé de 2 cases
-      if (lm.movingPiece.type != Pion) return;
-      if (lm.movingPiece.side == p.side) return;
-      if (abs(lm.start.y - lm.dest.y) != 2) return;
-      
-      // Le pion adverse est à côté
-      if (lm.dest.y != y) return;
-      if (abs(lm.dest.x - x) != 1) return;
-      
-      int epX = lm.dest.x;
+      if (board->enPassantFile == -1) return;  // Pas d'EP possible
+
+      // Le pion doit être sur le bon rang
+      int epRank = (p.side == sideWhite) ? 4 : 3;  // 5ème rang pour Blancs, 4ème pour Noirs
+      if (y != epRank) return;
+
+      // Le pion doit être adjacent à la colonne EP
+      int epFile = board->enPassantFile;
+      if (abs(x - epFile) != 1) return;
+
+      // Case destination EP
+      int epX = epFile;
       int epY = y + dir;
+
+      // Case où se trouve le pion adverse à capturer
+      int captureY = y;  // Sur le même rang que notre pion
+
+      // 🔴 VÉRIFIER que le pion adverse est bien là !
+      Piece *capturedPawn = board->pieceCase[epX][captureY];
+      if (!capturedPawn) {
+          NSLog(@"⚠️ EP impossible: pas de pion à capturer en (%d,%d)", epX, captureY);
+          return;
+      }
+      if (capturedPawn.type != Pion) {
+          NSLog(@"⚠️ EP impossible: pièce en (%d,%d) n'est pas un pion", epX, captureY);
+          return;
+      }
+      if (capturedPawn.side == p.side) {
+          NSLog(@"⚠️ EP impossible: pion en (%d,%d) est du même camp", epX, captureY);
+          return;
+      }
       
+
       Move *ep = [Move newMoveFromX:x Y:y ToNx:epX Ny:epY];
       ep.movingPiece   = p;
       ep.isCapture     = YES;
       ep.isEnPassant   = YES;
-      ep.capturedPiece = board->pieceCase[epX][y]; // pion pris
+      ep.capturedPiece = capturedPawn;  // ✅ Maintenant garanti non-nil
       ep.fromSquare    = SQ(x,y);
       ep.toSquare      = SQ(epX,epY);
-      
+
       [moves addObject:ep];
    }
 

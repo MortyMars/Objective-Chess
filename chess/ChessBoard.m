@@ -10,6 +10,8 @@
 #import "ChessBoard.h"
 #import "Zobrist.h"
 
+// #define DEBUG_ZOBRIST
+
 // Pour mode verbeux du moteur -----------------------------------------------*
 #define LOG_EP(fmt, ...) \
     if (kVerboseMoveDebug) NSLog(@"🟡 EP  " fmt, ##__VA_ARGS__)
@@ -407,14 +409,34 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
    // ChessBoard
    -(id)copyWithZone:(NSZone *)zone
    {
-      ChessBoard *newBoard = [[ChessBoard allocWithZone:zone] init];
-      for (int x = 0; x < 8; x++) {
-         for (int y = 0; y < 8; y++) {
-            if (pieceCase[x][y]) newBoard->pieceCase[x][y] = pieceCase[x][y].copy;
-         }
-      }
-      newBoard.lastMove = self.lastMove.copy;
-      return newBoard;
+       ChessBoard *newBoard = [[ChessBoard alloc] init];
+       
+       // Copie des pièces
+       for (int x = 0; x < 8; x++) {
+           for (int y = 0; y < 8; y++) {
+               if (pieceCase[x][y]) {
+                   newBoard->pieceCase[x][y] = pieceCase[x][y].copy;
+               } else {
+                   newBoard->pieceCase[x][y] = nil;
+               }
+           }
+       }
+       
+       // 🔴 CRITIQUE : Copier TOUS les états !
+       newBoard->sideToMove = self->sideToMove;
+       newBoard->castlingRights = self->castlingRights;
+       newBoard->enPassantFile = self->enPassantFile;
+       newBoard->zobristKey = self->zobristKey;  // ← ESSENTIEL !
+       
+       // Copier aussi les autres variables d'instance
+       newBoard->strRoque = self->strRoque;
+       newBoard->strCibleEP = self->strCibleEP;
+       newBoard->nbDemis = self->nbDemis;
+       newBoard->nbEntiers = self->nbEntiers;
+       
+       newBoard.lastMove = self.lastMove ? self.lastMove.copy : nil;
+       
+       return newBoard;
    }
 
    // ==================================================================================================
@@ -493,7 +515,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       Move* firstAImove = [maMinimax BestMoveForSide:sideWhite Board:self];
       ChessBoard* boardAvantMove = self.copy;   // sauvegardé pour ConvertEnStringMove avant PerformMove
       
-      [self PerformMove:firstAImove];           // réalisation graphique du coup
+      MoveState st = [self makeMove:firstAImove];           // réalisation graphique du coup
       
       /* Init de la liste des coups joués et traitement chaine du 1er coup, sachant qu'il ne peut y avoir
        à ce stade de la partie, de promotion de pion ou de position d'échec, d'où les paramètres fixés à @""
@@ -742,6 +764,15 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       NSAssert(m.fromSquare == m.start.y * 8 + m.start.x, @"Move incohérent: fromSquare");
       NSAssert(m.toSquare   == m.dest.y  * 8 + m.dest.x, @"Move incohérent: toSquare");
       
+   #ifdef DEBUG_ZOBRIST
+      uint64_t hashAnteMove = zobristKey;
+      uint64_t hashRecalcAnteMove = recomputeZobrist(self);
+      if (hashAnteMove != hashRecalcAnteMove) {
+         NSLog(@"⚠️ ZOBRIST DÉJÀ CORROMPU AVANT makeMove %@", m);
+         NSLog(@"   Hash actuel: %llx, recalculé: %llx", hashAnteMove, hashRecalcAnteMove);
+      }
+   #endif
+      
       
       MoveState st = {0};
       st.oldCastleRights   = castlingRights;
@@ -759,9 +790,21 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       NSAssert(moving, @"makeMove: pas de pièce à déplacer");
       
       /*----------------------- ZOBRIST — EP ancien -------------------------------*/
-      if (enPassantFile != -1)
+   #ifdef DEBUG_ZOBRIST
+      NSLog(@"🔵 MAKE EP ancien:");
+      NSLog(@"   enPassantFile avant = %d", enPassantFile);
+   #endif
+      if (enPassantFile != -1) {
+   #ifdef DEBUG_ZOBRIST
+         NSLog(@"   → XOR retire ancien EP [%d]", enPassantFile);
+   #endif
          zobristKey ^= zobristEnPassant[enPassantFile];
+      }
       enPassantFile = -1;
+      
+   #ifdef DEBUG_ZOBRIST
+      NSLog(@"   → enPassantFile réinitialisé à -1");
+   #endif
       
       /*----------------------- ZOBRIST — retirer pièce source --------------------*/
       zobristKey ^= zobristPiece[moving.side][moving.type][fromSq];
@@ -773,14 +816,29 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
          int cx = tx;
          int cy = fy;
          
+         #ifdef DEBUG_ZOBRIST
+               NSLog(@"🟡 EP makeMove: start=(%d,%d) dest=(%d,%d) capture=(%d,%d)",
+                     fx, fy, tx, ty, cx, cy);
+               NSLog(@"   fromSq=%d toSq=%d capSq=%d", fromSq, toSq, cy*8+cx);
+               NSLog(@"   Pièce capturée: %@", pieceCase[cx][cy]);
+               NSLog(@"   m.capturedPiece: %@", m.capturedPiece);
+               if (pieceCase[cx][cy] != m.capturedPiece) {
+                  NSLog(@"❌ INCOHÉRENCE: pièce sur board != m.capturedPiece !");
+               }
+         #endif
+         
          st.enPassantX = cx;
          st.enPassantY = cy;
          
          st.captured = pieceCase[cx][cy];
-         pieceCase[cx][cy] = nil;
          
+         // 🔴 XOR AVANT de retirer physiquement
          int capSq = cy * 8 + cx;
          zobristKey ^= zobristPiece[st.captured.side][st.captured.type][capSq];
+         
+         // Retirer physiquement
+         pieceCase[cx][cy] = nil;
+         
          
          // Mode verbeux Prise EP ---------------------------------------*
          LOG_EP(@"%@ pawn from (%d,%d) captures pawn at (%d,%d)",
@@ -794,7 +852,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
             zobristKey ^= zobristPiece[st.captured.side][st.captured.type][toSq];
          }
       }
-
+      
       /*----------------------- DÉPLACEMENT PRINCIPAL -----------------------------*/
       pieceCase[tx][ty] = moving;
       pieceCase[fx][fy] = nil;
@@ -804,6 +862,9 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       /*----------------------- EN PASSANT (double pas) ---------------------------*/
       if (moving.type == Pion && abs(ty - fy) == 2) {
          enPassantFile = fx;
+         #ifdef DEBUG_ZOBRIST
+               NSLog(@"🔵 MAKE EP nouveau: double pas détecté, enPassantFile = %d", enPassantFile);
+         #endif
          zobristKey ^= zobristEnPassant[enPassantFile];
       }
       
@@ -818,20 +879,23 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
          Piece *rook = pieceCase[rookFromX][y];
          NSAssert(rook && rook.type == Tour, @"Roque: tour absente");
          
-         pieceCase[rookToX][y]   = rook;
-         pieceCase[rookFromX][y] = nil;
-         
          int rookFromSq = y * 8 + rookFromX;
          int rookToSq   = y * 8 + rookToX;
          
+         // 🔴 XOR AVANT le déplacement physique !
          zobristKey ^= zobristPiece[rook.side][Tour][rookFromSq];
+         
+         pieceCase[rookToX][y]   = rook;
+         pieceCase[rookFromX][y] = nil;
+         
+         // 🔴 XOR APRÈS le déplacement physique
          zobristKey ^= zobristPiece[rook.side][Tour][rookToSq];
          
          LOG_CASTLE(@"%@ castles %@ side (king %d,%d → %d,%d)",
-                        (moving.side == sideWhite ? @"White" : @"Black"),
-                        kingSide ? @"KING" : @"QUEEN",
-                        m.start.x, m.start.y,
-                        m.dest.x, m.dest.y);
+                    (moving.side == sideWhite ? @"White" : @"Black"),
+                    kingSide ? @"KING" : @"QUEEN",
+                    m.start.x, m.start.y,
+                    m.dest.x, m.dest.y);
       }
       
       /*----------------------- PROMOTION -----------------------------------------*/
@@ -847,13 +911,24 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
          zobristKey ^= zobristPiece[moving.side][Dame][toSq];
          
          LOG_PROMO(@"%@ pawn promotes at (%d,%d)",
-                       (moving.side == sideWhite ? @"White" : @"Black"),
-                       m.dest.x, m.dest.y);
+                   (moving.side == sideWhite ? @"White" : @"Black"),
+                   m.dest.x, m.dest.y);
       }
       
       /*----------------------- DROITS DE ROQUE -----------------------------------*/
+      #ifdef DEBUG_ZOBRIST
+            uint8_t oldRights = castlingRights;
+      #endif
+            
       zobristKey ^= zobristCastle[st.oldCastleRights];
-      // calcul de mise à jour de castlingRights à insérer ici (fonction à créer
+      // 🔴 Mise à jour de castlingRights à insérer ici (fonction à créer)
+      
+      #ifdef DEBUG_ZOBRIST
+            if (castlingRights != oldRights) {
+               NSLog(@"🔵 MAKE Castle rights changé: %d → %d", oldRights, castlingRights);
+            }
+      #endif
+      
       zobristKey ^= zobristCastle[castlingRights];
       
       /*----------------------- SIDE TO MOVE --------------------------------------*/
@@ -862,9 +937,9 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       
       
       if (moving.type == Roi && abs(m.dest.x - m.start.x) == 2) {
-          NSLog(@"👀 ROQUE détecté implicitement : %@", m);
+         NSLog(@"👀 ROQUE détecté implicitement : %@", m);
       }
-
+      
       moving.numMoves++;
       return st;
       
@@ -880,7 +955,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
                  m.dest.x, m.dest.y,
                  m.start.x, m.start.y,
                  m.dest.x, m.dest.y);
-
+      
       int fx = SQ_X(m.fromSquare);
       int fy = SQ_Y(m.fromSquare);
       int tx = SQ_X(m.toSquare);
@@ -902,6 +977,10 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       zobristKey ^= zobristSide;
       
       /*----------------------- DROITS DE ROQUE -----------------------------------*/
+      #ifdef DEBUG_ZOBRIST
+         NSLog(@"🔵 UNMAKE Castle: actuel=%d, old=%d", castlingRights, st.oldCastleRights);
+      #endif
+      
       zobristKey ^= zobristCastle[castlingRights];
       castlingRights = st.oldCastleRights;
       zobristKey ^= zobristCastle[castlingRights];
@@ -913,7 +992,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
          zobristKey ^= zobristPiece[moving.side][Pion][toSq];
          
          LOG_PROMO(@"UNMAKE promotion at (%d,%d) restoring pawn",
-                       m.dest.x, m.dest.y);
+                   m.dest.x, m.dest.y);
       }
       
       /*----------------------- ROQUE (tour) --------------------------------------*/
@@ -921,28 +1000,39 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
          int y = fy;
          BOOL kingSide = (tx == 6);
          
-         int rookFromX = kingSide ? 5 : 3;
-         int rookToX   = kingSide ? 7 : 0;
+         int rookFromX = kingSide ? 5 : 3;  // Position actuelle
+         int rookToX   = kingSide ? 7 : 0;  // Position d'origine
          
          Piece *rook = pieceCase[rookFromX][y];
          NSAssert(rook && rook.type == Tour, @"Unroque: tour absente");
          
-         pieceCase[rookToX][y]   = rook;
-         pieceCase[rookFromX][y] = nil;
-         
          int rookFromSq = y * 8 + rookFromX;
          int rookToSq   = y * 8 + rookToX;
          
+         // 🔴 XOR AVANT le déplacement physique !
          zobristKey ^= zobristPiece[rook.side][Tour][rookFromSq];
+         
+         pieceCase[rookToX][y]   = rook;
+         pieceCase[rookFromX][y] = nil;
+         
+         // 🔴 XOR APRÈS le déplacement physique
          zobristKey ^= zobristPiece[rook.side][Tour][rookToSq];
          
          LOG_CASTLE(@"UNMAKE roque %@ side for %@",
-                        kingSide ? @"KING" : @"QUEEN",
-                        (moving.side == sideWhite ? @"White" : @"Black"));
+                    kingSide ? @"KING" : @"QUEEN",
+                    (moving.side == sideWhite ? @"White" : @"Black"));
       }
+      
+      /*----------------------- ZOBRIST — retirer pièce de toSq -------------------*/
+      zobristKey ^= zobristPiece[moving.side][moving.type][toSq];
       
       /*----------------------- DÉPLACEMENT PRINCIPAL -----------------------------*/
       pieceCase[fx][fy] = moving;
+      
+      /*----------------------- ZOBRIST — ajouter pièce sur fromSq ----------------*/
+      zobristKey ^= zobristPiece[moving.side][moving.type][fromSq];
+      
+      
       
       /*----------------------- CAPTURE / EN PASSANT ------------------------------*/
       if (st.wasEnPassant) {
@@ -953,7 +1043,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
          zobristKey ^= zobristPiece[st.captured.side][st.captured.type][capSq];
          
          LOG_EP(@"UNMAKE EP: restoring pawn at (%d,%d)",
-                    st.enPassantX, st.enPassantY);
+                st.enPassantX, st.enPassantY);
       }
       else {
          pieceCase[tx][ty] = st.captured;
@@ -962,26 +1052,63 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
          }
       }
       
-      /*----------------------- ZOBRIST — pièce déplacée --------------------------*/
-      zobristKey ^= zobristPiece[moving.side][moving.type][toSq];
-      zobristKey ^= zobristPiece[moving.side][moving.type][fromSq];
-      
       /*----------------------- EN PASSANT FILE -----------------------------------*/
-      if (enPassantFile != -1)
-         zobristKey ^= zobristEnPassant[enPassantFile];
+      #ifdef DEBUG_ZOBRIST
+         NSLog(@"🔵 UNMAKE EP section:");
+         NSLog(@"   enPassantFile actuel = %d", enPassantFile);
+         NSLog(@"   st.oldEnPassantFile = %d", st.oldEnPassantFile);
+      #endif
       
+      // Retirer l'EP actuel s'il existe
+      if (enPassantFile != -1) {
+         #ifdef DEBUG_ZOBRIST
+               NSLog(@"   → XOR retire EP actuel [%d]", enPassantFile);
+         #endif
+         zobristKey ^= zobristEnPassant[enPassantFile];
+      }
+      
+      // Restaurer l'ancien EP
       enPassantFile = st.oldEnPassantFile;
       
-      if (enPassantFile != -1)
+      #ifdef DEBUG_ZOBRIST
+         NSLog(@"   → Restauré enPassantFile = %d", enPassantFile);
+      #endif
+      
+      // Ajouter l'ancien EP s'il existait
+      if (enPassantFile != -1) {  // ✅ Tester enPassantFile après restauration !
+         #ifdef DEBUG_ZOBRIST
+               NSLog(@"   → XOR ajoute ancien EP [%d]", enPassantFile);
+         #endif
          zobristKey ^= zobristEnPassant[enPassantFile];
+      }
+      
+      #ifdef DEBUG_ZOBRIST
+         NSLog(@"   → EP section terminée, enPassantFile final = %d", enPassantFile);
+      #endif
+      
+      /*-----------------------------------------------------------------------------*/
       
       moving.numMoves--;
       
       if (pieceCase[m.dest.x][m.dest.y] &&
           pieceCase[m.dest.x][m.dest.y] == moving) {
-          NSLog(@"❌ ERREUR: pièce encore présente sur dest après unmake %@", m);
+         NSLog(@"❌ ERREUR: pièce encore présente sur dest après unmake %@", m);
       }
-
+      
+      // New DEBUG_ZOBRIST
+      #ifdef DEBUG_ZOBRIST
+         uint64_t hashAfterUnmake = zobristKey;
+         uint64_t hashRecalc = recomputeZobrist(self);
+         if (hashAfterUnmake != hashRecalc) {
+            NSLog(@"💥 UNMAKE a corrompu le hash pour %@", m);
+            NSLog(@"   Hash après unmake=%llx, recalculé=%llx, diff=%llx",
+                  hashAfterUnmake, hashRecalc, hashAfterUnmake ^ hashRecalc);
+            NSLog(@"   Était promo=%d capture=%d EP=%d roque=%d",
+                  m.wasPromotion, m.isCapture, m.isEnPassant, m.isCastling);
+         }
+         else NSLog(@"👉 DEBUG_ZOBRIST DE FIN d'unmakeMove ATTEINT SANS SIGNALEMENT");
+      #endif
+      
       
    } // !unmakeMove
 
@@ -990,32 +1117,91 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
    // Nouvelle Méthode de construction d'un move complet (avec ses attributs)
    - (Move *)buildMoveFrom:(Pos *)start to:(Pos *)dest board:(ChessBoard *)board
    {
-      Move *m = [[Move alloc] initWithStart:start Dest:dest];
-      
-      Piece *p = [board pieceAtPos:start];
-      m.movingPiece = p;
-      
-      m.fromSquare = start.y * 8 + start.x;
-      m.toSquare   = dest.y  * 8 + dest.x;
-      
-      // Roque
-      if (p.type == Roi && abs(dest.x - start.x) == 2)
-         m.isCastling = YES;
-      
-      // Promotion
-      if (p.type == Pion && (dest.y == 0 || dest.y == 7))
-         m.isPromotion = YES;
-      
-      // Capture
-      if ([board pieceAtPos:dest])
-         m.isCapture = YES;
-      
-      // En passant (si applicable)
-      // m.isEnPassant = ...
-      
-      return m;
+       Move *m = [[Move alloc] initWithStart:start Dest:dest];
+       
+       Piece *p = [board pieceAtPos:start];
+       m.movingPiece = p;
+       
+       m.fromSquare = start.y * 8 + start.x;
+       m.toSquare   = dest.y  * 8 + dest.x;
+       
+       // Roque
+       if (p.type == Roi && abs(dest.x - start.x) == 2) {
+           m.isCastling = YES;
+       }
+       
+       // Promotion
+       if (p.type == Pion && (dest.y == 0 || dest.y == 7)) {
+           m.isPromotion = YES;
+       }
+       
+       // Capture
+       Piece *target = [board pieceAtPos:dest];
+       if (target) {
+           m.isCapture = YES;
+           m.capturedPiece = target;
+       }
+       
+       // 🔴 EN PASSANT - CORRECTION CRITIQUE !
+      // C'est EP si :
+      // 1. Le pion se déplace en diagonale (changement de colonne)
+      // 2. La case destination est vide
+      // 3. Il y a un enPassantFile défini
+      if (p.type == Pion && !target) {  // Pion qui bouge sur case vide
+          if (dest.x != start.x && board->enPassantFile == dest.x) {
+              int expectedRank = (p.side == sideWhite) ? 5 : 2;
+              if (dest.y == expectedRank) {
+                  m.isEnPassant = YES;
+                  // 🔴 IMPORTANT : définir aussi capturedPiece !
+                  int captureY = (p.side == sideWhite) ? 4 : 3;
+                  m.capturedPiece = [board pieceAtPos:[Pos posWithX:dest.x y:captureY]];
+              }
+          }
+      }
+       
+       return m;
    }
 
+
+// ==================================================================================================
+// Méthode de recalcul des droits de Roque
+-(int) ComputeCastlingRights:(ChessBoard *) board {
+   
+   int NewCastlingRights = 15;
+   Piece *rk, *rq, *k, *RK, *RQ, *K;
+   
+   /* Aux emplacements c-dessous ne se trouvent pas forcément les pièces attendues.
+   Si c'est le cas pas de problème ; mais si ça n'est pas le cas, les pièces s'y trouvant
+   auront forcément pris la place des pièces attendues et accuseront donc un nombre de moves
+   différent de 0, ce que l'on regarde finalement dans les tests -------------------------*/
+   rk = pieceCase[7][7];
+   rq = pieceCase[0][7];
+   k  = pieceCase[4][7];
+   RK = pieceCase[7][0];
+   RQ = pieceCase[0][0];
+   K  = pieceCase[4][0];
+   
+   // Aucune pièce n'a bougé parmi les emplacements ciblés -> CastlingRights = "KQkq"
+   if (rk.numMoves == 0 && rq.numMoves == 0 &&
+       RK.numMoves == 0 && RQ.numMoves == 0 &&
+       k.numMoves  == 0 && K.numMoves  == 0) {
+      NewCastlingRights = 15;
+      return NewCastlingRights;
+   }
+   
+   // Bloc Roque Roi Noir
+   if (rk.numMoves == 1 && k.numMoves == 0) NewCastlingRights -= 4;  // on retire 'k'
+   if (rq.numMoves == 1 && k.numMoves == 0) NewCastlingRights -= 8;  // on retire 'q'
+   if (k.numMoves == 1) NewCastlingRights -= 12;                     // on retire 'kq'
+   
+   // Bloc Roque Roi Blanc
+   if (RK.numMoves == 1 && K.numMoves == 0) NewCastlingRights -= 1;  // on retire 'K'
+   if (RQ.numMoves == 1 && K.numMoves == 0) NewCastlingRights -= 2;  // on retire 'Q'
+   if (K.numMoves == 1) NewCastlingRights -= 3;                      // on retire 'KQ'
+   
+   return NewCastlingRights;
+   
+}
 
 
 @end

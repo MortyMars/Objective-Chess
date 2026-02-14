@@ -8,7 +8,7 @@
 
 // =====================================================================================================
 // Initialisation des tables glogales
-uint64_t zobristPiece[2][6][64];
+uint64_t zobristPiece[2][7][64];
 uint64_t zobristSide;
 uint64_t zobristCastle[16];
 uint64_t zobristEnPassant[8];
@@ -29,7 +29,7 @@ static uint64_t rand64(void)
 void InitZobrist(void)
 {
     for (int s = 0; s < 2; s++)
-        for (int p = 0; p < 6; p++)
+        for (int p = 0; p < 7; p++) // 7 types de Pièces (cis 'Invalide')
             for (int sq = 0; sq < 64; sq++)
                 zobristPiece[s][p][sq] = rand64();
 

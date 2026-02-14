@@ -570,7 +570,7 @@ NSString *strPieces;
       ChessBoard* savedBoard = board.copy; // Sauvegardé pour usage dans 'ConvertEnStringMove' avt 'PerformMove'
       
       // Réalisation du move - NOTER : c'est 'PerformMove' qui positionne les indicateurs de roque
-      [board PerformMove:aiMove];
+      MoveState st = [board makeMove:aiMove];
       
       /* Sauvegarde des indic de roque  et de prise e.p. car RAZ plus loin par 'TestEchecFavSide' (???)
       avant de pouvoir les exploiter dans 'ConvertEnStringMove' */

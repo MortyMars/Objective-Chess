@@ -89,4 +89,6 @@ ce qui permettra notamment de faire des copies d'objets ChessBoard, ...ce dont n
    -(void)unmakeMove:(Move *)m state:(MoveState)state;
    -(Move *)buildMoveFrom:(Pos *)start to:(Pos *)dest board:(ChessBoard *)board;
 
+   -(int) ComputeCastlingRights:(ChessBoard *) board;
+
 @end

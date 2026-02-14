@@ -252,7 +252,7 @@ BOOL engineIsBusy = NO;
       ChessBoard* savedBoard = liveBoard.copy; // Sauvegardé pour ConvertEnStringMove avant PerformMove
       
       // Réalisation du move - NOTER : c'est PerformMove qui positionne les indicateurs de roque
-      [liveBoard PerformMove:aiMove];
+      MoveState st = [liveBoard makeMove:aiMove];
       
       /* Sauvegarde des indicateurs de roque car RAZ plus loin par 'TestEchecFavSide' (???)
        avant de pouvoir les exploiter dans 'ConvertEnStringMove' */
@@ -324,16 +324,37 @@ BOOL engineIsBusy = NO;
       Elle a été controlée comme appartenant ou non aux déplacements autorisés
       Si OK on peut alors préparer et réaliser le 'Move' Joueur */
       //Move *moveJoueur = [[Move alloc] initWithStart:selTile Dest:dest];
-      Move *moveJoueur =
-      [liveBoard buildMoveFrom:selTile to:dest board:liveBoard];
+      Move *moveJoueur = [liveBoard buildMoveFrom:selTile to:dest board:liveBoard];
       
-      /* Sauvegarde du board avant PerformMove, pour que ConvertEnStringMove (Modif00EnA1 en fait) puisse
-       déterminer la pièce jouée et la pièce éventuellement prise */
+      #ifdef DEBUG_ZOBRIST
+      NSLog(@"🎮 Coup joueur construit: %@ (castling=%d, EP=%d, capture=%d, promo=%d)",
+            moveJoueur,
+            moveJoueur.isCastling,
+            moveJoueur.isEnPassant,
+            moveJoueur.isCapture,
+            moveJoueur.isPromotion);
+
+      uint64_t hashAvant = liveBoard->zobristKey;
+      uint64_t recalcAvant = recomputeZobrist(liveBoard);
+      NSLog(@"🎮 AVANT makeMove: hash=%llx, recalc=%llx", hashAvant, recalcAvant);
+      #endif
+
       ChessBoard* savedBoard = liveBoard.copy;
-      
-      /* Réalisation du move - NOTER que PerformMove positionne les indicateurs petitRoque, grandRoque,
-       et prise e.p. */
-      [liveBoard PerformMove:moveJoueur];
+
+      /* Réalisation du move - AVEC mise à jour Zobrist */
+      MoveState st = [liveBoard makeMove:moveJoueur];
+
+      #ifdef DEBUG_ZOBRIST
+      uint64_t hashApres = liveBoard->zobristKey;
+      uint64_t recalcApres = recomputeZobrist(liveBoard);
+      NSLog(@"🎮 APRÈS makeMove: hash=%llx, recalc=%llx", hashApres, recalcApres);
+      if (hashApres != recalcApres) {
+          NSLog(@"❌ Le coup joueur a corrompu le Zobrist !");
+      }
+      #endif
+
+
+      // Note : on ne fait PAS unmakeMove car c'est un vrai coup, pas une exploration
       
       /* Sauvegarde des indicateurs de Roque et de Prise e.p., car -bizarement- [Minimax TestEchecFavSide]
        les RAZ avant d'avoir pu les exploiter dans ConvertEnStringMove */
@@ -405,7 +426,7 @@ BOOL engineIsBusy = NO;
       ChessBoard* savedBoard = board.copy; // Sauvegardé pour usage dans 'ConvertEnStringMove' avt le move
       
       // Réalisation du move - NOTER : c'est 'PerformMove' qui positionne les indicateurs de roque
-      [board PerformMove:aiMove];
+      MoveState st = [board makeMove:aiMove];
       
       /* Sauvegarde des indicateurs de roque  et de prise e.p. car RAZ plus loin par 'TestEchecFavSide' (???)
       avant de pouvoir les exploiter dans 'ConvertEnStringMove' */
