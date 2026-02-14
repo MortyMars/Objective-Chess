@@ -222,9 +222,9 @@ static int nbCallsIsKingCheck = 0;
    {
       nodes++;
       
-               #ifdef DEBUG_ZOBRIST
-               uint64_t keyEntry = board->zobristKey;
-               #endif
+      #ifdef DEBUG_ZOBRIST
+      uint64_t keyEntry = board->zobristKey;
+      #endif
 
       if (depth <= 0) {
          return [self QuiescenceForSide:side
@@ -250,10 +250,10 @@ static int nbCallsIsKingCheck = 0;
       // Traiter le cas où 'moves' est vide, càd si Mat ou Pat
       if (moves.count == 0) {
          
-               #ifdef DEBUG_ZOBRIST
-               NSAssert(board->zobristKey == keyEntry,
-                        @"Zobrist corrompu : sortie Negamax sans coups");
-               #endif
+         #ifdef DEBUG_ZOBRIST
+         NSAssert(board->zobristKey == keyEntry,
+                  @"Zobrist corrompu : sortie Negamax sans coups");
+         #endif
          
          if ([self IsKingInCheck:side board:board]) {
             // Mat : très mauvais pour le camp qui joue
@@ -279,24 +279,23 @@ static int nbCallsIsKingCheck = 0;
          
          MoveState st = [board makeMove:m];
          
-               #ifdef DEBUG_ZOBRIST
-                  uint64_t z2;
-               #endif
-         
-               // New Debug
-               #ifdef DEBUG_ZOBRIST
-                  uint64_t keyAfter = board->zobristKey;
-                  z2 = recomputeZobrist(board);
-                  NSLog(@"   APRES makeMove %@ : hash=%llx (recalc=%llx) diff=%llx",
-                        m, keyAfter, z2, keyAfter ^ z2);
-                  
-                  if (z2 != board->zobristKey) {
-                     NSLog(@"❌ Mismatch détecté !");
-                     NSAssert(NO, @"Zobrist corrompu");
-                  }
-               #endif
+         #ifdef DEBUG_ZOBRIST
+            uint64_t z2;
+         #endif
+   
+         // New Debug
+         #ifdef DEBUG_ZOBRIST
+            uint64_t keyAfter = board->zobristKey;
+            z2 = recomputeZobrist(board);
+            NSLog(@"   APRES makeMove %@ : hash=%llx (recalc=%llx) diff=%llx",
+                  m, keyAfter, z2, keyAfter ^ z2);
+            
+            if (z2 != board->zobristKey) {
+               NSLog(@"❌ Mismatch détecté !");
+               NSAssert(NO, @"Zobrist corrompu");
+            }
+         #endif
 
-         
          // 🔴 FILTRE LÉGALITÉ — MANQUANT JUSQU’ICI
          if (![self IsKingInCheck:side board:board]) {
             
@@ -309,7 +308,6 @@ static int nbCallsIsKingCheck = 0;
             if (score > alpha) alpha = score;
          }
          
-
          [board unmakeMove:m state:st];
          
          #ifdef DEBUG_ZOBRIST
@@ -329,12 +327,12 @@ static int nbCallsIsKingCheck = 0;
          
          if (alpha >= beta)
             break;
-      }
+      } // !for
       
-               #ifdef DEBUG_ZOBRIST
-               NSAssert(board->zobristKey == keyEntry,
-                        @"Zobrist corrompu : sortie Negamax normale");
-               #endif
+      #ifdef DEBUG_ZOBRIST
+      NSAssert(board->zobristKey == keyEntry,
+               @"Zobrist corrompu : sortie Negamax normale");
+      #endif
       
       return alpha;
       

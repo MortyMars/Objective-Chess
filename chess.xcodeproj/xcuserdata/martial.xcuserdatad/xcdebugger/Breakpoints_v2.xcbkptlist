@@ -43,8 +43,8 @@
             filePath = "Chess/ChessBoard.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "764"
-            endingLineNumber = "764"
+            startingLineNumber = "788"
+            endingLineNumber = "788"
             landmarkName = "-makeMove:"
             landmarkType = "7">
          </BreakpointContent>

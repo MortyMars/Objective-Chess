@@ -47,10 +47,11 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
          //nbDemis     = 49; // pour tester NSAlert50coups
          nbEntiers   = 1;
          
-         // Init pour TT
-         sideToMove = sideWhite;
-         castlingRights = 0b1111;   // KQkq
-         enPassantFile = -1;
+         // 🔴 Init pour Zobrist et état du jeu
+         sideToMove = sideWhite;      // Les Blancs commencent toujours
+         castlingRights = 0b1111;     // KQkq
+         enPassantFile = -1;          // Pas d'EP en début de partie
+         zobristKey = 0;              // Sera recalculé après SetupPieces
          
       }
       return self;
@@ -179,6 +180,16 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       NSLog(@"a1 = %@", pieceCase[0][0]);
       NSLog(@"h8 = %@", pieceCase[7][7]);
       
+      // 🔴 DEBUG : vérifier l'état AVANT initialisation Zobrist
+      #ifdef DEBUG_ZOBRIST
+      NSLog(@"🔵 AVANT init Zobrist:");
+      NSLog(@"   self = %p", self);
+      NSLog(@"   sideToMove = %d", self->sideToMove);
+      NSLog(@"   castlingRights = %d", self->castlingRights);
+      NSLog(@"   enPassantFile = %d", self->enPassantFile);
+      NSLog(@"   zobristKey = %llx", self->zobristKey);
+      #endif
+      
       /* Initialisation de la clé Zobrist -----------------------------------*/
       self->zobristKey = 0;
       
@@ -199,12 +210,24 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       
       if (self->sideToMove == sideBlack)
          self->zobristKey ^= zobristSide;
-      /* Fin d'initialisation de la clé Zobrist -----------------------------*/
       
+      #ifdef DEBUG_ZOBRIST
+         NSLog(@"🔵 APRÈS init Zobrist:");
+         NSLog(@"   zobristKey = %llx", self->zobristKey);
+         uint64_t recalc = recomputeZobrist(self);
+         NSLog(@"   recalculé  = %llx", recalc);
+         if (self->zobristKey != recalc) {
+             NSLog(@"❌ INIT ZOBRIST A ÉCHOUÉ !");
+         }
+      #endif
+      /* Fin d'initialisation de la clé Zobrist -----------------------------*/
       
       // Chargement du board dans la vue active et rafraichissement
       monConnecteur.maChessView->liveBoard = self;
       monConnecteur.maChessView.needsDisplay = YES;
+      
+      // 🔴 APRÈS INIT ZOBRIST, FORCER L'IA À JOUER LE PREMIER COUP !
+      [self PremCoupAIBlancs];
       
       // Affichage du 1er coup de l'IA qui joue les BLANCS
       [monConnecteur InitialiseTxtCoups:stringCoupsPartie];
@@ -297,16 +320,17 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       }
       
       
-      
-      /* FORCER L'IA À JOUER EN PREMIER QUAND ELLE A LES BLANCS
+      /* Appel reporté dans 'NewPartieJoueurNoirs
+      FORCER L'IA À JOUER EN PREMIER QUAND ELLE A LES BLANCS
        L'appel à la méthode idoine placé ici, un peu anachroniquement, mais juste
        après initialisation de l'échiquier, garantit qu'il ne sera fait qu'une seule
        fois dans la partie, et au tout début.
        Le test introduisant 'sideJoueur' n'est a priori pas 'new engine compatible.
-       Il sera peut-être nécessaire d'y revenir plus tard ...                     */
+       Il sera peut-être nécessaire d'y revenir plus tard ...
       if (sideJoueur == sideBlack) {
          [self PremCoupAIBlancs];
       } // Fin de Forcer l'IA à jouer
+      */
       
    }
 
