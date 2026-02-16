@@ -8,8 +8,10 @@
 //  par opposition à la classe ChessBoard qui traite les données d'un 'board'
 
 #import "ChessView.h"
+#import "ChessConfig.h"
 #import "AppDelegate.h"
 #import "Util.h"
+#import "ChessBoard+MakeMoves.h"
 
 
 BOOL engineIsBusy = NO;
@@ -251,8 +253,33 @@ BOOL engineIsBusy = NO;
       Move *aiMove = [maMinimax BestMoveForSide:sideIA Board:liveBoard];   // Version MCN
       ChessBoard* savedBoard = liveBoard.copy; // Sauvegardé pour ConvertEnStringMove avant PerformMove
       
-      // Réalisation du move - NOTER : c'est PerformMove qui positionne les indicateurs de roque
+      // Réalisation du move 
       MoveState st = [liveBoard makeMove:aiMove];
+      
+      // Gestion des indicateurs d'affichage du Roque dans la liste des coups joués
+      petitRoque = NO;
+      grandRoque = NO;
+      if (sideJoueur == sideWhite) {
+         if (aiMove.isCastling && aiMove.fromSquare == 4 && aiMove.toSquare == 6) {
+            petitRoque = YES;
+            grandRoque = NO;
+         }
+         else if (aiMove.isCastling && aiMove.fromSquare == 4 && aiMove.toSquare == 2) {
+            petitRoque = NO;
+            grandRoque = YES;
+         }
+      }
+      else if (sideJoueur == sideBlack) {
+         if (aiMove.isCastling && aiMove.fromSquare == 60 && aiMove.toSquare == 62) {
+            petitRoque = YES;
+            grandRoque = NO;
+         }
+         else if (aiMove.isCastling && aiMove.fromSquare == 60 && aiMove.toSquare == 58) {
+            petitRoque = NO;
+            grandRoque = YES;
+         }
+      }
+      // Fin de gestion des indicateurs
       
       /* Sauvegarde des indicateurs de roque car RAZ plus loin par 'TestEchecFavSide' (???)
        avant de pouvoir les exploiter dans 'ConvertEnStringMove' */
@@ -327,37 +354,62 @@ BOOL engineIsBusy = NO;
       Move *moveJoueur = [liveBoard buildMoveFrom:selTile to:dest board:liveBoard];
       
       #ifdef DEBUG_ZOBRIST
-      NSLog(@"🎮 Coup joueur construit: %@ (castling=%d, EP=%d, capture=%d, promo=%d)",
-            moveJoueur,
-            moveJoueur.isCastling,
-            moveJoueur.isEnPassant,
-            moveJoueur.isCapture,
-            moveJoueur.isPromotion);
-
-      uint64_t hashAvant = liveBoard->zobristKey;
-      uint64_t recalcAvant = recomputeZobrist(liveBoard);
-      NSLog(@"🎮 AVANT makeMove: hash=%llx, recalc=%llx", hashAvant, recalcAvant);
+         NSLog(@"🎮 Coup joueur construit: %@ (castling=%d, EP=%d, capture=%d, promo=%d)",
+               moveJoueur,
+               moveJoueur.isCastling,
+               moveJoueur.isEnPassant,
+               moveJoueur.isCapture,
+               moveJoueur.isPromotion);
+         
+         uint64_t hashAvant = liveBoard->zobristKey;
+         uint64_t recalcAvant = recomputeZobrist(liveBoard);
+         NSLog(@"🎮 AVANT makeMove: hash=%llx, recalc=%llx", hashAvant, recalcAvant);
       #endif
-
+      
       ChessBoard* savedBoard = liveBoard.copy;
-
+      
       /* Réalisation du move - AVEC mise à jour Zobrist */
       MoveState st = [liveBoard makeMove:moveJoueur];
-
+      
       #ifdef DEBUG_ZOBRIST
-      uint64_t hashApres = liveBoard->zobristKey;
-      uint64_t recalcApres = recomputeZobrist(liveBoard);
-      NSLog(@"🎮 APRÈS makeMove: hash=%llx, recalc=%llx", hashApres, recalcApres);
-      if (hashApres != recalcApres) {
-          NSLog(@"❌ Le coup joueur a corrompu le Zobrist !");
-      }
+         uint64_t hashApres = liveBoard->zobristKey;
+         uint64_t recalcApres = recomputeZobrist(liveBoard);
+         NSLog(@"🎮 APRÈS makeMove: hash=%llx, recalc=%llx", hashApres, recalcApres);
+         if (hashApres != recalcApres) {
+            NSLog(@"❌ Le coup joueur a corrompu le Zobrist !");
+         }
       #endif
+      
+      // Gestion des indicateurs d'affichage du Roque dans la liste des coups joués
+      petitRoque = NO;
+      grandRoque = NO;
+      if (sideJoueur == sideWhite) {
+         if (moveJoueur.isCastling && moveJoueur.fromSquare == 4 && moveJoueur.toSquare == 6) {
+            petitRoque = YES;
+            grandRoque = NO;
+         }
+         else if (moveJoueur.isCastling && moveJoueur.fromSquare == 4 && moveJoueur.toSquare == 2) {
+            petitRoque = NO;
+            grandRoque = YES;
+         }
+      }
+      else if (sideJoueur == sideBlack) {
+         if (moveJoueur.isCastling && moveJoueur.fromSquare == 60 && moveJoueur.toSquare == 62) {
+            petitRoque = YES;
+            grandRoque = NO;
+         }
+         else if (moveJoueur.isCastling && moveJoueur.fromSquare == 60 && moveJoueur.toSquare == 58) {
+            petitRoque = NO;
+            grandRoque = YES;
+         }
+      }
+      // Fin de gestion des indicateurs 
 
 
       // Note : on ne fait PAS unmakeMove car c'est un vrai coup, pas une exploration
       
       /* Sauvegarde des indicateurs de Roque et de Prise e.p., car -bizarement- [Minimax TestEchecFavSide]
-       les RAZ avant d'avoir pu les exploiter dans ConvertEnStringMove */
+      les RAZ avant d'avoir pu les exploiter dans ConvertEnStringMove */
       BOOL roque = petitRoque;          BOOL ROQUE = grandRoque;          BOOL ENPASS = enPassant;
       
       /* AJOUT DU COUP JOUEUR À LA LISTE DE CEUX DÉJÀ JOUÉS

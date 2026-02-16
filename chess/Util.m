@@ -6,6 +6,9 @@
 
 #import "Util.h"
 #import "Minimax.h"
+#import "ChessBoard+MakeMoves.h"
+#import "ChessConfig.h"
+
 #import <assert.h>
 
 
@@ -51,6 +54,11 @@ int Absc2[8] = {'h','g','f','e','d','c','b','a'};  /* et là qd les NOIRS sont e
 
 int depthCounter = 0;
 
+
+const int bishopDirs[4][2]    = {{-1,-1},{-1,1},{1,-1},{1,1}};
+const int rookDirs[4][2]      = {{-1,0},{1,0},{0,-1},{0,1}};
+const int queenDirs[8][2]     = {{-1,-1},{-1,1},{1,-1},{1,1},{-1,0},{1,0},{0,-1},{0,1}};
+const int knightOffsets[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,2},{2,-1},{2,1}};
 
 
 

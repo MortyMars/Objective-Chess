@@ -5,6 +5,7 @@
 //  Updated by MCN in 2020
 
 #import "AppDelegate.h"
+#import "ChessConfig.h"
 #import "Zobrist.h"
 
 @implementation AppDelegate

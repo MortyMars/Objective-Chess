@@ -25,6 +25,10 @@
 		833949A228120B1B0043F12F /* BoardsForTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 833949A128120B1B0043F12F /* BoardsForTests.m */; };
 		8342C20C2F38CAC40063DF68 /* Zobrist.m in Sources */ = {isa = PBXBuildFile; fileRef = 8342C20B2F38CAC40063DF68 /* Zobrist.m */; };
 		8342C20D2F38CAC40063DF68 /* Zobrist.m in Sources */ = {isa = PBXBuildFile; fileRef = 8342C20B2F38CAC40063DF68 /* Zobrist.m */; };
+		835926F82F438AB1003B50CB /* Minimax+GenMoves.m in Sources */ = {isa = PBXBuildFile; fileRef = 835926F72F438AB1003B50CB /* Minimax+GenMoves.m */; };
+		835926F92F438AB1003B50CB /* ChessBoard+MakeMoves.m in Sources */ = {isa = PBXBuildFile; fileRef = 835926F52F438AB1003B50CB /* ChessBoard+MakeMoves.m */; };
+		835926FA2F438AB1003B50CB /* Minimax+GenMoves.m in Sources */ = {isa = PBXBuildFile; fileRef = 835926F72F438AB1003B50CB /* Minimax+GenMoves.m */; };
+		835926FB2F438AB1003B50CB /* ChessBoard+MakeMoves.m in Sources */ = {isa = PBXBuildFile; fileRef = 835926F52F438AB1003B50CB /* ChessBoard+MakeMoves.m */; };
 		8359FCE82561F309000CCF2A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8359FCE72561F309000CCF2A /* AppDelegate.m */; };
 		839B0EA62393F4E300254843 /* Util.m in Sources */ = {isa = PBXBuildFile; fileRef = 839B0EA52393F4E300254843 /* Util.m */; };
 		83A693AE28273A430098C629 /* Codes FEN.txt in Resources */ = {isa = PBXBuildFile; fileRef = 83A693AC28273A430098C629 /* Codes FEN.txt */; };
@@ -83,6 +87,11 @@
 		833949A428120D890043F12F /* ChessTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ChessTests.h; sourceTree = "<group>"; };
 		8342C20A2F38CAC40063DF68 /* Zobrist.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Zobrist.h; sourceTree = "<group>"; };
 		8342C20B2F38CAC40063DF68 /* Zobrist.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Zobrist.m; sourceTree = "<group>"; };
+		835926F42F438AB1003B50CB /* ChessBoard+MakeMoves.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ChessBoard+MakeMoves.h"; sourceTree = "<group>"; };
+		835926F52F438AB1003B50CB /* ChessBoard+MakeMoves.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "ChessBoard+MakeMoves.m"; sourceTree = "<group>"; };
+		835926F62F438AB1003B50CB /* Minimax+GenMoves.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Minimax+GenMoves.h"; sourceTree = "<group>"; };
+		835926F72F438AB1003B50CB /* Minimax+GenMoves.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "Minimax+GenMoves.m"; sourceTree = "<group>"; };
+		835926FC2F43B44E003B50CB /* ChessConfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ChessConfig.h; sourceTree = "<group>"; };
 		8359FCE62561F309000CCF2A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		8359FCE72561F309000CCF2A /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		839B0EA52393F4E300254843 /* Util.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Util.m; sourceTree = "<group>"; };
@@ -153,22 +162,27 @@
 			isa = PBXGroup;
 			children = (
 				49AE4AB817948BAD009D59BE /* MainMenu.xib */,
+				835926FC2F43B44E003B50CB /* ChessConfig.h */,
 				8359FCE62561F309000CCF2A /* AppDelegate.h */,
 				8359FCE72561F309000CCF2A /* AppDelegate.m */,
 				49AE4ADA17948D73009D59BE /* ChessBoard.h */,
 				49AE4ADB17948D73009D59BE /* ChessBoard.m */,
+				835926F42F438AB1003B50CB /* ChessBoard+MakeMoves.h */,
+				835926F52F438AB1003B50CB /* ChessBoard+MakeMoves.m */,
 				49AE4AD717948BB8009D59BE /* ChessView.h */,
 				49AE4AD817948BB8009D59BE /* ChessView.m */,
 				83B442B0254F17A00008D95C /* Connecteur.h */,
 				83B442B1254F17A00008D95C /* Connecteur.m */,
-				83FFBCC527C5658C008DEBF3 /* MoveToStr.h */,
-				83FFBCC327C56562008DEBF3 /* MoveToStr.m */,
 				83172A4727FA08AF006FB509 /* Diagramme.h */,
 				83172A4527FA0873006FB509 /* Diagramme.m */,
 				49C0319E1794B238001A2048 /* Minimax.h */,
 				49C0319F1794B238001A2048 /* Minimax.m */,
+				835926F62F438AB1003B50CB /* Minimax+GenMoves.h */,
+				835926F72F438AB1003B50CB /* Minimax+GenMoves.m */,
 				49C031A11794B4D6001A2048 /* Move.h */,
 				49C031A21794B4D6001A2048 /* Move.m */,
+				83FFBCC527C5658C008DEBF3 /* MoveToStr.h */,
+				83FFBCC327C56562008DEBF3 /* MoveToStr.m */,
 				49AE4AE31794909A009D59BE /* Piece.h */,
 				49AE4AE41794909A009D59BE /* Piece.m */,
 				49AE4AEB1794A5CE009D59BE /* Pos.h */,
@@ -325,6 +339,8 @@
 				49C031A31794B4D6001A2048 /* Move.m in Sources */,
 				83B442B2254F17A00008D95C /* Connecteur.m in Sources */,
 				49AE4AD917948BB8009D59BE /* ChessView.m in Sources */,
+				835926FA2F438AB1003B50CB /* Minimax+GenMoves.m in Sources */,
+				835926FB2F438AB1003B50CB /* ChessBoard+MakeMoves.m in Sources */,
 				8342C20D2F38CAC40063DF68 /* Zobrist.m in Sources */,
 				49AE4ADC17948D73009D59BE /* ChessBoard.m in Sources */,
 				49AE4AE51794909A009D59BE /* Piece.m in Sources */,
@@ -342,6 +358,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				833949A228120B1B0043F12F /* BoardsForTests.m in Sources */,
+				835926F82F438AB1003B50CB /* Minimax+GenMoves.m in Sources */,
+				835926F92F438AB1003B50CB /* ChessBoard+MakeMoves.m in Sources */,
 				83079A0727ECB7BD0047CE06 /* ChessTests.m in Sources */,
 				8342C20C2F38CAC40063DF68 /* Zobrist.m in Sources */,
 			);

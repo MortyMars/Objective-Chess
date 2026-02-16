@@ -6,6 +6,7 @@
 
 #import "Pos.h"
 #import "Util.h"
+#import "ChessConfig.h"
 
 
 @implementation Pos

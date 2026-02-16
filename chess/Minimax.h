@@ -15,16 +15,13 @@
 
 
 
-
-
-
-
 @class Move, ChessBoard; // compte tenu de l'appel de ces 2 classes dans la classe Minimax
 
 @interface Minimax : NSObject
 
    // DÉCLARATION DES VARIABLES D'INSTANCE
    {
+      @public  // Déclaration des iVars comme publiques pour accès aux catégories
       int nbLoop;
       int nbElag;
       int nodeCount;
@@ -60,13 +57,8 @@
 
 
    // MÉTHODES AJOUTÉES POUR LE REFACTORING DU MOTEUR
-   -(void)GenMovesForSide:(Side)side
-                               board:(ChessBoard *)board
-                                into:(NSMutableArray<Move *> *)moves;
+   
 
-   -(void)GenCapturForSide:(Side)side
-                              board:(ChessBoard *)board
-                              into:(NSMutableArray<Move *> *)moves;
    -(BOOL)IsKingInCheck:(Side)side board:(ChessBoard *)board;
 
    
@@ -98,16 +90,13 @@
    /* +(int)StaticExchangeEvaluation:(Move *)capture
                    board:(ChessBoard *)board; */
 
-   -(BOOL)IsSquareAttackedAtX:(int)x
-                            Y:(int)y
-                       bySide:(Side)attackingSide
-                        Board:(ChessBoard *)board;
+   
 
    
 @end
 
 
 // Déclaration fonction de recalcul Zobrist 
-#ifdef DEBUG_ZOBRIST
-uint64_t recomputeZobrist(ChessBoard *board);
-#endif
+//#ifdef DEBUG_ZOBRIST
+   uint64_t recomputeZobrist(ChessBoard *board);
+//#endif

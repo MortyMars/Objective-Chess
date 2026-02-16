@@ -6,6 +6,7 @@
 // CLASSE CONTROLEUR INTERAGISSANT AVEC L'UI ET SES DIFFERENTS OBJETS
 
 #import "Connecteur.h"
+#import "ChessConfig.h"
 
 
 @implementation Connecteur

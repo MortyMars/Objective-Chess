@@ -4,6 +4,8 @@
 //  Copyright © 2022 MCN. All rights reserved
 
 #import "Diagramme.h"
+#import "ChessConfig.h"
+#import "ChessBoard+MakeMoves.h"
 
 
 //static NSString *strPieces;

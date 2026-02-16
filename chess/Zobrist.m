@@ -4,6 +4,7 @@
 //  Copyright © 2026 MCN - All rights reserved
 
 #import "Zobrist.h"
+#import "ChessConfig.h"
 
 
 // =====================================================================================================
@@ -28,9 +29,9 @@ static uint64_t rand64(void)
 // Initialisateur de la clé Zobrist
 void InitZobrist(void)
 {
-    for (int s = 0; s < 2; s++)
-        for (int p = 0; p < 7; p++) // 7 types de Pièces (cis 'Invalide')
-            for (int sq = 0; sq < 64; sq++)
+    for (int s = 0; s < 2; s++)              // 2 sides
+        for (int p = 0; p < 7; p++)          // 7 types de Pièces (cis 'Invalide')
+            for (int sq = 0; sq < 64; sq++)  // 64 cases
                 zobristPiece[s][p][sq] = rand64();
 
     zobristSide = rand64();

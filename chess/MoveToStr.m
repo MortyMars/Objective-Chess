@@ -4,6 +4,7 @@
 //  Copyright © 2022 MCN. All rights reserved
 
 #import "MoveToStr.h"
+#import "ChessConfig.h"
 
    /* Classe créée afin d'abriter les Méthodes implémentées ...
       1) pour EXTRAIRE d'un 'Move' le déplacement exécuté

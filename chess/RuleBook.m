@@ -8,6 +8,10 @@
 
 #import "RuleBook.h"
 #import "ChessBoard.h"
+#import "ChessBoard+MakeMoves.h"
+#import "Minimax+GenMoves.h"
+#import "ChessConfig.h"
+#import "Zobrist.h"
 
 
 

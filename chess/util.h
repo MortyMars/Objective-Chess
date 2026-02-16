@@ -132,6 +132,10 @@ extern BOOL engineIsBusy;
 // Pour moteur verbeux
 extern BOOL kVerboseMoveDebug;
 
+extern const int bishopDirs[4][2];
+extern const int rookDirs[4][2];
+extern const int queenDirs[8][2];
+extern const int knightOffsets[8][2];
 
 
 

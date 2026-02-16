@@ -6,6 +6,7 @@
 
 #import "Move.h"
 #import "Pos.h"
+#import "ChessConfig.h"
 
 
 @implementation Move

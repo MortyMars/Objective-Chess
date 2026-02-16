@@ -13,7 +13,8 @@
 
 @class Piece, Move, Pos;
 
-typedef struct {
+typedef struct
+{
     Piece      *captured;     // pièce capturée (ou nil)
     PieceType  oldType;       // type avant promotion
     BOOL       wasPromotion;
@@ -32,7 +33,7 @@ typedef struct {
 ce qui permettra notamment de faire des copies d'objets ChessBoard, ...ce dont nous avons besoin  */
 @interface ChessBoard : NSObject <NSCopying>
    {
-      /* Variable d'instance -tableau à 2 dimensions- désignant la pièce en case [x] [y]
+      /* Variable d'instance (iVars) -tableau à 2 dimensions- désignant la pièce en case [x] [y]
        Déclarée publique pour pouvoir y accéder via l'opérateur '->' dans d'autres classes */
       @public Piece *pieceCase[8][8];
       
@@ -85,8 +86,7 @@ ce qui permettra notamment de faire des copies d'objets ChessBoard, ...ce dont n
    -(void)       AlertePartieNulle;
 
    // GPT
-   -(MoveState)makeMove:(Move *)m ;
-   -(void)unmakeMove:(Move *)m state:(MoveState)state;
+   
    -(Move *)buildMoveFrom:(Pos *)start to:(Pos *)dest board:(ChessBoard *)board;
 
    -(int) ComputeCastlingRights:(ChessBoard *) board;

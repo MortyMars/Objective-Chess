@@ -5,6 +5,7 @@
 //  Updated by MCN in 2020
 
 #import "Piece.h"
+#import "ChessConfig.h"
 
 
 @implementation Piece
