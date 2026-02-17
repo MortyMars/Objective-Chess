@@ -67,25 +67,44 @@
    
    int dir = (p.side == sideWhite) ? 1 : -1;
    int startRank = (p.side == sideWhite) ? 1 : 6;
+   int promRank  = (p.side == sideWhite) ? 7 : 0;  // ✨ NOUVEAU : rang de promotion
    
    
    // 1️⃣ Avance simple
    int ny = y + dir;
    if (ny >= 0 && ny <= 7 && !board->pieceCase[x][ny]) {
       
-      Move *m = [Move newMoveFromX:x Y:y ToNx:x Ny:ny];
-      m.movingPiece = p;
-      m.fromSquare  = SQ(x,y);
-      m.toSquare    = SQ(x,ny);
-      [moves addObject:m];
-      
-      // Avance double
-      if (y == startRank && !board->pieceCase[x][y + 2*dir]) {
-         Move *m2 = [Move newMoveFromX:x Y:y ToNx:x Ny:y + 2*dir];
-         m2.movingPiece = p;
-         m2.fromSquare  = SQ(x,y);
-         m2.toSquare    = SQ(x,y + 2*dir);
-         [moves addObject:m2];
+      // ✨ NOUVEAU : Vérifier si c'est une promotion
+      if (ny == promRank) {
+         // Créer 4 coups (Dame, Tour, Fou, Cavalier)
+         PieceType promotions[] = {Dame, Tour, Fou, Cava};
+         
+         for (int i = 0; i < 4; i++) {
+            Move *m = [Move newMoveFromX:x Y:y ToNx:x Ny:ny];
+            m.movingPiece   = p;
+            m.isPromotion   = YES;
+            m.promotionType = promotions[i];
+            m.fromSquare    = SQ(x,y);
+            m.toSquare      = SQ(x,ny);
+            [moves addObject:m];
+         }
+      }
+      else {
+         // Coup normal (non-promotion)
+         Move *m = [Move newMoveFromX:x Y:y ToNx:x Ny:ny];
+         m.movingPiece = p;
+         m.fromSquare  = SQ(x,y);
+         m.toSquare    = SQ(x,ny);
+         [moves addObject:m];
+         
+         // Avance double
+         if (y == startRank && !board->pieceCase[x][y + 2*dir]) {
+            Move *m2 = [Move newMoveFromX:x Y:y ToNx:x Ny:y + 2*dir];
+            m2.movingPiece = p;
+            m2.fromSquare  = SQ(x,y);
+            m2.toSquare    = SQ(x,y + 2*dir);
+            [moves addObject:m2];
+         }
       }
    }
    
@@ -98,16 +117,35 @@
       if (nx < 0 || nx > 7 || ny < 0 || ny > 7) continue;
       
       Piece *target = board->pieceCase[nx][ny];
-      if (target && target.side != p.side && target.type != Roi) { // ✅ AJOUT du filtre Roi
+      if (target && target.side != p.side && target.type != Roi) {
          
-         Move *m = [Move newMoveFromX:x Y:y ToNx:nx Ny:ny];
-         m.movingPiece   = p;
-         m.isCapture     = YES;
-         m.capturedPiece = target;
-         m.fromSquare    = SQ(x,y);
-         m.toSquare      = SQ(nx,ny);
-         
-         [moves addObject:m];
+         // ✨ NOUVEAU : Vérifier si c'est une promotion-capture
+         if (ny == promRank) {
+            // Créer 4 coups (Dame, Tour, Fou, Cavalier)
+            PieceType promotions[] = {Dame, Tour, Fou, Cava};
+            
+            for (int i = 0; i < 4; i++) {
+               Move *m = [Move newMoveFromX:x Y:y ToNx:nx Ny:ny];
+               m.movingPiece   = p;
+               m.isCapture     = YES;
+               m.isPromotion   = YES;
+               m.promotionType = promotions[i];
+               m.capturedPiece = target;
+               m.fromSquare    = SQ(x,y);
+               m.toSquare      = SQ(nx,ny);
+               [moves addObject:m];
+            }
+         }
+         else {
+            // Capture normale (non-promotion)
+            Move *m = [Move newMoveFromX:x Y:y ToNx:nx Ny:ny];
+            m.movingPiece   = p;
+            m.isCapture     = YES;
+            m.capturedPiece = target;
+            m.fromSquare    = SQ(x,y);
+            m.toSquare      = SQ(nx,ny);
+            [moves addObject:m];
+         }
       }
    }
    
@@ -149,12 +187,13 @@
    ep.movingPiece   = p;
    ep.isCapture     = YES;
    ep.isEnPassant   = YES;
-   ep.capturedPiece = capturedPawn;  // ✅ Maintenant garanti non-nil
+   ep.capturedPiece = capturedPawn;
    ep.fromSquare    = SQ(x,y);
    ep.toSquare      = SQ(epX,epY);
 
    [moves addObject:ep];
-}
+   
+} // !GenPawnMovesFromX
 
 
 // ================================================================================================

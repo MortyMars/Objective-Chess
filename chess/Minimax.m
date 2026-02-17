@@ -20,6 +20,15 @@ static int nodes = 0;
 static int nbCallsIsKingCheck = 0;
 
 
+@interface Minimax () {
+    // ... tes iVars existantes ...
+    
+    // ✨ NOUVEAU : Historique de positions
+    uint64_t positionHistory[MAX_GAME_LENGTH];
+    int      historyCount;
+}
+@end
+
 
 @implementation Minimax
 
@@ -75,8 +84,11 @@ static int nbCallsIsKingCheck = 0;
       /* // Réinit valeurs cache
       evalCache = [[NSMutableDictionary alloc] initWithCapacity:100000];
       cacheHits = 0;
-      cacheMisses = 0;
-      */
+      cacheMisses = 0; */
+      
+      // ✅ NOUVEAU : Réinitialiser l'historique de positions
+      historyCount = 0;
+      memset(positionHistory, 0, sizeof(positionHistory));
       
       /* Stats efficacité TT */
       // ✅ APRÈS — reset propre AVANT la recherche
@@ -94,7 +106,7 @@ static int nbCallsIsKingCheck = 0;
       }
       
       /* Initialisation des variables de recherche */
-      int bestScore  = -INT_MAX;
+      int bestScore  = -SCORE_INF;
       Move *bestMove = nil;
       Side otherSide = (side == sideWhite)? sideBlack:sideWhite;
       
@@ -189,6 +201,9 @@ static int nbCallsIsKingCheck = 0;
       /* ========== ÉVALUATION DE CHAQUE COUP ========== */
       for (Move *moveEnCours in sortedMoves)
       {
+         // ✅ NOUVEAU : Ajouter la position avant makeMove
+         positionHistory[historyCount++] = board->zobristKey;
+         
          // ✅ CORRECT — makeMove/unmakeMove sur le board original
          MoveState st = [board makeMove:moveEnCours];
          
@@ -201,6 +216,9 @@ static int nbCallsIsKingCheck = 0;
                                       beta:SCORE_INF];
 
          [board unmakeMove:moveEnCours state:st];
+         
+         // ✅ NOUVEAU : Retirer la position après unmakeMove
+         historyCount--;
          
          // score est maintenant positif = bon pour side ✅
          if (score > bestScore || !bestMove) {
@@ -216,7 +234,7 @@ static int nbCallsIsKingCheck = 0;
             bestMove, bestScore, elapsed, nodeCount, nodeCount/elapsed);
       
       // Stats efficacité Après la recherche
-      NSLog(@"🎯 Nœuds explorés: %d", nodes);
+      NSLog(@"🎯 Nœuds explorés: %llu", nodes);
       [self.transpositionTable printStats];
       // Fin de stats
       
@@ -242,6 +260,12 @@ static int nbCallsIsKingCheck = 0;
       #ifdef DEBUG_ZOBRIST
          uint64_t keyEntry = board->zobristKey;
       #endif
+      
+      // ✅ NOUVEAU : Détection de répétition AVANT probe TT
+       if ([self isRepetition:board->zobristKey]) {
+           return 0;  // Position répétée = nulle (draw)
+       }
+      
       
       // ========================================================================
       // 🔍 PROBE TT : Consulter la table de transposition
@@ -351,6 +375,9 @@ static int nbCallsIsKingCheck = 0;
                NSLog(@"➡️ AVANT makeMove %@ : hash=%llx", m, keyBefore);
          #endif
          
+         // ✅ NOUVEAU : Ajouter la position à l'historique AVANT makeMove
+         positionHistory[historyCount++] = board->zobristKey;
+         
          MoveState st = [board makeMove:m];
          
          #ifdef DEBUG_ZOBRIST
@@ -381,6 +408,9 @@ static int nbCallsIsKingCheck = 0;
          }
          
          [board unmakeMove:m state:st];
+         
+         // ✅ NOUVEAU : Retirer la position de l'historique APRÈS unmakeMove
+         historyCount--;
          
          #ifdef DEBUG_ZOBRIST
                uint64_t keyAfterUnmake = board->zobristKey;
@@ -1295,7 +1325,7 @@ static int nbCallsIsKingCheck = 0;
                       bySide:(Side)attackingSide
                      inBoard:(ChessBoard *)board
    {
-      int cheapestValue = INT_MAX;
+      int cheapestValue = SCORE_INF;
       BOOL isAttacked = NO;
       
       int targetX = targetSquare.x;
@@ -1570,6 +1600,24 @@ static int nbCallsIsKingCheck = 0;
       
       return NO;
    } // !IsKingInCheck
+
+
+   // Détecte si une position a déjà été vue (répétition = nulle)
+   -(BOOL)isRepetition:(uint64_t)zobristKey
+   {
+       // Compter les occurrences de cette clé dans l'historique
+       int count = 0;
+       for (int i = 0; i < historyCount; i++) {
+           if (positionHistory[i] == zobristKey) {
+               count++;
+               if (count >= 2) {
+                   // 3ème occurrence (2 dans l'historique + la position actuelle)
+                   return YES;
+               }
+           }
+       }
+       return NO;
+   }
 
 
    

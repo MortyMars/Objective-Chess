@@ -580,7 +580,8 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       }
       
       return promoDTFC;
-   } // Fin de Méthode SelectPromoPion
+      
+   } // !SelectPromoPion
 
 
    // ==================================================================================================

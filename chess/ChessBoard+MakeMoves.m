@@ -127,12 +127,12 @@
       if (m.isCastling) {
          // Recherche bug Roque Roi Noir IA
          NSLog(@"🏰 ROQUE makeMove:");
-             NSLog(@"   Roi : (%d,%d) → (%d,%d)", fx, fy, tx, ty);
-             NSLog(@"   kingSide = %d", (tx == 6));
-             NSLog(@"   rookFromX = %d, y = %d", (tx==6)?7:0, fy);
-             NSLog(@"   pieceCase[%d][%d] = %@", (tx==6)?7:0, fy,
+         NSLog(@"   Roi : (%d,%d) → (%d,%d)", fx, fy, tx, ty);
+         NSLog(@"   kingSide = %d", (tx == 6));
+         NSLog(@"   rookFromX = %d, y = %d", (tx==6)?7:0, fy);
+         NSLog(@"   pieceCase[%d][%d] = %@", (tx==6)?7:0, fy,
                    pieceCase[(tx==6)?7:0][fy]);
-             NSLog(@"   Tour numMoves = %d",
+         NSLog(@"   Tour numMoves = %d",
                    pieceCase[(tx==6)?7:0][fy].numMoves);
          
          int y = fy;
@@ -142,7 +142,36 @@
          int rookToX   = kingSide ? 5 : 3;
          
          Piece *rook = pieceCase[rookFromX][y];
-         NSAssert(rook && rook.type == Tour, @"Roque: tour absente");
+         // ✅ DIAGNOSTIC détaillé au lieu d'un simple assert
+         if (!rook || rook.type != Tour) {
+            NSLog(@"❌ ROQUE IMPOSSIBLE:");
+            NSLog(@"   Roi: (%d,%d) → (%d,%d), side=%@, kingSide=%d",
+                    fx, fy, tx, ty,
+                    (moving.side == sideWhite ? @"White" : @"Black"),
+                    kingSide);
+            NSLog(@"   rookFromX=%d, y=%d", rookFromX, y);
+            NSLog(@"   pieceCase[%d][%d] = %@", rookFromX, y, rook);
+            NSLog(@"   Move: %@", m);
+            NSLog(@"   isCastling=%d", m.isCastling);
+              
+            // Afficher tout le board
+            for (int yy = 7; yy >= 0; yy--) {
+               NSMutableString *line = [NSMutableString stringWithFormat:@"   y=%d: ", yy];
+               for (int xx = 0; xx < 8; xx++) {
+                     Piece *p = pieceCase[xx][yy];
+                     if (p) {
+                          [line appendFormat:@"%@%c ",
+                           (p.side == sideWhite ? @"W" : @"B"),
+                           "?PNBRKQ"[p.type]];
+                     } else {
+                          [line appendString:@".. "];
+                     }
+               }
+               NSLog(@"%@", line);
+            }
+              
+            NSAssert(NO, @"Roque: tour absente ou incorrecte");
+         }
          
          int rookFromSq = y * 8 + rookFromX;
          int rookToSq   = y * 8 + rookToX;
@@ -155,6 +184,8 @@
          
          // 🔴 XOR APRÈS le déplacement physique
          zobristKey ^= zobristPiece[rook.side][Tour][rookToSq];
+         
+         rook.numMoves++;  // ✅ FIX : Tour a bougé !
          
          LOG_CASTLE(@"%@ castles %@ side (king %d,%d → %d,%d)",
                     (moving.side == sideWhite ? @"White" : @"Black"),
@@ -204,9 +235,11 @@
       zobristKey ^= zobristSide;
       sideToMove = (sideToMove == sideWhite) ? sideBlack : sideWhite;
       
-      if (moving.type == Roi && abs(m.dest.x - m.start.x) == 2) {
-         NSLog(@"👀 ROQUE détecté implicitement : %@", m);
-      }
+      #ifdef DEBUG_ZOBRIST
+            if (moving.type == Roi && abs(m.dest.x - m.start.x) == 2) {
+               NSLog(@"👀 ROQUE détecté implicitement : %@", m);
+            }
+      #endif
       
       moving.numMoves++;
       return st;
@@ -218,11 +251,14 @@
    // initial en restaurant les positions et indicateurs d'avant move
    -(void)unmakeMove:(Move *)m state:(MoveState)st
    {
-      LOG_UNMAKE(@"moving back from toSq=%d (%d,%d) start=(%d,%d) dest=(%d,%d)",
-                 m.toSquare,
-                 m.dest.x, m.dest.y,
-                 m.start.x, m.start.y,
-                 m.dest.x, m.dest.y);
+      
+      #ifdef DEBUG_ZOBRIST
+            LOG_UNMAKE(@"moving back from toSq=%d (%d,%d) start=(%d,%d) dest=(%d,%d)",
+                       m.toSquare,
+                       m.dest.x, m.dest.y,
+                       m.start.x, m.start.y,
+                       m.dest.x, m.dest.y);
+      #endif
       
       int fx = SQ_X(m.fromSquare);
       int fy = SQ_Y(m.fromSquare);
@@ -232,13 +268,17 @@
       int fromSq = m.fromSquare;
       int toSq   = m.toSquare;
       
+
       Piece *moving = pieceCase[tx][ty];
-      NSLog(@"UNMAKE moving at toSq=%d (%d,%d) start=(%d,%d) dest=(%d,%d)",
-            m.toSquare, tx, ty,
-            m.start.x, m.start.y,
-            m.dest.x, m.dest.y);
       
-      NSAssert(moving, @"unmakeMove: pièce absente");
+      #ifdef DEBUG_ZOBRIST
+            NSLog(@"UNMAKE moving at toSq=%d (%d,%d) start=(%d,%d) dest=(%d,%d)",
+                  m.toSquare, tx, ty,
+                  m.start.x, m.start.y,
+                  m.dest.x, m.dest.y);
+            NSAssert(moving, @"unmakeMove: pièce absente");
+      #endif
+      
       
       /*----------------------- SIDE TO MOVE --------------------------------------*/
       sideToMove = (sideToMove == sideWhite) ? sideBlack : sideWhite;
@@ -285,6 +325,8 @@
          
          // 🔴 XOR APRÈS le déplacement physique
          zobristKey ^= zobristPiece[rook.side][Tour][rookToSq];
+         
+         rook.numMoves--;  // ✅ FIX : Restaurer numMoves de la tour
          
          LOG_CASTLE(@"UNMAKE roque %@ side for %@",
                     kingSide ? @"KING" : @"QUEEN",

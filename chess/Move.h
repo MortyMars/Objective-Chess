@@ -26,6 +26,7 @@
    @property (nonatomic, strong) Piece       *capturedPiece;
    
    @property (nonatomic)         PieceType   oldType;       // type avant promotion
+   @property (nonatomic)         PieceType   promotionType; // ✨ NOUVEAU : type cible (Dame par défaut)
 
    @property (nonatomic)         BOOL        isCapture;     // Ce move est-il une capture
    @property (nonatomic)         BOOL        givesCheck;    // Ce move provoque t-il une mise en échec

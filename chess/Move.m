@@ -25,6 +25,8 @@
          _fromSquare = start.y * 8 + start.x;
          _toSquare   = dest.y  * 8 + dest.x;
          
+         _promotionType = Dame;  // ✨ NOUVEAU : Promotion en Dame par défaut
+         
          _movingPiece   = nil;
          _capturedPiece = nil;
          
@@ -66,6 +68,8 @@
        m.isCapture     = self.isCapture;
        m.isCastling    = self.isCastling;
        m.isPromotion   = self.isPromotion;
+       m.oldType       = self.oldType;
+       m.promotionType = self.promotionType;  // ✨ NOUVEAU
        m.isEnPassant   = self.isEnPassant;
        m.orderingScore = self.orderingScore;
 

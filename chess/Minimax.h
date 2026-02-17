@@ -26,7 +26,7 @@
       int nbLoop;
       int nbElag;
       int nodeCount; // dble emploi avec nodes ?
-      ULONG nodes;     // dble emploi avec nodeCount ?
+      uint64_t nodes;     // dble emploi avec nodeCount ?
 
       // Variables de profilling
       int evalCount ;
@@ -52,7 +52,8 @@
 
    @property (nonatomic, strong) TranspositionTable *transpositionTable;
 
-
+   // Historique des positions pour détection de répétition
+   #define MAX_GAME_LENGTH 512
 
    // DÉCLARATION DE MÉTHODES AFIN QU'ELLES SOIENT VISIBLES POUR LES TESTS
    -(int)NegamaxForSide:(Side)side
@@ -95,6 +96,9 @@
    // Méthode SSE qui calcule si une capture est bonne
    /* +(int)StaticExchangeEvaluation:(Move *)capture
                    board:(ChessBoard *)board; */
+
+   // Détecte si une position a déjà été vue (répétition = nulle)
+   -(BOOL)isRepetition:(uint64_t)zobristKey;
 
    
 
