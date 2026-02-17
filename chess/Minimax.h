@@ -9,6 +9,7 @@
 #import "Piece.h"
 #import "Move.h"
 #import "Zobrist.h"
+#import "TranspositionTable.h"
 
 #define INF 1000000     // Définit le score infini pour limiter sans contraindre
 #define QS_MAX_DEPTH 4  // Profondeur choisie pour la Quiescence
@@ -47,6 +48,10 @@
    }
 
    @property int depthCounter;
+
+   @property (nonatomic, strong) TranspositionTable *transpositionTable;
+
+
 
    // DÉCLARATION DE MÉTHODES AFIN QU'ELLES SOIENT VISIBLES POUR LES TESTS
    -(int)NegamaxForSide:(Side)side

@@ -29,6 +29,7 @@ static int nbCallsIsKingCheck = 0;
          evalCache = [[NSMutableDictionary alloc] initWithCapacity:200000];
          cacheHits = 0;
          cacheMisses = 0;
+         self.transpositionTable = [[TranspositionTable alloc] initWithSizeMB:128];
       }
       return self;
    }
@@ -208,133 +209,215 @@ static int nbCallsIsKingCheck = 0;
    } // !BestMoveForSide
 
 
-   // ================================================================================================
-   // MÉTHODE 2 : NegamaxForSide
-   // Moteur récursif du jeu, explorant l'arbre des possibilités de coups réalisables
-   -(int)NegamaxForSide:(Side)side
-                  board:(ChessBoard *)board
-                  depth:(int)depth
-                  alpha:(int)alpha
-                   beta:(int)beta
-   {
-      nodes++;
-      
-      #ifdef DEBUG_ZOBRIST
-      uint64_t keyEntry = board->zobristKey;
-      #endif
-
-      if (depth <= 0) {
-         return [self QuiescenceForSide:side
-                                  board:board
-                                  alpha:alpha
-                                   beta:beta
-                                qsDepth:0];
-      }
-      // ⚠️ tableau LOCAL, neuf à chaque appel
-      NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:64];
-      
-      // Génération des coups
-      [self GenMovesForSide:side board:board into:moves];
-      
-      // Move Ordering
-      [self ScoreMovesList:moves board:board side:side];
-      
-      [moves sortUsingComparator:^NSComparisonResult(Move *a, Move *b) {
-         return (a.orderingScore < b.orderingScore);
-      }];
-      // Fin de Move Ordering
-      
-      // Traiter le cas où 'moves' est vide, càd si Mat ou Pat
-      if (moves.count == 0) {
-         
-         #ifdef DEBUG_ZOBRIST
-         NSAssert(board->zobristKey == keyEntry,
-                  @"Zobrist corrompu : sortie Negamax sans coups");
-         #endif
-         
-         if ([self IsKingInCheck:side board:board]) {
-            // Mat : très mauvais pour le camp qui joue
-            return -100000 + (NUMBER_MOVES_AHEAD - depth);
-         } else {
-            // Pat : nul
-            return 0;
-         }
-      }
-      // Fin de détection préalable de Mat ou Pat
-      
-      
-      Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
-      
-      for (Move *m in moves) {
-         
-         // GÉNÉRATION CLÉ ZOBRIST AVANT makeMove #################################################
-         uint64_t keyBefore = board->zobristKey;
-         
-         #ifdef DEBUG_ZOBRIST
-            NSLog(@"➡️ AVANT makeMove %@ : hash=%llx", m, keyBefore);
-         #endif
-         
-         MoveState st = [board makeMove:m];
-         
-         #ifdef DEBUG_ZOBRIST
-            uint64_t z2;
-         #endif
+// ================================================================================================
+// MÉTHODE 2 : NegamaxForSide avec Tables de Transposition
+// Moteur récursif du jeu, explorant l'arbre des possibilités de coups réalisables
+-(int)NegamaxForSide:(Side)side
+               board:(ChessBoard *)board
+               depth:(int)depth
+               alpha:(int)alpha
+                beta:(int)beta
+{
+   nodes++;
    
-         // New Debug
-         #ifdef DEBUG_ZOBRIST
-            uint64_t keyAfter = board->zobristKey;
-            z2 = recomputeZobrist(board);
-            NSLog(@"   APRES makeMove %@ : hash=%llx (recalc=%llx) diff=%llx",
-                  m, keyAfter, z2, keyAfter ^ z2);
-            
-            if (z2 != board->zobristKey) {
-               NSLog(@"❌ Mismatch détecté !");
-               NSAssert(NO, @"Zobrist corrompu");
-            }
-         #endif
+   int alphaOrig = alpha;  // ✨ Sauvegarder alpha original pour TT
+   
+#ifdef DEBUG_ZOBRIST
+   uint64_t keyEntry = board->zobristKey;
+#endif
+   
+   // ========================================================================
+   // 🔍 PROBE TT : Consulter la table de transposition
+   // ========================================================================
+   Move *ttMove = nil;
+   TTEntry *ttEntry = [self.transpositionTable probe:board->zobristKey
+                                             bestMove:&ttMove];
 
-         // 🔴 FILTRE LÉGALITÉ — MANQUANT JUSQU’ICI
-         if (![self IsKingInCheck:side board:board]) {
-            
-            int score = -[self NegamaxForSide:otherSide
-                                        board:board
-                                        depth:depth-1
-                                        alpha:-beta
-                                         beta:-alpha];
-            
-            if (score > alpha) alpha = score;
+   if (ttEntry) {
+       // ttMove est déjà rempli automatiquement !
+       
+       // Utiliser le score de la TT si la profondeur est suffisante
+       if (ttEntry->depth >= depth) {
+         int ttScore = ttEntry->score;
+         
+         switch (ttEntry->nodeType) {
+            case TT_EXACT:
+               // Score exact : retourner directement
+               return ttScore;
+               
+            case TT_LOWER_BOUND:
+               // Fail-high (beta cutoff) : score >= ttScore
+               if (ttScore >= beta) return ttScore;
+               if (ttScore > alpha) alpha = ttScore;
+               break;
+               
+            case TT_UPPER_BOUND:
+               // Fail-low (alpha cutoff) : score <= ttScore
+               if (ttScore <= alpha) return ttScore;
+               if (ttScore < beta) beta = ttScore;
+               break;
          }
          
-         [board unmakeMove:m state:st];
-         
-         #ifdef DEBUG_ZOBRIST
-            uint64_t keyAfterUnmake = board->zobristKey;
-            uint64_t z3 = recomputeZobrist(board);
-            NSLog(@"⬅️ APRES unmakeMove %@ : hash=%llx (recalc=%llx) diff=%llx",
-                  m, keyAfterUnmake, z3, keyAfterUnmake ^ z3);
-            
-            if (keyAfterUnmake != keyBefore) {
-               NSLog(@"💥 UNMAKE n'a pas restauré le hash !");
-               NSLog(@"   Avant makeMove : %llx", keyBefore);
-               NSLog(@"   Après unmakeMove: %llx", keyAfterUnmake);
-               NSLog(@"   Diff           : %llx", keyBefore ^ keyAfterUnmake);
-               NSAssert(NO, @"unmakeMove ne restaure pas le hash");
-            }
-         #endif
-         
-         if (alpha >= beta)
+         // Fenêtre alpha-beta fermée ?
+         if (alpha >= beta) return ttScore;
+      }
+   }
+   
+   // ========================================================================
+   // Quiescence Search à profondeur 0
+   // ========================================================================
+   if (depth <= 0) {
+      return [self QuiescenceForSide:side
+                               board:board
+                               alpha:alpha
+                                beta:beta
+                             qsDepth:0];
+   }
+   
+   // ========================================================================
+   // Génération et tri des coups
+   // ========================================================================
+   NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:64];
+   [self GenMovesForSide:side board:board into:moves];
+   
+   // Move Ordering avec bonus TT
+   [self ScoreMovesList:moves board:board side:side];
+   
+   // ✨ Bonus énorme pour le coup TT (essayer en premier)
+   if (ttMove) {
+      for (Move *m in moves) {
+         if (m.fromSquare == ttMove.fromSquare &&
+             m.toSquare == ttMove.toSquare) {
+            m.orderingScore += 1000000;  // Priorité absolue
             break;
-      } // !for
-      
-      #ifdef DEBUG_ZOBRIST
+         }
+      }
+   }
+   
+   [moves sortUsingComparator:^NSComparisonResult(Move *a, Move *b) {
+      return (b.orderingScore - a.orderingScore);  // ⚠️ Ordre décroissant !
+   }];
+   
+   // ========================================================================
+   // Traiter le cas Mat/Pat
+   // ========================================================================
+   if (moves.count == 0) {
+#ifdef DEBUG_ZOBRIST
       NSAssert(board->zobristKey == keyEntry,
-               @"Zobrist corrompu : sortie Negamax normale");
-      #endif
+               @"Zobrist corrompu : sortie Negamax sans coups");
+#endif
       
-      return alpha;
+      int score;
+      if ([self IsKingInCheck:side board:board]) {
+         // Mat : très mauvais pour le camp qui joue
+         score = -100000 + (NUMBER_MOVES_AHEAD - depth);
+      } else {
+         // Pat : nul
+         score = 0;
+      }
       
-   } // !NegamaxForSide
-
+      // ✨ Stocker dans TT (score exact, pas de meilleur coup)
+      [self.transpositionTable store:board->zobristKey
+                               score:score
+                               depth:depth
+                            nodeType:TT_EXACT
+                            bestMove:nil];
+      return score;
+   }
+   
+   // ========================================================================
+   // Recherche principale
+   // ========================================================================
+   Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
+   Move *bestMove = nil;  // ✨ Tracker le meilleur coup pour TT
+   
+   for (Move *m in moves) {
+      
+#ifdef DEBUG_ZOBRIST
+      uint64_t keyBefore = board->zobristKey;
+      NSLog(@"➡️ AVANT makeMove %@ : hash=%llx", m, keyBefore);
+#endif
+      
+      MoveState st = [board makeMove:m];
+      
+#ifdef DEBUG_ZOBRIST
+      uint64_t keyAfter = board->zobristKey;
+      uint64_t z2 = recomputeZobrist(board);
+      NSLog(@"   APRES makeMove %@ : hash=%llx (recalc=%llx) diff=%llx",
+            m, keyAfter, z2, keyAfter ^ z2);
+      
+      if (z2 != board->zobristKey) {
+         NSLog(@"❌ Mismatch détecté !");
+         NSAssert(NO, @"Zobrist corrompu");
+      }
+#endif
+      
+      // Filtre de légalité
+      if (![self IsKingInCheck:side board:board]) {
+         
+         int score = -[self NegamaxForSide:otherSide
+                                     board:board
+                                     depth:depth-1
+                                     alpha:-beta
+                                      beta:-alpha];
+         
+         if (score > alpha) {
+            alpha = score;
+            bestMove = m;  // ✨ Nouveau meilleur coup
+         }
+      }
+      
+      [board unmakeMove:m state:st];
+      
+#ifdef DEBUG_ZOBRIST
+      uint64_t keyAfterUnmake = board->zobristKey;
+      uint64_t z3 = recomputeZobrist(board);
+      NSLog(@"⬅️ APRES unmakeMove %@ : hash=%llx (recalc=%llx) diff=%llx",
+            m, keyAfterUnmake, z3, keyAfterUnmake ^ z3);
+      
+      if (keyAfterUnmake != keyBefore) {
+         NSLog(@"💥 UNMAKE n'a pas restauré le hash !");
+         NSAssert(NO, @"unmakeMove ne restaure pas le hash");
+      }
+#endif
+      
+      // Beta cutoff
+      if (alpha >= beta) {
+         break;
+      }
+   }
+   
+#ifdef DEBUG_ZOBRIST
+   NSAssert(board->zobristKey == keyEntry,
+            @"Zobrist corrompu : sortie Negamax normale");
+#endif
+   
+   // ========================================================================
+   // 💾 STORE TT : Stocker le résultat dans la table
+   // ========================================================================
+   TTNodeType nodeType;
+   if (alpha <= alphaOrig) {
+      // Fail-low : tous les coups <= alpha original
+      nodeType = TT_UPPER_BOUND;
+   }
+   else if (alpha >= beta) {
+      // Fail-high : cutoff (au moins un coup >= beta)
+      nodeType = TT_LOWER_BOUND;
+   }
+   else {
+      // PV node : score exact dans [alpha, beta]
+      nodeType = TT_EXACT;
+   }
+   
+   [self.transpositionTable store:board->zobristKey
+                            score:alpha
+                            depth:depth
+                         nodeType:nodeType
+                         bestMove:bestMove];
+   
+   return alpha;
+   
+} // !NegamaxForSide
 
    // ================================================================================================
    // Méthode de Quiescence

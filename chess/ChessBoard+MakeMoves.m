@@ -12,7 +12,7 @@
 @implementation ChessBoard (MakeMoves)    // Extension de la Classe ChessBoard
 
    // ==================================================================================================
-   // Méthode d'instance 'makeMove' permettant de réaliser un move de test
+   // Méthode d'instance 'makeMove' permettant de réaliser un move fictif ou réel
    -(MoveState)makeMove:(Move *)m
    {
       NSAssert(m.fromSquare == m.start.y * 8 + m.start.x, @"Move incohérent: fromSquare");
@@ -176,7 +176,11 @@
       #endif
             
       zobristKey ^= zobristCastle[st.oldCastleRights];
-      // 🔴 Mise à jour de castlingRights à insérer ici (fonction à créer)
+      
+      // 🔴 Mise à jour de castlingRights
+      castlingRights = [self updateCastlingRights:castlingRights
+                                          forMove:m
+                                    capturedPiece:st.captured];
       
       #ifdef DEBUG_ZOBRIST
             if (castlingRights != oldRights) {
@@ -365,6 +369,41 @@
       
       
    } // !unmakeMove
+
+
+   // Méthode déterminant les droits de roque
+   - (uint8_t)updateCastlingRights:(uint8_t)rights
+                           forMove:(Move *)m
+                     capturedPiece:(Piece *)captured
+   {
+       uint8_t newRights = rights;
+       Piece *moving = m.movingPiece;
+       
+       // Roi bouge
+       if (moving.type == Roi) {
+           newRights &= (moving.side == sideWhite) ? ~0b0011 : ~0b1100;
+       }
+       
+       // Tour bouge (comparaison sur square linéaire)
+       if (moving.type == Tour) {
+           int fromSq = m.fromSquare;
+           if (fromSq == 0)  newRights &= ~0b0010; // a1
+           if (fromSq == 7)  newRights &= ~0b0001; // h1
+           if (fromSq == 56) newRights &= ~0b1000; // a8
+           if (fromSq == 63) newRights &= ~0b0100; // h8
+       }
+       
+       // Tour capturée
+       if (captured && captured.type == Tour) {
+           int toSq = m.toSquare;
+           if (toSq == 0)  newRights &= ~0b0010;
+           if (toSq == 7)  newRights &= ~0b0001;
+           if (toSq == 56) newRights &= ~0b1000;
+           if (toSq == 63) newRights &= ~0b0100;
+       }
+       
+       return newRights;
+   }
 
 
 @end

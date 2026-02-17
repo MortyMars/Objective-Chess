@@ -836,50 +836,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
    
 }
 
-// proposition Claude pour droits de roque
-- (uint8_t)updateCastlingRights:(uint8_t)rights
-                        forMove:(Move *)m
-                  capturedPiece:(Piece *)captured
-                          fromX:(int)fx fromY:(int)fy
-                            toX:(int)tx toY:(int)ty
-{
-    uint8_t newRights = rights;
-    
-    Piece *moving = m.movingPiece;
-    
-    // Roi bouge
-    if (moving.type == Roi) {
-        if (moving.side == sideWhite) {
-            newRights &= ~0b0011;
-        } else {
-            newRights &= ~0b1100;
-        }
-    }
-    
-    // Tour bouge
-    if (moving.type == Tour) {
-        if (moving.side == sideWhite) {
-            if (fx == 0 && fy == 0) newRights &= ~0b0010;
-            if (fx == 7 && fy == 0) newRights &= ~0b0001;
-        } else {
-            if (fx == 0 && fy == 7) newRights &= ~0b1000;
-            if (fx == 7 && fy == 7) newRights &= ~0b0100;
-        }
-    }
-    
-    // Tour capturée
-    if (captured && captured.type == Tour) {
-        if (captured.side == sideWhite) {
-            if (tx == 0 && ty == 0) newRights &= ~0b0010;
-            if (tx == 7 && ty == 0) newRights &= ~0b0001;
-        } else {
-            if (tx == 0 && ty == 7) newRights &= ~0b1000;
-            if (tx == 7 && ty == 7) newRights &= ~0b0100;
-        }
-    }
-    
-    return newRights;
-}
+
 
 
 @end

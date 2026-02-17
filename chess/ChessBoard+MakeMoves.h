@@ -11,4 +11,10 @@
 
    -(void)unmakeMove:(Move *)m state:(MoveState)state;
 
+   - (uint8_t)updateCastlingRights:(uint8_t)rights
+                           forMove:(Move *)m
+                     capturedPiece:(Piece *)captured
+                             fromX:(int)fx fromY:(int)fy
+                               toX:(int)tx toY:(int)ty;
+
 @end
