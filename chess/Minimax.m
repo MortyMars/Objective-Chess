@@ -11,6 +11,8 @@
 #import "ChessConfig.h"
 #import "Util.h"
 
+#define SCORE_INF 10000000
+
 
 
 
@@ -70,10 +72,17 @@ static int nbCallsIsKingCheck = 0;
       evalTotalTime = 0;
       moveGenTotalTime = 0;
       
-      // Réinit valeurs cache
+      /* // Réinit valeurs cache
       evalCache = [[NSMutableDictionary alloc] initWithCapacity:100000];
       cacheHits = 0;
       cacheMisses = 0;
+      */
+      
+      /* Stats efficacité TT */
+      // ✅ APRÈS — reset propre AVANT la recherche
+      nodes = 0;  // Reset au lieu de sauvegarder
+      [self.transpositionTable newGeneration];
+      /* Fin Stats*/
       
       /* Détermination du jeu de tous les moves possibles pour 'side' */
       NSSet *movesPossibles = [self PossibleMovesForSide:side board:board];
@@ -87,7 +96,7 @@ static int nbCallsIsKingCheck = 0;
       /* Initialisation des variables de recherche */
       int bestScore  = -INT_MAX;
       Move *bestMove = nil;
-      //Side otherSide = (side == sideWhite)? sideBlack:sideWhite;
+      Side otherSide = (side == sideWhite)? sideBlack:sideWhite;
       
       /* ========== FILTRAGE SÉCURITÉ ========== */
       NSMutableSet *safeMovesOnly = [[NSMutableSet alloc] init];
@@ -149,10 +158,10 @@ static int nbCallsIsKingCheck = 0;
             if (cheapestAttacker > 0) {  // Case attaquée
                int netGain = capturedValue - movingValue;
                
-               if (netGain < -200) {
+               /* if (netGain < -200) {
                   isDangerous = YES;
                   dangerousMovesFiltered++;
-               }
+               } */
             }
          }
          
@@ -180,20 +189,23 @@ static int nbCallsIsKingCheck = 0;
       /* ========== ÉVALUATION DE CHAQUE COUP ========== */
       for (Move *moveEnCours in sortedMoves)
       {
+         // ✅ CORRECT — makeMove/unmakeMove sur le board original
+         MoveState st = [board makeMove:moveEnCours];
          
-         ChessBoard *newBoard = board.copy;
-         MoveState st = [newBoard makeMove:moveEnCours];
+         // Negamax retourne le score du point de vue d'otherSide
+         // On le négative UNE SEULE FOIS pour obtenir le score pour side
+         int score = -[self NegamaxForSide:otherSide
+                                     board:board
+                                     depth:NUMBER_MOVES_AHEAD - 1
+                                     alpha:-SCORE_INF
+                                      beta:SCORE_INF];
+
+         [board unmakeMove:moveEnCours state:st];
          
-         /* Appel à Negamax */
-         int negaMax = [self NegamaxForSide:side
-                                      board:newBoard
-                                      depth:NUMBER_MOVES_AHEAD
-                                      alpha:-INT_MAX
-                                       beta:INT_MAX];
-         /* Mise à jour du meilleur coup */
-         if (negaMax > bestScore || !bestMove) {
-            bestScore = negaMax;
-            bestMove = moveEnCours;
+         // score est maintenant positif = bon pour side ✅
+         if (score > bestScore || !bestMove) {
+             bestScore = score;
+             bestMove = moveEnCours;
          }
       }
       
@@ -203,221 +215,221 @@ static int nbCallsIsKingCheck = 0;
       NSLog(@"✅ Coup choisi : %@ (score=%d, %.1fs, %d nœuds, %.0f n/s)\n",
             bestMove, bestScore, elapsed, nodeCount, nodeCount/elapsed);
       
+      // Stats efficacité Après la recherche
+      NSLog(@"🎯 Nœuds explorés: %d", nodes);
+      [self.transpositionTable printStats];
+      // Fin de stats
+      
       
       return bestMove;
       
    } // !BestMoveForSide
 
 
-// ================================================================================================
-// MÉTHODE 2 : NegamaxForSide avec Tables de Transposition
-// Moteur récursif du jeu, explorant l'arbre des possibilités de coups réalisables
--(int)NegamaxForSide:(Side)side
-               board:(ChessBoard *)board
-               depth:(int)depth
-               alpha:(int)alpha
-                beta:(int)beta
-{
-   nodes++;
-   
-   int alphaOrig = alpha;  // ✨ Sauvegarder alpha original pour TT
-   
-#ifdef DEBUG_ZOBRIST
-   uint64_t keyEntry = board->zobristKey;
-#endif
-   
-   // ========================================================================
-   // 🔍 PROBE TT : Consulter la table de transposition
-   // ========================================================================
-   Move *ttMove = nil;
-   TTEntry *ttEntry = [self.transpositionTable probe:board->zobristKey
-                                             bestMove:&ttMove];
+   // ================================================================================================
+   // MÉTHODE 2 : NegamaxForSide avec Tables de Transposition
+   // Moteur récursif du jeu, explorant l'arbre des possibilités de coups réalisables
+   -(int)NegamaxForSide:(Side)side
+                  board:(ChessBoard *)board
+                  depth:(int)depth
+                  alpha:(int)alpha
+                   beta:(int)beta
+   {
+      nodes++;
+      
+      int alphaOrig = alpha;  // ✨ Sauvegarder alpha original pour TT
+      
+      #ifdef DEBUG_ZOBRIST
+         uint64_t keyEntry = board->zobristKey;
+      #endif
+      
+      // ========================================================================
+      // 🔍 PROBE TT : Consulter la table de transposition
+      Move *ttMove = nil;
+      TTEntry *ttEntry = [self.transpositionTable probe:board->zobristKey
+                                                bestMove:&ttMove];
 
-   if (ttEntry) {
-       // ttMove est déjà rempli automatiquement !
-       
-       // Utiliser le score de la TT si la profondeur est suffisante
-       if (ttEntry->depth >= depth) {
-         int ttScore = ttEntry->score;
+      if (ttEntry) {
+          // ttMove est déjà rempli automatiquement !
+          
+          // Utiliser le score de la TT si la profondeur est suffisante
+          if (ttEntry->depth >= depth) {
+            int ttScore = ttEntry->score;
+            
+            switch (ttEntry->nodeType) {
+               case TT_EXACT:
+                  // Score exact : retourner directement
+                  return ttScore;
+                  
+               case TT_LOWER_BOUND:
+                  // Fail-high (beta cutoff) : score >= ttScore
+                  if (ttScore >= beta) return ttScore;
+                  if (ttScore > alpha) alpha = ttScore;
+                  break;
+                  
+               case TT_UPPER_BOUND:
+                  // Fail-low (alpha cutoff) : score <= ttScore
+                  if (ttScore <= alpha) return ttScore;
+                  if (ttScore < beta) beta = ttScore;
+                  break;
+            }
+            
+            // Fenêtre alpha-beta fermée ?
+            if (alpha >= beta) return ttScore;
+         }
+      }
+      
+      // ========================================================================
+      // Quiescence Search à profondeur 0
+      if (depth <= 0) {
+         return [self QuiescenceForSide:side
+                                  board:board
+                                  alpha:alpha
+                                   beta:beta
+                                qsDepth:0];
+      }
+      
+      // ========================================================================
+      // Génération et tri des coups
+      NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:64];
+      [self GenMovesForSide:side board:board into:moves];
+      
+      // Move Ordering avec bonus TT
+      [self ScoreMovesList:moves board:board side:side];
+      
+      // ✨ Bonus énorme pour le coup TT (essayer en premier)
+      if (ttMove) {
+         for (Move *m in moves) {
+            if (m.fromSquare == ttMove.fromSquare &&
+                m.toSquare == ttMove.toSquare) {
+               m.orderingScore += 1000000;  // Priorité absolue
+               break;
+            }
+         }
+      }
+      
+      [moves sortUsingComparator:^NSComparisonResult(Move *a, Move *b) {
+         return (b.orderingScore - a.orderingScore);  // ⚠️ Ordre décroissant !
+      }];
+      
+      // ========================================================================
+      // Traiter le cas Mat/Pat
+      if (moves.count == 0) {
          
-         switch (ttEntry->nodeType) {
-            case TT_EXACT:
-               // Score exact : retourner directement
-               return ttScore;
-               
-            case TT_LOWER_BOUND:
-               // Fail-high (beta cutoff) : score >= ttScore
-               if (ttScore >= beta) return ttScore;
-               if (ttScore > alpha) alpha = ttScore;
-               break;
-               
-            case TT_UPPER_BOUND:
-               // Fail-low (alpha cutoff) : score <= ttScore
-               if (ttScore <= alpha) return ttScore;
-               if (ttScore < beta) beta = ttScore;
-               break;
+      #ifdef DEBUG_ZOBRIST
+            NSAssert(board->zobristKey == keyEntry,
+                     @"Zobrist corrompu : sortie Negamax sans coups");
+      #endif
+         
+         int score;
+         if ([self IsKingInCheck:side board:board]) {
+            // Mat : très mauvais pour le camp qui joue
+            score = -100000 + (NUMBER_MOVES_AHEAD - depth);
+         } else {
+            // Pat : nul
+            score = 0;
          }
          
-         // Fenêtre alpha-beta fermée ?
-         if (alpha >= beta) return ttScore;
+         // ✨ Stocker dans TT (score exact, pas de meilleur coup)
+         [self.transpositionTable store:board->zobristKey
+                                  score:score
+                                  depth:depth
+                               nodeType:TT_EXACT
+                               bestMove:nil];
+         return score;
       }
-   }
-   
-   // ========================================================================
-   // Quiescence Search à profondeur 0
-   // ========================================================================
-   if (depth <= 0) {
-      return [self QuiescenceForSide:side
-                               board:board
-                               alpha:alpha
-                                beta:beta
-                             qsDepth:0];
-   }
-   
-   // ========================================================================
-   // Génération et tri des coups
-   // ========================================================================
-   NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:64];
-   [self GenMovesForSide:side board:board into:moves];
-   
-   // Move Ordering avec bonus TT
-   [self ScoreMovesList:moves board:board side:side];
-   
-   // ✨ Bonus énorme pour le coup TT (essayer en premier)
-   if (ttMove) {
+      
+      // ========================================================================
+      // Recherche principale
+      Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
+      Move *bestMove = nil;  // ✨ Tracker le meilleur coup pour TT
+      
       for (Move *m in moves) {
-         if (m.fromSquare == ttMove.fromSquare &&
-             m.toSquare == ttMove.toSquare) {
-            m.orderingScore += 1000000;  // Priorité absolue
+         
+         #ifdef DEBUG_ZOBRIST
+               uint64_t keyBefore = board->zobristKey;
+               NSLog(@"➡️ AVANT makeMove %@ : hash=%llx", m, keyBefore);
+         #endif
+         
+         MoveState st = [board makeMove:m];
+         
+         #ifdef DEBUG_ZOBRIST
+               uint64_t keyAfter = board->zobristKey;
+               uint64_t z2 = recomputeZobrist(board);
+               NSLog(@"   APRES makeMove %@ : hash=%llx (recalc=%llx) diff=%llx",
+                     m, keyAfter, z2, keyAfter ^ z2);
+               
+               if (z2 != board->zobristKey) {
+                  NSLog(@"❌ Mismatch détecté !");
+                  NSAssert(NO, @"Zobrist corrompu");
+               }
+         #endif
+         
+         // Filtre de légalité
+         if (![self IsKingInCheck:side board:board]) {
+            
+            int score = -[self NegamaxForSide:otherSide
+                                        board:board
+                                        depth:depth-1
+                                        alpha:-beta
+                                         beta:-alpha];
+            
+            if (score > alpha) {
+               alpha = score;
+               bestMove = m;  // ✨ Nouveau meilleur coup
+            }
+         }
+         
+         [board unmakeMove:m state:st];
+         
+         #ifdef DEBUG_ZOBRIST
+               uint64_t keyAfterUnmake = board->zobristKey;
+               uint64_t z3 = recomputeZobrist(board);
+               NSLog(@"⬅️ APRES unmakeMove %@ : hash=%llx (recalc=%llx) diff=%llx",
+                     m, keyAfterUnmake, z3, keyAfterUnmake ^ z3);
+               
+               if (keyAfterUnmake != keyBefore) {
+                  NSLog(@"💥 UNMAKE n'a pas restauré le hash !");
+                  NSAssert(NO, @"unmakeMove ne restaure pas le hash");
+               }
+         #endif
+            
+         // Beta cutoff
+         if (alpha >= beta) {
             break;
          }
       }
-   }
-   
-   [moves sortUsingComparator:^NSComparisonResult(Move *a, Move *b) {
-      return (b.orderingScore - a.orderingScore);  // ⚠️ Ordre décroissant !
-   }];
-   
-   // ========================================================================
-   // Traiter le cas Mat/Pat
-   // ========================================================================
-   if (moves.count == 0) {
-#ifdef DEBUG_ZOBRIST
-      NSAssert(board->zobristKey == keyEntry,
-               @"Zobrist corrompu : sortie Negamax sans coups");
-#endif
       
-      int score;
-      if ([self IsKingInCheck:side board:board]) {
-         // Mat : très mauvais pour le camp qui joue
-         score = -100000 + (NUMBER_MOVES_AHEAD - depth);
-      } else {
-         // Pat : nul
-         score = 0;
+      #ifdef DEBUG_ZOBRIST
+         NSAssert(board->zobristKey == keyEntry,
+                  @"Zobrist corrompu : sortie Negamax normale");
+      #endif
+      
+      // ========================================================================
+      // 💾 STORE TT : Stocker le résultat dans la table
+      TTNodeType nodeType;
+      if (alpha <= alphaOrig) {
+         // Fail-low : tous les coups <= alpha original
+         nodeType = TT_UPPER_BOUND;
+      }
+      else if (alpha >= beta) {
+         // Fail-high : cutoff (au moins un coup >= beta)
+         nodeType = TT_LOWER_BOUND;
+      }
+      else {
+         // PV node : score exact dans [alpha, beta]
+         nodeType = TT_EXACT;
       }
       
-      // ✨ Stocker dans TT (score exact, pas de meilleur coup)
       [self.transpositionTable store:board->zobristKey
-                               score:score
+                               score:alpha
                                depth:depth
-                            nodeType:TT_EXACT
-                            bestMove:nil];
-      return score;
-   }
-   
-   // ========================================================================
-   // Recherche principale
-   // ========================================================================
-   Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
-   Move *bestMove = nil;  // ✨ Tracker le meilleur coup pour TT
-   
-   for (Move *m in moves) {
+                            nodeType:nodeType
+                            bestMove:bestMove];
       
-#ifdef DEBUG_ZOBRIST
-      uint64_t keyBefore = board->zobristKey;
-      NSLog(@"➡️ AVANT makeMove %@ : hash=%llx", m, keyBefore);
-#endif
+      return alpha;
       
-      MoveState st = [board makeMove:m];
-      
-#ifdef DEBUG_ZOBRIST
-      uint64_t keyAfter = board->zobristKey;
-      uint64_t z2 = recomputeZobrist(board);
-      NSLog(@"   APRES makeMove %@ : hash=%llx (recalc=%llx) diff=%llx",
-            m, keyAfter, z2, keyAfter ^ z2);
-      
-      if (z2 != board->zobristKey) {
-         NSLog(@"❌ Mismatch détecté !");
-         NSAssert(NO, @"Zobrist corrompu");
-      }
-#endif
-      
-      // Filtre de légalité
-      if (![self IsKingInCheck:side board:board]) {
-         
-         int score = -[self NegamaxForSide:otherSide
-                                     board:board
-                                     depth:depth-1
-                                     alpha:-beta
-                                      beta:-alpha];
-         
-         if (score > alpha) {
-            alpha = score;
-            bestMove = m;  // ✨ Nouveau meilleur coup
-         }
-      }
-      
-      [board unmakeMove:m state:st];
-      
-#ifdef DEBUG_ZOBRIST
-      uint64_t keyAfterUnmake = board->zobristKey;
-      uint64_t z3 = recomputeZobrist(board);
-      NSLog(@"⬅️ APRES unmakeMove %@ : hash=%llx (recalc=%llx) diff=%llx",
-            m, keyAfterUnmake, z3, keyAfterUnmake ^ z3);
-      
-      if (keyAfterUnmake != keyBefore) {
-         NSLog(@"💥 UNMAKE n'a pas restauré le hash !");
-         NSAssert(NO, @"unmakeMove ne restaure pas le hash");
-      }
-#endif
-      
-      // Beta cutoff
-      if (alpha >= beta) {
-         break;
-      }
-   }
-   
-#ifdef DEBUG_ZOBRIST
-   NSAssert(board->zobristKey == keyEntry,
-            @"Zobrist corrompu : sortie Negamax normale");
-#endif
-   
-   // ========================================================================
-   // 💾 STORE TT : Stocker le résultat dans la table
-   // ========================================================================
-   TTNodeType nodeType;
-   if (alpha <= alphaOrig) {
-      // Fail-low : tous les coups <= alpha original
-      nodeType = TT_UPPER_BOUND;
-   }
-   else if (alpha >= beta) {
-      // Fail-high : cutoff (au moins un coup >= beta)
-      nodeType = TT_LOWER_BOUND;
-   }
-   else {
-      // PV node : score exact dans [alpha, beta]
-      nodeType = TT_EXACT;
-   }
-   
-   [self.transpositionTable store:board->zobristKey
-                            score:alpha
-                            depth:depth
-                         nodeType:nodeType
-                         bestMove:bestMove];
-   
-   return alpha;
-   
-} // !NegamaxForSide
+   } // !NegamaxForSide
 
    // ================================================================================================
    // Méthode de Quiescence
@@ -757,6 +769,7 @@ static int nbCallsIsKingCheck = 0;
    -(int)EvalBoardForSide:(Side)side
                     board:(ChessBoard *)board
    {
+      /* A DÉSACTIVER CAR DOUBLE EMPLOI AVEC TT
       // Générer une clé unique pour cette position
       NSString *key = [self BoardHashKey:board forSide:side];
       NSNumber *cached = evalCache[key];
@@ -765,6 +778,7 @@ static int nbCallsIsKingCheck = 0;
          return [cached intValue];
       }
       cacheMisses++;
+      FIN DE DÉSACTIVATION */
       
       evalWhitePOV = 0;  /* Évaluation du point de vue des Blancs (convention Negamax) */
       
@@ -866,6 +880,27 @@ static int nbCallsIsKingCheck = 0;
       
       /* ========== PARCOURS DE L'ÉCHIQUIER ========== */
       /* Comptage du matériel total pour déterminer si on est en fin de partie */
+      // ✅ FIX : pré-calculer totalMaterial AVANT la boucle principale
+
+      // Passe 1 : calcul du matériel total (sans le Roi)
+      totalMaterial = 0;
+      for (int x = 0; x < 8; x++) {
+          for (int y = 0; y < 8; y++) {
+              Piece *p = [board piece_colX:x rangY:y];
+              if (!p || p.type == Roi || p.type == Invalide) continue;
+              switch (p.type) {
+                  case Pion:  totalMaterial += 100; break;
+                  case Cava:  totalMaterial += 300; break;
+                  case Fou:   totalMaterial += 300; break;
+                  case Tour:  totalMaterial += 500; break;
+                  case Dame:  totalMaterial += 900; break;
+                  default: break;
+              }
+          }
+      }
+      BOOL isEndGame = (totalMaterial < 2600);
+      
+      // Passe 2 : évaluation complète
       for (int x = 0; x < 8; x++) {
          for (int y = 0; y < 8; y++) {
             Piece *piece = [board piece_colX:x rangY:y];
@@ -922,7 +957,7 @@ static int nbCallsIsKingCheck = 0;
                   materialValue = 100000;
                   /* Choix de la table selon la phase de jeu */
                   /* Fin de partie si matériel total < 3000 (approximatif) */
-                  if (totalMaterial < 3000) {
+                  if (isEndGame) {
                      if (piece.side == sideWhite) positionBonus = kingEndGameTable[y][x];
                      else positionBonus = kingEndGameTable[7-y][x];
                   } else {
@@ -1108,30 +1143,20 @@ static int nbCallsIsKingCheck = 0;
       
       // ===========================================
       // PARTIE 7 : PIONS EN AVANT-DERNIÈRE RANGÉE
+      // ✅ APRÈS — symétrique et indépendant
       /* Bonus important pour pions sur le point d'être promus */
-      if (sideJoueur == sideWhite) {
-         for (int x = 0; x < 8; x++) {
-            Piece *pionB = board->pieceCase[x][6];
-            if ((pionB.type == Pion) && (pionB.side == sideWhite)) {
-               evalWhitePOV += +900;  // Pion Blanc proche promo
-            }
-            Piece *pionN = board->pieceCase[x][1];
-            if ((pionN.type == Pion) && (pionN.side == sideBlack)) {
-               evalWhitePOV += -900;  // Pion Noir proche promo
-            }
-         }
-      }
-      if (sideJoueur == sideBlack) {
-         for (int x = 0; x < 8; x++) {
-            Piece *pionB = board->pieceCase[x][1];
-            if ((pionB.type == Pion) && (pionB.side == sideWhite)) {
-               evalWhitePOV += +900;  // Pion Blanc proche promo
-            }
-            Piece *pionN = board->pieceCase[x][6];
-            if ((pionN.type == Pion) && (pionN.side == sideBlack)) {
-               evalWhitePOV += -900;  // Pion Noir proche promo
-            }
-         }
+      // Ce bonus s'applique toujours, peu importe qui joue
+      for (int x = 0; x < 8; x++) {
+          // Pion blanc en y=6 (avant-dernière rangée côté blanc)
+          Piece *pionB = board->pieceCase[x][6];
+          if (pionB && pionB.type == Pion && pionB.side == sideWhite) {
+              evalWhitePOV += 900;
+          }
+          // Pion noir en y=1 (avant-dernière rangée côté noir)
+          Piece *pionN = board->pieceCase[x][1];
+          if (pionN && pionN.type == Pion && pionN.side == sideBlack) {
+              evalWhitePOV -= 900;
+          }
       }
       
       // ===========================================
@@ -1140,9 +1165,9 @@ static int nbCallsIsKingCheck = 0;
        pour limiter le nombre de mise à jour de l'interface pendant que l'IA décide de son coup */
       
       // Stocker dans le cache
-      evalCache[key] = @(evalWhitePOV);
+      // evalCache[key] = @(evalWhitePOV);
       // Limiter la taille du cache
-      if (evalCache.count > 200000) [evalCache removeAllObjects];
+      // if (evalCache.count > 200000) [evalCache removeAllObjects];
       
       /* CONVERSION FINALE POUR NEGAMAX :
        - Si 'side' = Blancs : retourner evalWhitePOV tel quel (positif = bon pour Blancs)

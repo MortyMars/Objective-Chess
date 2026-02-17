@@ -10,7 +10,7 @@
 // ==== FLAGS DE DEBUG ====
 /*========= LIGNE À COMMENTER /DÉCOMMENTER EN FONCTION DES BESOINS DE DEBUG ==========*/
 /*                                                                                    */
-#define DEBUG_ZOBRIST 1   // DEBUG_ZOBRIST mis en place dans Negamax et Quiescence     /
+//#define DEBUG_ZOBRIST 1   // DEBUG_ZOBRIST mis en place dans Negamax et Quiescence     /
 /*                                                                                    */
 /*============== FIN D'ACTIVATION /DÉSACTIVATION DE DEBUG_ZOBRIST ====================*/
 // #define DEBUG_MOVE_GEN 1

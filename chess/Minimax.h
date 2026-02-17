@@ -25,7 +25,8 @@
       @public  // Déclaration des iVars comme publiques pour accès aux catégories
       int nbLoop;
       int nbElag;
-      int nodeCount;
+      int nodeCount; // dble emploi avec nodes ?
+      ULONG nodes;     // dble emploi avec nodeCount ?
 
       // Variables de profilling
       int evalCount ;

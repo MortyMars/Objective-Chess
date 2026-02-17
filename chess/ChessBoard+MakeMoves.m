@@ -125,6 +125,16 @@
       
       /*----------------------- ROQUE (tour) --------------------------------------*/
       if (m.isCastling) {
+         // Recherche bug Roque Roi Noir IA
+         NSLog(@"🏰 ROQUE makeMove:");
+             NSLog(@"   Roi : (%d,%d) → (%d,%d)", fx, fy, tx, ty);
+             NSLog(@"   kingSide = %d", (tx == 6));
+             NSLog(@"   rookFromX = %d, y = %d", (tx==6)?7:0, fy);
+             NSLog(@"   pieceCase[%d][%d] = %@", (tx==6)?7:0, fy,
+                   pieceCase[(tx==6)?7:0][fy]);
+             NSLog(@"   Tour numMoves = %d",
+                   pieceCase[(tx==6)?7:0][fy].numMoves);
+         
          int y = fy;
          BOOL kingSide = (tx == 6);
          
@@ -372,7 +382,7 @@
 
 
    // Méthode déterminant les droits de roque
-   - (uint8_t)updateCastlingRights:(uint8_t)rights
+   -(uint8_t)updateCastlingRights:(uint8_t)rights
                            forMove:(Move *)m
                      capturedPiece:(Piece *)captured
    {
