@@ -74,19 +74,29 @@
    int ny = y + dir;
    if (ny >= 0 && ny <= 7 && !board->pieceCase[x][ny]) {
       
-      // ✨ NOUVEAU : Vérifier si c'est une promotion
+      // ✨ Vérifier si c'est une promotion
       if (ny == promRank) {
-         // Créer 4 coups (Dame, Tour, Fou, Cavalier)
-         PieceType promotions[] = {Dame, Tour, Fou, Cava};
-         
-         for (int i = 0; i < 4; i++) {
+         // ASYMÉTRIE : Joueur = 1 coup, IA = 4 coups
+         if (p.side == sideJoueur) {
             Move *m = [Move newMoveFromX:x Y:y ToNx:x Ny:ny];
             m.movingPiece   = p;
             m.isPromotion   = YES;
-            m.promotionType = promotions[i];
+            m.promotionType = Dame;
             m.fromSquare    = SQ(x,y);
             m.toSquare      = SQ(x,ny);
             [moves addObject:m];
+         }
+         else {
+            PieceType promotions[] = {Dame, Tour, Fou, Cava};
+            for (int i = 0; i < 4; i++) {
+               Move *m = [Move newMoveFromX:x Y:y ToNx:x Ny:ny];
+               m.movingPiece   = p;
+               m.isPromotion   = YES;
+               m.promotionType = promotions[i];
+               m.fromSquare    = SQ(x,y);
+               m.toSquare      = SQ(x,ny);
+               [moves addObject:m];
+            }
          }
       }
       else {
@@ -119,21 +129,33 @@
       Piece *target = board->pieceCase[nx][ny];
       if (target && target.side != p.side && target.type != Roi) {
          
-         // ✨ NOUVEAU : Vérifier si c'est une promotion-capture
+         // ✨ Vérifier si c'est une promotion-capture
          if (ny == promRank) {
-            // Créer 4 coups (Dame, Tour, Fou, Cavalier)
-            PieceType promotions[] = {Dame, Tour, Fou, Cava};
-            
-            for (int i = 0; i < 4; i++) {
+            // ASYMÉTRIE : Joueur = 1 coup, IA = 4 coups
+            if (p.side == sideJoueur) {
                Move *m = [Move newMoveFromX:x Y:y ToNx:nx Ny:ny];
                m.movingPiece   = p;
                m.isCapture     = YES;
                m.isPromotion   = YES;
-               m.promotionType = promotions[i];
+               m.promotionType = Dame;
                m.capturedPiece = target;
                m.fromSquare    = SQ(x,y);
                m.toSquare      = SQ(nx,ny);
                [moves addObject:m];
+            }
+            else {
+               PieceType promotions[] = {Dame, Tour, Fou, Cava};
+               for (int i = 0; i < 4; i++) {
+                  Move *m = [Move newMoveFromX:x Y:y ToNx:nx Ny:ny];
+                  m.movingPiece   = p;
+                  m.isCapture     = YES;
+                  m.isPromotion   = YES;
+                  m.promotionType = promotions[i];
+                  m.capturedPiece = target;
+                  m.fromSquare    = SQ(x,y);
+                  m.toSquare      = SQ(nx,ny);
+                  [moves addObject:m];
+               }
             }
          }
          else {

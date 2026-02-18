@@ -528,60 +528,33 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
 
 
    // ============================================================================================
-   // Méthode d'instance gérant la promotion d'un pion parvenant sur sa dernière rangée
-   -(NSString *) SelectPromoPion:(Piece*)piece auRang:(int)rang
+   // Méthode d'instance gérant le choix de promotion du joueur
+   -(PieceType)SelectPromoPionForSide:(Side)side
    {
-      NSString *promoDTFC = @"";
-      NSString *msgTitre  = @"";
-      NSString *msgInfo   = @"";
-      
-      // Orientation classique Blancs en bas --> Pion blanc en rang 7 ou pion noir en rang 0 = promo
-      //if(sideJoueur == sideWhite) {
-      if (rang == 7) {  // Pion Blanc
-         msgTitre = @"Pion Blanc éligible à promotion";
-         msgInfo  = @"Choisissez la promotion souhaitée pour votre Pion...";
-      }
-      if (rang == 0) {  // Pion Noir
-         msgTitre = @"Pion Noir éligible à promotion";
-         msgInfo  = @"Il vous revient de choisir en toute bonne foi, la promotion pour le Pion de l'IA...";
-      }
-      //}
-      
-      // Orientation inversée Noirs en bas --> Pion blanc en rang 0 ou pion noir en rang 7 = promo
-      /* if(sideJoueur == sideBlack) {
-       if (rang == 7) {  // Pion Noir Joueur
-       msgTitre = @"Pion Noir éligible à promotion";
-       msgInfo  = @"Choisissez la promotion souhaitée pour votre Pion...";
+       NSString *msgTitre = (side == sideWhite)
+           ? @"Pion Blanc éligible à promotion"
+           : @"Pion Noir éligible à promotion";
+       
+       NSString *msgInfo = @"Choisissez la promotion souhaitée pour votre Pion...";
+       
+       NSAlert *promoPion = [[NSAlert alloc] init];
+       [promoPion addButtonWithTitle:@"Dame"];
+       [promoPion addButtonWithTitle:@"Tour"];
+       [promoPion addButtonWithTitle:@"Fou"];
+       [promoPion addButtonWithTitle:@"Cavalier"];
+       [promoPion setMessageText:msgTitre];
+       [promoPion setInformativeText:msgInfo];
+       [promoPion setAlertStyle:NSAlertStyleInformational];
+       
+       NSModalResponse boutonChoisi = [promoPion runModal];
+       
+       switch (boutonChoisi) {
+           case NSAlertFirstButtonReturn:  return Dame;
+           case NSAlertSecondButtonReturn: return Tour;
+           case NSAlertThirdButtonReturn:  return Fou;
+           default:                        return Cava;
        }
-       if (rang == 0) {  // Pion Blanc IA
-       msgTitre = @"Pion Blanc éligible à promotion";
-       msgInfo  = @"Il vous revient de choisir en toute bonne foi, la promotion pour le Pion de l'IA...";
-       }
-       } */
-      
-      NSAlert *promoPion = [[NSAlert alloc] init];
-      [promoPion addButtonWithTitle:@"Dame"];
-      [promoPion addButtonWithTitle:@"Tour"];
-      [promoPion addButtonWithTitle:@"Fou"];
-      [promoPion addButtonWithTitle:@"Cavalier"];
-      [promoPion setMessageText:msgTitre];
-      [promoPion setInformativeText:msgInfo];
-      [promoPion setAlertStyle:NSAlertStyleInformational];
-      
-      /* Récupération du choix fait par le joueur
-       Noter l'astuce utilisée pour disposer d'un véritable quadruple choix -sachant que NSAlert ne sait pas
-       lire un retour au-delà du 'ThirdButton'- en utilisant un pseudo choix par défaut...  */
-      NSModalResponse boutonChoisi = [promoPion runModal];
-      switch (boutonChoisi) {
-         case NSAlertFirstButtonReturn : piece.type = Dame;  promoDTFC=@"D";   break;
-         case NSAlertSecondButtonReturn: piece.type = Tour;  promoDTFC=@"T";   break;
-         case NSAlertThirdButtonReturn : piece.type = Fou;   promoDTFC=@"F";   break;
-         default                       : piece.type = Cava;  promoDTFC=@"C";   break;
-      }
-      
-      return promoDTFC;
-      
-   } // !SelectPromoPion
+   }
 
 
    // ==================================================================================================

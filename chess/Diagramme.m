@@ -579,15 +579,16 @@ NSString *strPieces;
       BOOL roque = petitRoque;         BOOL ROQUE = grandRoque;         BOOL ENPASS = enPassant;
       
       /* MCN - AJOUT DU COUP IA À LA LISTE DE CEUX DÉJÀ JOUÉS
-      EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard
+      EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard */
        
+      /* VÉRIF OBSOLÈTE CPTE TENU DE LA GESTION PAR L'IA DE SES PROPRES PROMOTIONS
       Vérification s'il y a une promo de pion à réaliser
-      Test à faire avant 'TestEchecFavSide' car la promo peut générer une mise en échec */
+      Test à faire avant 'TestEchecFavSide' car la promo peut générer une mise en échec
       Piece *pionPromo = [board pieceAtPos:aiMove.dest];       NSString *promPion = @"";
       if (pionPromo.type == Pion) {
          if (aiMove.dest.y == 0 || aiMove.dest.y == 7)
             promPion = [board SelectPromoPion:pionPromo auRang:aiMove.dest.y];
-      }
+      } */
       
       /* Récup info d'une mise en échec éventuelle et de Prise e.p. pour renseigner 'ConvertEnStringMove'
       Bizarrement 'TestEchecForSide' RAZ les indic de Roque et de Prise e.p., d'où la sauvegarde ci-avant */
@@ -599,7 +600,8 @@ NSString *strPieces;
       // Restauration des indicateurs de roque pour utilisation dans 'ConvertEnStringMove'
       petitRoque = roque;           grandRoque = ROQUE;           enPassant = ENPASS;
       
-      NSMutableString* bestMoveIA = [MoveToStr ConvertEnStringMove:aiMove    PromPion:promPion
+      // REVOIR @"" PASSÉ À PROMPION ???!!! CPTE TENU DE LA GESTION PAR L'IA DE SES PROPRES PROMOS
+      NSMutableString* bestMoveIA = [MoveToStr ConvertEnStringMove:aiMove    PromPion:@""
                                                              StrEchec:strEchec     Board:savedBoard];
       
       /* Ligne déplacée dans le Thread Principal ci dessous

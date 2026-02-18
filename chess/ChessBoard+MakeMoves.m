@@ -203,12 +203,20 @@
          st.oldType = moving.type;
          
          zobristKey ^= zobristPiece[moving.side][Pion][toSq];
-         moving.type = Dame;
+         moving.type = m.promotionType; // ✅ Utiliser m.promotionType
          zobristKey ^= zobristPiece[moving.side][Dame][toSq];
          
          LOG_PROMO(@"%@ pawn promotes at (%d,%d)",
                    (moving.side == sideWhite ? @"White" : @"Black"),
                    m.dest.x, m.dest.y);
+         
+         // ✅ LOG DE DIAGNOSTIC
+         NSLog(@"🔵 PROMOTION dans makeMove:");
+         NSLog(@"   m.promotionType = %d (%@)", m.promotionType,
+                  @[@"?", @"Pion", @"Cavalier", @"Fou", @"Tour", @"Dame"][m.promotionType]);
+         NSLog(@"   moving.type après = %d (%@)", moving.type,
+                  @[@"?", @"Pion", @"Cavalier", @"Fou", @"Tour", @"Dame"][moving.type]);
+         
       }
       
       /*----------------------- DROITS DE ROQUE -----------------------------------*/
@@ -295,7 +303,7 @@
       
       /*----------------------- PROMOTION -----------------------------------------*/
       if (st.wasPromotion) {
-         zobristKey ^= zobristPiece[moving.side][Dame][toSq];
+         zobristKey ^= zobristPiece[moving.side][m.promotionType][toSq];
          moving.type = st.oldType;
          zobristKey ^= zobristPiece[moving.side][Pion][toSq];
          

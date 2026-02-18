@@ -52,5 +52,9 @@ Tests de Fonctionnement du Roque et MàJ indicateur :                       |
 ----------------------------------------------------                       |
 r3k2r/p1ppqppp/3b4/3np3/N3P3/1p1PQN2/PP1BBPPP/R3K2R w QKqk e3 0 1          |  Test Roques Rois Blanc et Noir - Blancs en BAS
 R2K3R/P1PPQPPP/3B4/3NP3/n3p3/1P1pqn2/pp1bbppp/r2k3r w QKqk e3 0 1          |  Idem mais Noirs en BAS, Cas non géré par Diagramme
+                                                                           |
+Tests de Fonctionnement de la Promotion /Sous-Promotion :                  |
+---------------------------------------------------------                  |
+6k1/8/8/8/1P6/8/6K1/8 w - - 0 1                                            |
 
 

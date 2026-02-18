@@ -286,15 +286,16 @@ BOOL engineIsBusy = NO;
       BOOL roque = petitRoque;         BOOL ROQUE = grandRoque;         BOOL ENPASS = enPassant;
       
       /* MCN - AJOUT DU COUP IA À LA LISTE DE CEUX DÉJÀ JOUÉS
-       EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard
+       EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard */
        
-       Vérification s'il y a une promo de pion à réaliser
-       Test à faire avant 'TestEchecFavSide' car la promo peut générer une mise en échec */
+       /* Désormais l'IA gère dans le code sa meilleure protion /sous-promotion
+       // Vérification s'il y a une promo de pion à réaliser
+       // Test à faire avant 'TestEchecFavSide' car la promo peut générer une mise en échec
       Piece *pionPromo = [liveBoard pieceAtPos:aiMove.dest];          NSString *promPion = @"";
       if (pionPromo.type == Pion) {
          if (aiMove.dest.y == 0 || aiMove.dest.y == 7)
             promPion = [liveBoard SelectPromoPion:pionPromo auRang:aiMove.dest.y];
-      }
+      } */
       
       /* Récup info d'une mise en échec éventuelle et de Prise e.p. pour renseigner 'ConvertEnStringMove'
        Bizarrement 'TestEchecForSide' RAZ les indic de Roque et de Prise e.p., d'où la sauvegarde ci-avant */
@@ -303,7 +304,8 @@ BOOL engineIsBusy = NO;
       // Restauration des indicateurs de roque pour utilisation dans 'ConvertEnStringMove'
       petitRoque = roque;        grandRoque = ROQUE;         enPassant = ENPASS;
       
-      NSMutableString* bestMoveIA = [MoveToStr ConvertEnStringMove:aiMove  PromPion:promPion
+      // REVOIR le @"" passé en PromPion ???!!! compte tenu de la gestion par l'IA de sa propre promotion
+      NSMutableString* bestMoveIA = [MoveToStr ConvertEnStringMove:aiMove  PromPion:@""
                                                              StrEchec:strEchec   Board:savedBoard];
       
       [MoveToStr MettreEnFormeChaine:bestMoveIA Protagoniste:@"IA"];
@@ -348,8 +350,8 @@ BOOL engineIsBusy = NO;
    -(void) MakeJoueurMoveVersDest:(Pos *) dest
    {
       /* Le paramètre attendu par la méthode est la case sélectionnée par le second clic
-      Elle a été controlée comme appartenant ou non aux déplacements autorisés
-      Si OK on peut alors préparer et réaliser le 'Move' Joueur */
+       Elle a été controlée comme appartenant ou non aux déplacements autorisés
+       Si OK on peut alors préparer et réaliser le 'Move' Joueur */
       //Move *moveJoueur = [[Move alloc] initWithStart:selTile Dest:dest];
       Move *moveJoueur = [liveBoard buildMoveFrom:selTile to:dest board:liveBoard];
       
@@ -366,19 +368,29 @@ BOOL engineIsBusy = NO;
          NSLog(@"🎮 AVANT makeMove: hash=%llx, recalc=%llx", hashAvant, recalcAvant);
       #endif
       
+      // ✨ Si c'est une promotion, demander le type
+      PieceType chosenType = Dame; // Valeur par défaut
+      if (moveJoueur.isPromotion) {
+         chosenType = [liveBoard SelectPromoPionForSide:moveJoueur.movingPiece.side];
+         moveJoueur.promotionType = chosenType;
+         
+         NSLog(@"🎯 Joueur promeut en %@",
+               @[@"?", @"Pion", @"Cavalier", @"Fou", @"Tour", @"Dame", @"Roi"][chosenType]);
+      }
+      
       ChessBoard* savedBoard = liveBoard.copy;
       
       /* Réalisation du move - AVEC mise à jour Zobrist */
       MoveState st = [liveBoard makeMove:moveJoueur];
       
-      #ifdef DEBUG_ZOBRIST
-         uint64_t hashApres = liveBoard->zobristKey;
-         uint64_t recalcApres = recomputeZobrist(liveBoard);
-         NSLog(@"🎮 APRÈS makeMove: hash=%llx, recalc=%llx", hashApres, recalcApres);
-         if (hashApres != recalcApres) {
-            NSLog(@"❌ Le coup joueur a corrompu le Zobrist !");
-         }
-      #endif
+   #ifdef DEBUG_ZOBRIST
+      uint64_t hashApres = liveBoard->zobristKey;
+      uint64_t recalcApres = recomputeZobrist(liveBoard);
+      NSLog(@"🎮 APRÈS makeMove: hash=%llx, recalc=%llx", hashApres, recalcApres);
+      if (hashApres != recalcApres) {
+         NSLog(@"❌ Le coup joueur a corrompu le Zobrist !");
+      }
+   #endif
       
       // Gestion des indicateurs d'affichage du Roque dans la liste des coups joués
       petitRoque = NO;
@@ -403,42 +415,57 @@ BOOL engineIsBusy = NO;
             grandRoque = YES;
          }
       }
-      // Fin de gestion des indicateurs 
-
-
+      // Fin de gestion des indicateurs
+      
+      
       // Note : on ne fait PAS unmakeMove car c'est un vrai coup, pas une exploration
       
       /* Sauvegarde des indicateurs de Roque et de Prise e.p., car -bizarement- [Minimax TestEchecFavSide]
-      les RAZ avant d'avoir pu les exploiter dans ConvertEnStringMove */
-      BOOL roque = petitRoque;          BOOL ROQUE = grandRoque;          BOOL ENPASS = enPassant;
+       les RAZ avant d'avoir pu les exploiter dans ConvertEnStringMove */
+      BOOL roque = petitRoque;
+      BOOL ROQUE = grandRoque;
+      BOOL ENPASS = enPassant;
       
       /* AJOUT DU COUP JOUEUR À LA LISTE DE CEUX DÉJÀ JOUÉS
-      EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard
+       EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard */
        
-      Vérification s'il y a une promo de pion à réaliser
-      Test à faire avant 'TestEchecFavSide' car la promo peut générer un échec */
+       
+       /* Modif de gestion
+       Vérification s'il y a une promo de pion à réaliser
+       Test à faire avant 'TestEchecFavSide' car la promo peut générer un échec
       Piece *pionPromo = [liveBoard pieceAtPos:moveJoueur.dest];      NSString *promPion = @"";
       if (pionPromo.type == Pion) {
          if (moveJoueur.dest.y == 0 || moveJoueur.dest.y == 7)
             promPion = [liveBoard SelectPromoPion:pionPromo auRang:moveJoueur.dest.y];
-      }
+      }  */
       
       // Récup de l'info sur une mise en échec éventuelle pour renseigner ensuite ConvertEnStringMove
       NSString *strEchecMat = [maMinimax TestEchecFavSide:sideCourant Board:liveBoard];
       
       /* // Mise à jour 'Status Bar'
-      if ([strEchecMat isEqual:@"Echec"]) {
-      if (checkCount >1) monConnecteur.lblEchec.cell.stringValue = @"Échec : ++";
-      else               monConnecteur.lblEchec.cell.stringValue = @"Échec : +";
-      }
-      else monConnecteur.lblEchec.cell.stringValue = @"Échec :"; */
+       if ([strEchecMat isEqual:@"Echec"]) {
+       if (checkCount >1) monConnecteur.lblEchec.cell.stringValue = @"Échec : ++";
+       else               monConnecteur.lblEchec.cell.stringValue = @"Échec : +";
+       }
+       else monConnecteur.lblEchec.cell.stringValue = @"Échec :"; */
       
       // Restauration des indicateurs de Roque et de Prise e.p.
-      petitRoque = roque;        grandRoque = ROQUE;        enPassant = ENPASS;
+      petitRoque = roque;
+      grandRoque = ROQUE;
+      enPassant = ENPASS;
+      
       
       // Transformation de la chaine du move
+      // ✅ Afficher le symbole du type de promotion ('@"%c' pour char) au lieu du chiffre
+      NSString *promPion = @"";
+      if (moveJoueur.isPromotion) {
+         char symbols[] = "?PCFTD";  // Pion, Cavalier, Fou, Tour, Dame
+         promPion = [NSString stringWithFormat:@"%c", symbols[chosenType]];
+      }
+      
+      
       NSMutableString* myMoveMCN = [MoveToStr ConvertEnStringMove:moveJoueur  PromPion:promPion
-                                                            StrEchec:strEchecMat    Board:savedBoard];
+                                                         StrEchec:strEchecMat    Board:savedBoard];
       // Mise en forme de la chaine
       [MoveToStr MettreEnFormeChaine:myMoveMCN Protagoniste:@"J"];
       
@@ -485,15 +512,16 @@ BOOL engineIsBusy = NO;
       BOOL roque = petitRoque;         BOOL ROQUE = grandRoque;         BOOL ENPASS = enPassant;
       
       /* MCN - AJOUT DU COUP IA À LA LISTE DE CEUX DÉJÀ JOUÉS
-      EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard
+      EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard */
        
+      /* VÉRIF DÉSORMAIS INUTILE COMPTE TENU QUE C'EST L'IA QUI GÈRE LES PROMOTIONS /SOUS-PROMOTIONS
       Vérification s'il y a une promo de pion à réaliser
-      Test à faire avant 'TestEchecFavSide' car la promo peut générer une mise en échec */
+      Test à faire avant 'TestEchecFavSide' car la promo peut générer une mise en échec
       Piece *pionPromo = [board pieceAtPos:aiMove.dest];       NSString *promPion = @"";
       if (pionPromo.type == Pion) {
          if (aiMove.dest.y == 0 || aiMove.dest.y == 7)
             promPion = [board SelectPromoPion:pionPromo auRang:aiMove.dest.y];
-      }
+      } */
       
       /* Récup info d'une mise en échec éventuelle et de Prise e.p. pour renseigner 'ConvertEnStringMove'
       Bizarrement 'TestEchecForSide' RAZ les indic de Roque et de Prise e.p., d'où la sauvegarde ci-avant */
@@ -512,7 +540,8 @@ BOOL engineIsBusy = NO;
       // Restauration des indicateurs de roque pour utilisation dans 'ConvertEnStringMove'
       petitRoque = roque;           grandRoque = ROQUE;           enPassant = ENPASS;
       
-      NSMutableString* bestMoveIA = [MoveToStr ConvertEnStringMove:aiMove    PromPion:promPion
+      // REVOIR LE @"" PASSÉ À PROMPION ???!!! CPTE TENU DE LA GESTION PAR L'IA DE SES PROPRES PROMOTIONS
+      NSMutableString* bestMoveIA = [MoveToStr ConvertEnStringMove:aiMove    PromPion:@""
                                                              StrEchec:strEchec     Board:savedBoard];
       
       [MoveToStr MettreEnFormeChaine:bestMoveIA Protagoniste:(side == sideWhite)? @"B":@"N"];
