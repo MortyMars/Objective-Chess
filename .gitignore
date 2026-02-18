@@ -4,8 +4,11 @@ Thumbs.db
 *.xcuserstate
 **/.DS_Store
 Chess/*histo*.*
+Doxyfile*
 xcuserdata/
 DerivedData/
 node_modules/
 _doc_annexe/
 _historique/
+html/
+latex/
