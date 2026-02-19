@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24128" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24506" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24128"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24506"/>
+        <capability name="System colors introduced in macOS 10.14" minToolsVersion="10.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -287,12 +288,12 @@ CA
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     </box>
                     <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KkK-C2-v9Y">
-                        <rect key="frame" x="748" y="695" width="292" height="37"/>
+                        <rect key="frame" x="751" y="717" width="285" height="28"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" lineBreakMode="clipping" borderStyle="bezel" alignment="center" title="Coups joués" bezelStyle="round" id="VrH-oP-hoz">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="systemRedColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
                     <textField identifier="lettresSideNoirs" focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="O64-U1-bBy" userLabel="H                G                F                 E                D                 C                   B                 A">
@@ -305,18 +306,18 @@ CA
                         </textFieldCell>
                     </textField>
                     <scrollView fixedFrame="YES" borderType="line" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" translatesAutoresizingMaskIntoConstraints="NO" id="gGj-ZO-MXq">
-                        <rect key="frame" x="750" y="48" width="288" height="650"/>
+                        <rect key="frame" x="750" y="134" width="288" height="583"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <clipView key="contentView" drawsBackground="NO" id="3Yi-Br-mjc">
-                            <rect key="frame" x="1" y="1" width="269" height="648"/>
-                            <autoresizingMask key="autoresizingMask"/>
+                            <rect key="frame" x="1" y="1" width="269" height="581"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <textView editable="NO" importsGraphics="NO" richText="NO" verticallyResizable="YES" spellingCorrection="YES" smartInsertDelete="YES" id="hcA-ub-qgC">
-                                    <rect key="frame" x="0.0" y="0.0" width="269" height="648"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="269" height="581"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="windowBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                    <size key="minSize" width="269" height="648"/>
+                                    <size key="minSize" width="269" height="581"/>
                                     <size key="maxSize" width="288" height="10000000"/>
                                     <color key="insertionPointColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                 </textView>
@@ -327,7 +328,7 @@ CA
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                         <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="r9o-1D-Nd6">
-                            <rect key="frame" x="270" y="1" width="17" height="648"/>
+                            <rect key="frame" x="270" y="1" width="17" height="581"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                     </scrollView>
@@ -429,6 +430,27 @@ CA
                             <color key="backgroundColor" name="windowBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="l9Q-L1-nQ6">
+                        <rect key="frame" x="748" y="96" width="287" height="24"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="push" title="---&gt;    Proposer coup Joueur    &lt;---" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="E2x-8s-DWx" userLabel="-&gt; Proposer coup Joueur &lt;-">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <connections>
+                                <action selector="onHintButtonClicked:" target="oGd-vg-EmX" id="V1Z-6y-6du"/>
+                            </connections>
+                        </buttonCell>
+                        <color key="bezelColor" name="unemphasizedSelectedContentBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </button>
+                    <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="96l-tU-xYj">
+                        <rect key="frame" x="748" y="46" width="290" height="49"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" borderStyle="border" alignment="center" drawsBackground="YES" id="FkN-gQ-0yv">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
                 </subviews>
                 <constraints>
                     <constraint firstItem="huy-nn-Je9" firstAttribute="top" relation="greaterThanOrEqual" secondItem="372" secondAttribute="top" constant="63" id="UlP-Bi-8wX"/>
@@ -452,6 +474,7 @@ CA
                 <outlet property="chiffresSideNoirsGauche" destination="WXy-OT-d5e" id="W5d-Lc-aaX"/>
                 <outlet property="lbl50Coups" destination="2su-NZ-5OR" id="wSg-Ms-6vY"/>
                 <outlet property="lblCibleEP" destination="L3g-6L-Iv4" id="01V-Gt-f9m"/>
+                <outlet property="lblCoupProposed" destination="96l-tU-xYj" id="XjO-hq-k4h"/>
                 <outlet property="lblEchec" destination="zB7-kU-foB" id="ppL-W6-e8i"/>
                 <outlet property="lblEvalBoard" destination="tqI-9e-FDm" id="Izd-wg-3Lg"/>
                 <outlet property="lblInfo" destination="ote-sm-H7K" id="zU5-nC-a0a"/>

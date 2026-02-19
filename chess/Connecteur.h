@@ -27,6 +27,11 @@
    // NB : la police de caractère utilisée dans txtCoups est fixée par 'AppDelegate'
    
    // Création de labels affichant diverses info sur la partie en cours
+   /* Rappel sur la façon de procéder :
+   1) on crée ci-dessous un IBOutlet
+   2) via l'éditeur->Assistant, on 'tire' un lien entre la zone de texte
+      de l'interface qui nous intéresse et l'objet 'monConnecteur'
+   3) à partir de là 'monConnecteur' pilote le contenu du lbl créé    */
    @property (weak) IBOutlet NSTextField *lblEvalBoard;
    @property (weak) IBOutlet NSTextField *lblTrait;
    @property (weak) IBOutlet NSTextField *lblRoque;
@@ -35,6 +40,8 @@
    @property (weak) IBOutlet NSTextField *lblNumCoup;
    @property (weak) IBOutlet NSTextField *lblEchec;
    @property (weak) IBOutlet NSTextField *lblInfo;
+   @property (weak) IBOutlet NSTextField *lblCoupProposed;
+
    
    // Création du lien entre la Vue (ChessView) et le Contrôleur (MCNConnecteur)
    @property (weak) IBOutlet ChessView *maChessView;

@@ -29,6 +29,8 @@ BOOL stopMatOuPat = NO;
 
 BOOL enPassant = NO;
 
+BOOL partieLancee = NO;
+
 int checkCount = 0;
 int evalWhitePOV = 0;
 

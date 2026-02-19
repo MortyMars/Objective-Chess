@@ -137,6 +137,8 @@ extern const int rookDirs[4][2];
 extern const int queenDirs[8][2];
 extern const int knightOffsets[8][2];
 
+extern BOOL partieLancee;
+
 
 
 // ===============================================================================================================

@@ -120,6 +120,9 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       monConnecteur.menuPoursuivre.title = @"Poursuivre avec les Noirs";
       monConnecteur.menuPoursuivre.enabled = YES;
       
+      // Déclarer la partie lancée (pour bouton de l'interface)
+      partieLancee = YES;
+      
       // DEBUG *********** Test d'involution ************ DEBUG
       engineIsBusy = YES;
       TestInvolution();
@@ -225,6 +228,9 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       //MàJ des menus
       monConnecteur.menuPoursuivre.title = @"Poursuivre avec les Blancs";
       monConnecteur.menuPoursuivre.enabled = YES;
+      
+      // Déclarer la partie lancée (pour bouton de l'interface)
+      partieLancee = YES;
       
    }
 
@@ -770,45 +776,84 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
    }
 
 
-// ==================================================================================================
-// Méthode de recalcul des droits de Roque
--(int) ComputeCastlingRights:(ChessBoard *) board {
-   
-   int NewCastlingRights = 15;
-   Piece *rk, *rq, *k, *RK, *RQ, *K;
-   
-   /* Aux emplacements c-dessous ne se trouvent pas forcément les pièces attendues.
-   Si c'est le cas pas de problème ; mais si ça n'est pas le cas, les pièces s'y trouvant
-   auront forcément pris la place des pièces attendues et accuseront donc un nombre de moves
-   différent de 0, ce que l'on regarde finalement dans les tests -------------------------*/
-   rk = pieceCase[7][7];
-   rq = pieceCase[0][7];
-   k  = pieceCase[4][7];
-   RK = pieceCase[7][0];
-   RQ = pieceCase[0][0];
-   K  = pieceCase[4][0];
-   
-   // Aucune pièce n'a bougé parmi les emplacements ciblés -> CastlingRights = "KQkq"
-   if (rk.numMoves == 0 && rq.numMoves == 0 &&
-       RK.numMoves == 0 && RQ.numMoves == 0 &&
-       k.numMoves  == 0 && K.numMoves  == 0) {
-      NewCastlingRights = 15;
+   // ==================================================================================================
+   // Méthode de recalcul des droits de Roque
+   -(int) ComputeCastlingRights:(ChessBoard *) board {
+      
+      int NewCastlingRights = 15;
+      Piece *rk, *rq, *k, *RK, *RQ, *K;
+      
+      /* Aux emplacements c-dessous ne se trouvent pas forcément les pièces attendues.
+      Si c'est le cas pas de problème ; mais si ça n'est pas le cas, les pièces s'y trouvant
+      auront forcément pris la place des pièces attendues et accuseront donc un nombre de moves
+      différent de 0, ce que l'on regarde finalement dans les tests -------------------------*/
+      rk = pieceCase[7][7];
+      rq = pieceCase[0][7];
+      k  = pieceCase[4][7];
+      RK = pieceCase[7][0];
+      RQ = pieceCase[0][0];
+      K  = pieceCase[4][0];
+      
+      // Aucune pièce n'a bougé parmi les emplacements ciblés -> CastlingRights = "KQkq"
+      if (rk.numMoves == 0 && rq.numMoves == 0 &&
+          RK.numMoves == 0 && RQ.numMoves == 0 &&
+          k.numMoves  == 0 && K.numMoves  == 0) {
+         NewCastlingRights = 15;
+         return NewCastlingRights;
+      }
+      
+      // Bloc Roque Roi Noir
+      if (rk.numMoves == 1 && k.numMoves == 0) NewCastlingRights -= 4;  // on retire 'k'
+      if (rq.numMoves == 1 && k.numMoves == 0) NewCastlingRights -= 8;  // on retire 'q'
+      if (k.numMoves == 1) NewCastlingRights -= 12;                     // on retire 'kq'
+      
+      // Bloc Roque Roi Blanc
+      if (RK.numMoves == 1 && K.numMoves == 0) NewCastlingRights -= 1;  // on retire 'K'
+      if (RQ.numMoves == 1 && K.numMoves == 0) NewCastlingRights -= 2;  // on retire 'Q'
+      if (K.numMoves == 1) NewCastlingRights -= 3;                      // on retire 'KQ'
+      
       return NewCastlingRights;
+      
    }
-   
-   // Bloc Roque Roi Noir
-   if (rk.numMoves == 1 && k.numMoves == 0) NewCastlingRights -= 4;  // on retire 'k'
-   if (rq.numMoves == 1 && k.numMoves == 0) NewCastlingRights -= 8;  // on retire 'q'
-   if (k.numMoves == 1) NewCastlingRights -= 12;                     // on retire 'kq'
-   
-   // Bloc Roque Roi Blanc
-   if (RK.numMoves == 1 && K.numMoves == 0) NewCastlingRights -= 1;  // on retire 'K'
-   if (RQ.numMoves == 1 && K.numMoves == 0) NewCastlingRights -= 2;  // on retire 'Q'
-   if (K.numMoves == 1) NewCastlingRights -= 3;                      // on retire 'KQ'
-   
-   return NewCastlingRights;
-   
-}
+
+
+   // Bouton "Hint" cliqué
+   -(IBAction)onHintButtonClicked:(id)sender
+   {
+      NSString *message;
+      if (partieLancee) {
+         // Calculer le meilleur coup pour le joueur
+         Move *hint = [maMinimax BestMoveForSide:sideJoueur Board:monConnecteur.maChessView->liveBoard];
+         
+         // Création du message à destination d'une zone de texte
+         message = [NSString stringWithFormat:
+                              @"✨ Suggestion de l'IA : %@\n"
+                              @"Score : %+d centipawns\n",
+                              hint,
+                              hint.orderingScore  // ou le score retourné par BestMoveForSide
+         ];
+         
+      } else {
+         message = @"Merci de lancer d'abord une partie !\n"
+         @"(Menu Partie -> Nouvelle Partie -> ...)";
+      }
+      
+      // Remplissage du lbl associé
+      monConnecteur.lblCoupProposed.cell.stringValue = message;
+      
+      
+      /* REVOIR
+       
+      // Optionnel : mettre en surbrillance les cases start/dest
+      [self highlightSquare:hint.start withColor:[NSColor yellowColor]];
+      [self highlightSquare:hint.dest withColor:[NSColor greenColor]];
+      
+      CGContextRef context = [[NSGraphicsContext currentContext] CGContext];
+      CGContextSetRGBFillColor(context, 0, 0, 1, 1);
+       
+      FIN DE REVOIR */
+      
+   }
 
 
 
