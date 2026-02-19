@@ -1,14 +1,29 @@
-# Fichiers et dossiers non suivis
-Thumbs.db
+# FICHIERS ET DOSSIERS NON SUIVIS
+# -------------------------------
+
+# macOS
 .DS_Store
-*.xcuserstate
 **/.DS_Store
-Chess/*histo*.*
-Doxyfile*
+Thumbs.db
+
+# Xcode
 xcuserdata/
+*.xcuserstate
 DerivedData/
-node_modules/
-_doc_annexe/
-_historique/
+*.xcworkspace/xcuserdata/
+
+# Build (au cas où...)
+build/
+*.o
+*.a
+
+# Doxygen
+Doxyfile*
 html/
 latex/
+
+# Projet
+Chess/*histo*.*
+_doc_annexe/
+_historique/
+
