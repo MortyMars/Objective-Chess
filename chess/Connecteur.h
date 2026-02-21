@@ -1,7 +1,7 @@
-//  Connecteur.h
-//  Chess
-//  Created by MCN on 01/11/2020.
-//  Copyright © 2020 MCN - All rights reserved
+// Connecteur.h
+// Chess
+// Created by MCN on 01/11/2020.
+// Copyright © 2020 MCN - All rights reserved
 
 #import "Minimax.h"
 #import "ChessView.h"

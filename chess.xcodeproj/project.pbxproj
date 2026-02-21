@@ -21,6 +21,8 @@
 		49C031A01794B238001A2048 /* Minimax.m in Sources */ = {isa = PBXBuildFile; fileRef = 49C0319F1794B238001A2048 /* Minimax.m */; };
 		49C031A31794B4D6001A2048 /* Move.m in Sources */ = {isa = PBXBuildFile; fileRef = 49C031A21794B4D6001A2048 /* Move.m */; };
 		83079A0727ECB7BD0047CE06 /* ChessTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 83079A0627ECB7BD0047CE06 /* ChessTests.m */; };
+		8311766F2F49B4F800668E43 /* README_EN.md in Resources */ = {isa = PBXBuildFile; fileRef = 8311766E2F49B4F800668E43 /* README_EN.md */; };
+		831176702F49B4F800668E43 /* README_EN.md in Resources */ = {isa = PBXBuildFile; fileRef = 8311766E2F49B4F800668E43 /* README_EN.md */; };
 		83172A4627FA0873006FB509 /* Diagramme.m in Sources */ = {isa = PBXBuildFile; fileRef = 83172A4527FA0873006FB509 /* Diagramme.m */; };
 		833949A228120B1B0043F12F /* BoardsForTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 833949A128120B1B0043F12F /* BoardsForTests.m */; };
 		8342C20C2F38CAC40063DF68 /* Zobrist.m in Sources */ = {isa = PBXBuildFile; fileRef = 8342C20B2F38CAC40063DF68 /* Zobrist.m */; };
@@ -82,6 +84,7 @@
 		830799FF27ECB7630047CE06 /* Chess.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Chess.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		83079A0427ECB7BC0047CE06 /* ChessTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChessTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		83079A0627ECB7BD0047CE06 /* ChessTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ChessTests.m; sourceTree = "<group>"; };
+		8311766E2F49B4F800668E43 /* README_EN.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README_EN.md; sourceTree = "<group>"; };
 		83172A4527FA0873006FB509 /* Diagramme.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Diagramme.m; sourceTree = "<group>"; };
 		83172A4727FA08AF006FB509 /* Diagramme.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Diagramme.h; sourceTree = "<group>"; };
 		833949A128120B1B0043F12F /* BoardsForTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BoardsForTests.m; sourceTree = "<group>"; };
@@ -203,6 +206,7 @@
 				83E4FD9227F4DADA007F62F9 /* piecesMCN.png */,
 				49AE4ABB17948BAD009D59BE /* Images.xcassets */,
 				83D60B6C2829C84300A6196B /* README.md */,
+				8311766E2F49B4F800668E43 /* README_EN.md */,
 			);
 			path = Chess;
 			sourceTree = "<group>";
@@ -316,6 +320,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8311766F2F49B4F800668E43 /* README_EN.md in Resources */,
 				83A693AE28273A430098C629 /* Codes FEN.txt in Resources */,
 				83E4FD9327F4DADA007F62F9 /* piecesMCN.png in Resources */,
 				49AE4ABC17948BAD009D59BE /* Images.xcassets in Resources */,
@@ -330,6 +335,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				83A693AF28273A430098C629 /* Codes FEN.txt in Resources */,
+				831176702F49B4F800668E43 /* README_EN.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

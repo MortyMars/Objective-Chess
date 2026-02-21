@@ -1,10 +1,8 @@
+// TranspositionTable.h
+// Chess
 //
-//  TranspositionTable.h
-//  ChessEngine
-//
-//  Tables de Transposition pour moteur d'échecs
-//  Utilise les clés Zobrist pour stocker/récupérer les positions évaluées
-//
+// Tables de Transposition
+// Utilise les clés Zobrist pour stocker/récupérer les positions évaluées
 
 #import <Foundation/Foundation.h>
 #import "Move.h"

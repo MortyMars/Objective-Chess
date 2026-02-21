@@ -1,12 +1,10 @@
-//  Zobrist.h
-//  Chess
-//  Created by MCN on 2026-02-08.
-//  Copyright © 2026 MCN - All rights reserved
+// Zobrist.h
+// Chess
+// Created by MCN on 2026-02-08.
+// Copyright © 2026 MCN - All rights reserved
 
 #import <stdint.h>
 #import <stdlib.h>
-
-
 
 
 // =====================================================================================================

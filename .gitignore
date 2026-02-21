@@ -6,11 +6,12 @@
 **/.DS_Store
 Thumbs.db
 
-# Xcode
+# Xcode - fichiers personnels uniquement
 xcuserdata/
 *.xcuserstate
 DerivedData/
 *.xcworkspace/xcuserdata/
+**/*.xcbkptlist
 
 # Build (au cas où...)
 build/
@@ -22,7 +23,7 @@ Doxyfile*
 html/
 latex/
 
-# Projet
+# Dossiers fichiers persos
 Chess/*histo*.*
 _doc_annexe/
 _historique/

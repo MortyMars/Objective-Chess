@@ -1,8 +1,8 @@
-//  Piece.h
-//  chess
-//  Created by Andrew Wang on 15/07/2013
-//  Copyright (c) 2013 Andrew Wang. All rights reserved
-//  Updated by MCN in 2020
+// Piece.h
+// chess
+// Created by Andrew Wang on 15/07/2013
+// Copyright (c) 2013 Andrew Wang. All rights reserved
+// Updated by MCN in 2020
 
 
 #import "Util.h"

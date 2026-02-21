@@ -1,11 +1,11 @@
-//  ChessBoard.m
-//  chess
-//  Created by Andrew Wang on 15/07/2013
-//  Copyright (c) 2013 Andrew Wang. All rights reserved
-//  Optimized New Engine (makeMove/unmakeMove based) by MCN in 2026
+// ChessBoard.m
+// chess
+// Created by Andrew Wang on 15/07/2013
+// Copyright (c) 2013 Andrew Wang. All rights reserved
+// Optimized New Engine (makeMove/unmakeMove based) by MCN in 2026
 
-//  CLASSE DE DÉFINITION DE L'ÉCHIQUIER EN TERMES DE DONNÉES (couleur, nature, position des pièces...)
-//  par opposition à la classe ChessView qui traite la représentation graphique du 'board'
+// CLASSE DE DÉFINITION DE L'ÉCHIQUIER EN TERMES DE DONNÉES (couleur, nature, position des pièces...)
+// par opposition à la classe ChessView qui traite la représentation graphique du 'board'
 
 #import "ChessBoard.h"
 #import "ChessBoard+MakeMoves.h"

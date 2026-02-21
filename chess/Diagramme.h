@@ -1,7 +1,7 @@
-//  Diagramme.h
-//  Chess
-//  Created by MCN on 03/04/2022
-//  Copyright © 2022 MCN. All rights reserved
+// Diagramme.h
+// Chess
+// Created by MCN on 03/04/2022
+// Copyright © 2022 MCN. All rights reserved
 
 
 #import "Minimax.h"

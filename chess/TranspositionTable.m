@@ -1,6 +1,5 @@
-//
-//  TranspositionTable.m
-//  ChessEngine
+// TranspositionTable.m
+// Chess
 //
 
 #import "TranspositionTable.h"

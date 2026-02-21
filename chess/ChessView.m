@@ -1,8 +1,8 @@
-//  ChessView.m
-//  chess
-//  Created by Andrew Wang on 15/07/2013
-//  Copyright (c) 2013 Andrew Wang. All rights reserved
-//  Updated by MCN on 2020
+// ChessView.m
+// chess
+// Created by Andrew Wang on 15/07/2013
+// Copyright (c) 2013 Andrew Wang. All rights reserved
+// Updated by MCN on 2020
 
 //  CLASSE DE DÉFINITION DE L'ÉCHIQUIER EN TERMES DE VUES (construction graphique de l'échiquier, des pièces...)
 //  par opposition à la classe ChessBoard qui traite les données d'un 'board'
@@ -20,7 +20,6 @@ BOOL engineIsBusy = NO;
 
 @implementation ChessView
 
-
    @synthesize delegate;
 
    @synthesize uiFlipped;
@@ -30,22 +29,16 @@ BOOL engineIsBusy = NO;
    // MÉTHODE AUTO EXÉCUTÉE À LA CREATION DE CHESSVIEW
    // Elle en initialise une instance, allouant la mémoire et initialisant des variables
    /* Pour rappel, le type 'id' représente un pointeur sur un objet générique, un type Objective-C
-    représentant "tout objet". Une instance de n'importe quelle classe Objective-C peut être stockée dans
-    une variable id. Un id et tout autre type de classe peuvent être assignés l'un à l'autre sans casting
-    On utilise le type id quand on veut renvoyer un objet dont on ne connaît pas encore le type ou quand
-    une méthode peut prendre n'importe quel type d'objet en argument. */
+   représentant "tout objet". Une instance de n'importe quelle classe Objective-C peut être stockée dans
+   une variable id. Un id et tout autre type de classe peuvent être assignés l'un à l'autre sans casting
+   On utilise le type id quand on veut renvoyer un objet dont on ne connaît pas encore le type ou quand
+   une méthode peut prendre n'importe quel type d'objet en argument. -------------------------------- */
    -(id)initWithFrame:(NSRect)frame
    {
       self = [super initWithFrame:frame];
       if (self) {
-         
-         /* Corps de la méthode à compléter par notre propre code ci-dessous */
-         
-         // Appel de la méthode SetupPieces de la classe ChessBoard
-         // Les pièces sont positionnées pour le début de partie
+         // Initialisation de liveBoard
          liveBoard = [[ChessBoard alloc] init];
-         //[board SetupPieces];
-         
       }
       
       return self;
@@ -62,15 +55,15 @@ BOOL engineIsBusy = NO;
 
       
       /* 'self.bounds.size' pointe sur les dimensions de la vue ChessView contenant l'échiquier
-       La vue ChessView est définie à 600x600 (cf. le fichier xib)
-       Chaque case fait donc 600/8 de large et de haut, elle est donc au format 75x75 */
+      La vue ChessView est définie à 600x600 (cf. le fichier xib)
+      Chaque case fait donc 600/8 de large et de haut, elle est donc au format 75x75         */
       float tileWidth  = self.bounds.size.width  / 8;
       float tileHeight = self.bounds.size.height / 8;
       
       CGContextRef context = [[NSGraphicsContext currentContext] CGContext];
       
       /* CHARGEMENT DE L'IMAGE DE TOUTES LES PIÈCES - Pour que ça marche, l'image regroupant les pièces doit
-       être au format de 360x120 avec une résolution de 72x72 - Chaque pièce a donc une taille de 60x60    */
+      être au format de 360x120 avec une résolution de 72x72 - Chaque pièce a donc une taille de 60x60    */
       NSImage *piecesImage = [NSImage imageNamed:@"piecesMCN.png"];
       
       // Dessin de l'échiquier et des pièces par balayage des 64 cases, une à une
@@ -147,16 +140,14 @@ BOOL engineIsBusy = NO;
       float tileHeight = self.bounds.size.height / 8; // Les cases font donc 600/8 de large et de haut --> 75x75
       
       /* Lorsque l'on décale ChessView dans la fenêtre de l'appli (ce qui a été le cas pour faire de la
-       place pour les repères de cases qui ont été ajoutés), on décale les deux repères (O,x,y) superposés,
-       de l'échiquier d'une part et du pointeur de la souris d'autre part.
-       D'où la correction en ligne+5 faisant à nouveau correspondre la case cliquée avec la position curseur */
+      place pour les repères de cases qui ont été ajoutés), on décale les deux repères (O,x,y) superposés,
+      de l'échiquier d'une part et du pointeur de la souris d'autre part.
+      D'où la correction en ligne+5 faisant à nouveau correspondre la case cliquée avec la position curseur */
       CGPoint pos = [theEvent locationInWindow];
       int x = pos.x / tileWidth, y = pos.y / tileHeight;
       
-      /* 'Pos *tilePos = [Pos posWithX:x y:y]' = Ancienne formule à modifier car, ayant décalé l'échiquier
-       de 75x75, càd d'1 case complète, il faut corriger la position du curseur de -1 case en x et en y   */
-      //Pos *tilePos = [Pos posWithX:x -1 y:y -1];
-      
+      /* 'Pos *uiPos = [Pos posWithX:x y:y]' = Ancienne formule à modifier car, ayant décalé l'échiquier
+      de 75x75, càd d'1 case complète, il faut corriger la position du curseur de -1 case en x et en y   */
       Pos *uiPos = [Pos posWithX:x -1 y:y -1];
 
       // Conversion UI → moteur
@@ -169,10 +160,10 @@ BOOL engineIsBusy = NO;
       Piece *selPiece = [liveBoard pieceAtPos:enginePos]; // selPiece est la pièce sélectionnée
       
       /* Modif. MCN - sideCourant, déclaré dans Util.h, prend la valeur de la couleur de la dernière pièce
-       valide sélectionnée. Si selPiece est nil, sideCourant sera sideInvalid et le move de AI sera shunté */
+      valide sélectionnée. Si selPiece est nil, sideCourant sera sideInvalid et le move de AI sera shunté */
       
       /* SI UNE CASE (DESTINATION) N'EST PAS SÉLECTIONNÉE : C'EST LE CAS AU PREMIER CLIC
-       (pour que l'expression soit Vraie il faut que le basculeur logique 'isThereTileSelected' soit Faux) */
+      (pour que l'expression soit Vraie il faut que le basculeur logique 'isThereTileSelected' soit Faux) */
       if (!isThereTileSelected) {
          // S'il y a une pièce sur la case où on a cliqué
          if ([liveBoard pieceAtPos:enginePos]) {
@@ -195,18 +186,15 @@ BOOL engineIsBusy = NO;
                [maMinimax EvalBoardForSide:sideJoueur board:liveBoard];
                self.needsDisplay = YES;
                
-               // TODO REVOIR
-               /* [monConnecteur InverserIndicQuiJoue];     self.needsDisplay=YES; */
-               
                /* ON NE CONTINUE QUE SI MAT NON DÉTECTÉ (seule façon trouvée pour stopper le déroult auto du prog) */
                if (!stopMatOuPat)
                {
                   /* NSTimer permet de programmer un appel différé (de 2/100 de seconde ici) à
-                   'MakeComputerMove' tout en permettant la poursuite du programme.
-                   Ainsi, la position choisie par le JOUEUR pour son coup est prise en compte et dessinée
-                   tout de suite sur l'échiquier, ce qui est visuellement parlant plus acceptable que de
-                   voir les coups Joueur et IA se matérialiser simultanément sur l'échiquier comme le ferait
-                   un banal '[Minimax MakeComputerMove]' */
+                  'MakeComputerMove' tout en permettant la poursuite du programme.
+                  Ainsi, la position choisie par le JOUEUR pour son coup est prise en compte et dessinée
+                  tout de suite sur l'échiquier, ce qui est visuellement parlant plus acceptable que de
+                  voir les coups Joueur et IA se matérialiser simultanément sur l'échiquier comme le ferait
+                  un banal '[Minimax MakeComputerMove]' */
                   [NSTimer scheduledTimerWithTimeInterval:0.02         target:self
                                                  selector:@selector(MakeComputerMove)
                                                  userInfo:nil         repeats:NO];
@@ -331,11 +319,10 @@ BOOL engineIsBusy = NO;
       
       
       // Test si le coup IA met en échec ou Pat ou Mat le Joueur et message ad-hoc
-      checkCount=0;
       if ([maMinimax IsKingInCheck:sideJoueur board:liveBoard]){
          // Message Echec
          [monConnecteur AlertMsgEchecSide:sideJoueur];
-         checkCount++;
+         // Vérif si Mat /Pat
          NSSet *movesPossibles = [maMinimax PossibleMovesForSide:sideJoueur board:liveBoard];
          if (movesPossibles.count == 0) {
             [monConnecteur AlertMsgPatMatSide:sideJoueur onBoard:liveBoard];
@@ -346,6 +333,7 @@ BOOL engineIsBusy = NO;
       dispatch_async(dispatch_get_main_queue(), ^{
          self.needsDisplay = YES;
       });
+      
    } // Fin de MakeComputerMove
 
 
@@ -356,9 +344,8 @@ BOOL engineIsBusy = NO;
    -(void) MakeJoueurMoveVersDest:(Pos *) dest
    {
       /* Le paramètre attendu par la méthode est la case sélectionnée par le second clic
-       Elle a été controlée comme appartenant ou non aux déplacements autorisés
-       Si OK on peut alors préparer et réaliser le 'Move' Joueur */
-      //Move *moveJoueur = [[Move alloc] initWithStart:selTile Dest:dest];
+      Elle a été controlée comme appartenant ou non aux déplacements autorisés
+      Si OK on peut alors préparer et réaliser le 'Move' Joueur */
       Move *moveJoueur = [liveBoard buildMoveFrom:selTile to:dest board:liveBoard];
       
       #ifdef DEBUG_ZOBRIST
@@ -484,11 +471,10 @@ BOOL engineIsBusy = NO;
       monConnecteur.lblTrait.cell.stringValue = (sideCourant == sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
       
       // Test si le coup IA met en échec ou Pat ou Mat le Joueur et message ad-hoc
-      checkCount=0;
       if ([maMinimax IsKingInCheck:sideIA board:liveBoard]){
          // Message Echec
          [monConnecteur AlertMsgEchecSide:sideIA];
-         checkCount++;
+         // Vérification si Mat /Pat
          NSSet *movesPossibles = [maMinimax PossibleMovesForSide:sideIA board:liveBoard];
          if (movesPossibles.count == 0) {
             [monConnecteur AlertMsgPatMatSide:sideIA onBoard:liveBoard];

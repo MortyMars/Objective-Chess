@@ -1,8 +1,8 @@
-//  Pos.h
-//  chess
-//  Created by Andrew Wang on 15/07/2013
-//  Copyright (c) 2013 Andrew Wang. All rights reserved
-//  Updated by MCN in 2020
+// Pos.h
+// chess
+// Created by Andrew Wang on 15/07/2013
+// Copyright (c) 2013 Andrew Wang. All rights reserved
+// Updated by MCN in 2020
 
 
 @interface Pos : NSObject <NSCopying> /* Le protocole NSCopying permettra de faire des copies d'objets Pos,
