@@ -124,6 +124,37 @@ BOOL engineIsBusy = NO;
             }
          }
       }
+      
+      // ✨ NOUVEAU : Dessiner la surbrillance du hint
+       if (hintStartSquare || hintDestSquare) {
+           CGContextRef context = [[NSGraphicsContext currentContext] CGContext];
+           
+           // Surbrillance case de départ (jaune)
+           if (hintStartSquare) {
+               CGRect startRect = [self rectForSquareAtX:hintStartSquare.x Y:hintStartSquare.y];
+               
+               CGContextSetRGBFillColor(context, 1.0, 1.0, 0.0, 0.4);  // Jaune transparent
+               CGContextFillRect(context, startRect);
+               
+               // Optionnel : bordure
+               CGContextSetRGBStrokeColor(context, 1.0, 0.8, 0.0, 0.8);  // Jaune foncé
+               CGContextSetLineWidth(context, 3.0);
+               CGContextStrokeRect(context, startRect);
+           }
+           
+           // Surbrillance case de destination (vert)
+           if (hintDestSquare) {
+               CGRect destRect = [self rectForSquareAtX:hintDestSquare.x Y:hintDestSquare.y];
+               
+               CGContextSetRGBFillColor(context, 0.0, 1.0, 0.0, 0.4);  // Vert transparent
+               CGContextFillRect(context, destRect);
+               
+               // Optionnel : bordure
+               CGContextSetRGBStrokeColor(context, 0.0, 0.8, 0.0, 0.8);  // Vert foncé
+               CGContextSetLineWidth(context, 3.0);
+               CGContextStrokeRect(context, destRect);
+           }
+       }
    } // Fin de méthode DESSIN DE L'ECHIQUIER
 
 
@@ -672,6 +703,43 @@ BOOL engineIsBusy = NO;
 
    -(int)engineYFromUIY:(int)y {
        return uiFlipped ? 7 - y : y;
+   }
+
+   
+   // Méthodes définissant la surbrillanec
+   // Activer la surbrillance
+   -(void)highlightHintSquareStart:(Pos *)start dest:(Pos *)dest
+   {
+       hintStartSquare = start;
+       hintDestSquare = dest;
+       
+       // Forcer le redessin de la vue
+       [self setNeedsDisplay:YES];
+   }
+
+   // Désactiver la surbrillance
+   -(void)clearHintHighlight
+   {
+       hintStartSquare = nil;
+       hintDestSquare = nil;
+       [self setNeedsDisplay:YES];
+   }
+
+
+   // Méthode helper pour calculer le rectangle d'une case
+   -(CGRect)rectForSquareAtX:(int)x Y:(int)y
+   {
+       CGFloat tileSize = self.bounds.size.width / 8.0;
+       
+       // Adapter selon ton orientation
+       // Si les Blancs sont en bas :
+       CGFloat drawX = x * tileSize;
+       //CGFloat drawY = (7 - y) * tileSize;  // Inverser Y pour Cocoa
+       CGFloat drawY = y * tileSize;  // Inverser Y pour Cocoa
+      
+       // Si le board est orienté différemment, ajuste ici
+       
+       return CGRectMake(drawX, drawY, tileSize, tileSize);
    }
 
 

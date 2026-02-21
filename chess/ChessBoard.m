@@ -821,9 +821,10 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
    -(IBAction)onHintButtonClicked:(id)sender
    {
       NSString *message;
+      Move *hint = nil;
       if (partieLancee) {
          // Calculer le meilleur coup pour le joueur
-         Move *hint = [maMinimax BestMoveForSide:sideJoueur Board:monConnecteur.maChessView->liveBoard];
+         hint = [maMinimax BestMoveForSide:sideJoueur Board:monConnecteur.maChessView->liveBoard];
          
          // Création du message à destination d'une zone de texte
          message = [NSString stringWithFormat:
@@ -833,6 +834,8 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
                               hint.orderingScore  // ou le score retourné par BestMoveForSide
          ];
          
+         
+         
       } else {
          message = @"Merci de lancer d'abord une partie !\n"
          @"(Menu Partie -> Nouvelle Partie -> ...)";
@@ -841,17 +844,16 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       // Remplissage du lbl associé
       monConnecteur.lblCoupProposed.cell.stringValue = message;
       
+      // ✨ Surligner les cases
+     [monConnecteur.maChessView highlightHintSquareStart:hint.start dest:hint.dest];
+     
+     // Optionnel : effacer après 3 secondes
+     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC),
+                   dispatch_get_main_queue(), ^{
+         [monConnecteur.maChessView clearHintHighlight];
+     });
       
-      /* REVOIR
-       
-      // Optionnel : mettre en surbrillance les cases start/dest
-      [self highlightSquare:hint.start withColor:[NSColor yellowColor]];
-      [self highlightSquare:hint.dest withColor:[NSColor greenColor]];
       
-      CGContextRef context = [[NSGraphicsContext currentContext] CGContext];
-      CGContextSetRGBFillColor(context, 0, 0, 1, 1);
-       
-      FIN DE REVOIR */
       
    }
 

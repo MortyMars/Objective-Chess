@@ -57,5 +57,13 @@ R2K3R/P1PPQPPP/3B4/3NP3/n3p3/1P1pqn2/pp1bbppp/r2k3r w QKqk e3 0 1          |  Id
 Tests de Fonctionnement de la Promotion /Sous-Promotion :                  |
 ---------------------------------------------------------                  |
 6k1/8/8/8/1P6/8/6K1/8 w - - 0 1                                            |
-
+                                                                           |
+Test d'affichage du double échec :                                         |
+----------------------------------                                         |
+r1b1k2r/ppp1qppp/8/3Pn3/7B/8/PPP2PPP/RN1QKN1R w - - 0 1                    |  Trait aux Blancs : Fh4>f6 -> Noirs : Ce5>f3++
+3qr3/4QPkp/2nbr1p1/5n2/8/8/8/6K1 w - - 0 1                                 |  Trait aux Blancs : f7>f8
+                                                                           |
+Test d'affichage de la prise en passant :                                  |
+-----------------------------------------                                  |
+6k1/8/8/8/1p6/8/P7/4K3 w - - 0 1                                           |  Trait aux Blancs : Pa2>a4 -> Noirs : Pb4>a3 e.p.
 

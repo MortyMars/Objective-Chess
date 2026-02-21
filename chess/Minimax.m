@@ -1244,7 +1244,7 @@ static int nbCallsIsKingCheck = 0;
    }
 
 
-   /*
+   /* ANCIEN CODE
    // ================================================================================================
    // MÉTHODE 8 : TestEchecFavSide - DÉTECTION ÉCHEC AVEC NOTIFICATION
    -(NSString *)TestEchecFavSide:(Side)side Board:(ChessBoard *)board
@@ -1304,57 +1304,58 @@ static int nbCallsIsKingCheck = 0;
       return strEchec;
    }     */
 
+   // ================================================================================================
+   // MÉTHODE 8 : TestEchecFavSide - DÉTECTION ÉCHEC EN FAVEUR DE SIDE
+   -(NSString *)TestEchecFavSide:(Side)side Board:(ChessBoard *)board
+   {
+       Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
+       checkCount = 0;  // Reset
+       
+       if ([self IsKingInCheck:otherSide board:board]) {
+           
+           // Trouver le roi
+           Pos *kingPos = nil;
+           for (int x = 0; x < 8; x++) {
+               for (int y = 0; y < 8; y++) {
+                   Piece *p = board->pieceCase[x][y];
+                   if (p && p.type == Roi && p.side == otherSide) {
+                       kingPos = [Pos posWithX:x y:y];
+                       break;
+                   }
+               }
+               if (kingPos) break;
+           }
+           
+           // Compter les attaquants
+           if (kingPos) {
+               for (int x = 0; x < 8; x++) {
+                   for (int y = 0; y < 8; y++) {
+                       Piece *piece = board->pieceCase[x][y];
+                       if (piece && piece.side == side) {
+                           // Utiliser IsSquareAttackedAtX au lieu de générer les coups
+                           if ([self IsSquareAttackedAtX:kingPos.x
+                                                        Y:kingPos.y
+                                                   bySide:side
+                                                    Board:board]) {
+                               checkCount++;
+                               // On a déjà trouvé qu'il est attaqué,
+                               // pas besoin de compter davantage
+                               break;
+                           }
+                       }
+                   }
+                   if (checkCount > 1) break; // Permettre la détection de l'échec multiple
+               }
+           }
+           
+           // ✅ NE PAS ALERTER ICI — laisser l'appelant le faire
+           NSLog(@"🔍 Échec détecté, checkCount=%d", checkCount);
+           return @"Echec";
+       }
+       
+       return @"";
+   }
 
-// Ne plus alerter ici, juste retourner l'info
--(NSString *)TestEchecFavSide:(Side)side Board:(ChessBoard *)board
-{
-    Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
-    checkCount = 0;  // Reset
-    
-    if ([self IsKingInCheck:otherSide board:board]) {
-        
-        // Trouver le roi
-        Pos *kingPos = nil;
-        for (int x = 0; x < 8; x++) {
-            for (int y = 0; y < 8; y++) {
-                Piece *p = board->pieceCase[x][y];
-                if (p && p.type == Roi && p.side == otherSide) {
-                    kingPos = [Pos posWithX:x y:y];
-                    break;
-                }
-            }
-            if (kingPos) break;
-        }
-        
-        // Compter les attaquants
-        if (kingPos) {
-            for (int x = 0; x < 8; x++) {
-                for (int y = 0; y < 8; y++) {
-                    Piece *piece = board->pieceCase[x][y];
-                    if (piece && piece.side == side) {
-                        // Utiliser IsSquareAttackedAtX au lieu de générer les coups
-                        if ([self IsSquareAttackedAtX:kingPos.x
-                                                     Y:kingPos.y
-                                                bySide:side
-                                                 Board:board]) {
-                            checkCount++;
-                            // On a déjà trouvé qu'il est attaqué,
-                            // pas besoin de compter davantage
-                            break;
-                        }
-                    }
-                }
-                if (checkCount > 0) break;
-            }
-        }
-        
-        // ✅ NE PAS ALERTER ICI — laisser l'appelant le faire
-        NSLog(@"🔍 Échec détecté, checkCount=%d", checkCount);
-        return @"Echec";
-    }
-    
-    return @"";
-}
 
    // ================================================================================================
    // MÉTHODE 9 : TestEchecRoiSide - VERSION RAPIDE DE LA DÉTECTION D'ÉCHEC

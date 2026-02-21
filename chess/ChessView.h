@@ -22,7 +22,10 @@
       BOOL isThereTileSelected;
       Pos *selTile;
       NSSet *PosAcceptees;
-      //@public BOOL uiFlipped; // ajout séparation UI / Moteur
+   
+      // iVar mémorisant les cases du 'Hint' à mettre en surbrillance
+      Pos *hintStartSquare;   // Case de départ du hint
+      Pos *hintDestSquare;    // Case d'arrivée du hint
    }
 
    @property (weak) id <ChessViewDelegate> delegate;
@@ -54,6 +57,9 @@
    -(int)engineXFromUIX:(int)x;
    -(int)engineYFromUIY:(int)y ;
 
+   // Méthode pour surbrillance du 'Hint'
+   -(void)highlightHintSquareStart:(Pos *)start dest:(Pos *)dest;
+   -(void)clearHintHighlight;
 
 @end
 

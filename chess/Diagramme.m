@@ -592,7 +592,8 @@ NSString *strPieces;
       
       /* Récup info d'une mise en échec éventuelle et de Prise e.p. pour renseigner 'ConvertEnStringMove'
       Bizarrement 'TestEchecForSide' RAZ les indic de Roque et de Prise e.p., d'où la sauvegarde ci-avant */
-      NSString *strEchec = [Diagramme SilentTestEchecFavSide:side Board:board];
+      //NSString *strEchec = [Diagramme SilentTestEchecFavSide:side Board:board];
+      NSString *strEchec = [maMinimax TestEchecFavSide:side Board:board];
       
       NSLog(@"\nLe Move effectué par les %@ est : %@", (sideCourant == 2)? @"Blancs":@"Noirs ", aiMove);
       if (![strEchec isEqual:@""]) NSLog(@"\nLa chaîne d'échec est : '%@'", strEchec);
