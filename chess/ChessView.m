@@ -282,11 +282,13 @@ BOOL engineIsBusy = NO;
       // Fin de gestion des indicateurs
       
       /* Sauvegarde des indicateurs de roque car RAZ plus loin par 'TestEchecFavSide' (???)
-       avant de pouvoir les exploiter dans 'ConvertEnStringMove' */
-      BOOL roque = petitRoque;         BOOL ROQUE = grandRoque;         BOOL ENPASS = enPassant;
+      avant de pouvoir les exploiter dans 'ConvertEnStringMove' */
+      BOOL roque = petitRoque;
+      BOOL ROQUE = grandRoque;
+      BOOL ENPASS = enPassant;
       
       /* MCN - AJOUT DU COUP IA À LA LISTE DE CEUX DÉJÀ JOUÉS
-       EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard */
+      EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard */
        
        /* Désormais l'IA gère dans le code sa meilleure protion /sous-promotion
        // Vérification s'il y a une promo de pion à réaliser
@@ -302,7 +304,9 @@ BOOL engineIsBusy = NO;
       NSString * strEchec = [maMinimax TestEchecFavSide:sideCourant Board:liveBoard];
       
       // Restauration des indicateurs de roque pour utilisation dans 'ConvertEnStringMove'
-      petitRoque = roque;        grandRoque = ROQUE;         enPassant = ENPASS;
+      petitRoque = roque;
+      grandRoque = ROQUE;
+      enPassant = ENPASS;
       
       // REVOIR le @"" passé en PromPion ???!!! compte tenu de la gestion par l'IA de sa propre promotion
       NSMutableString* bestMoveIA = [MoveToStr ConvertEnStringMove:aiMove  PromPion:@""
@@ -327,9 +331,11 @@ BOOL engineIsBusy = NO;
       
       
       // Test si le coup IA met en échec ou Pat ou Mat le Joueur et message ad-hoc
+      checkCount=0;
       if ([maMinimax IsKingInCheck:sideJoueur board:liveBoard]){
          // Message Echec
          [monConnecteur AlertMsgEchecSide:sideJoueur];
+         checkCount++;
          NSSet *movesPossibles = [maMinimax PossibleMovesForSide:sideJoueur board:liveBoard];
          if (movesPossibles.count == 0) {
             [monConnecteur AlertMsgPatMatSide:sideJoueur onBoard:liveBoard];
@@ -478,9 +484,11 @@ BOOL engineIsBusy = NO;
       monConnecteur.lblTrait.cell.stringValue = (sideCourant == sideWhite)? @"Trait : Blancs": @"Trait : Noirs";
       
       // Test si le coup IA met en échec ou Pat ou Mat le Joueur et message ad-hoc
+      checkCount=0;
       if ([maMinimax IsKingInCheck:sideIA board:liveBoard]){
          // Message Echec
          [monConnecteur AlertMsgEchecSide:sideIA];
+         checkCount++;
          NSSet *movesPossibles = [maMinimax PossibleMovesForSide:sideIA board:liveBoard];
          if (movesPossibles.count == 0) {
             [monConnecteur AlertMsgPatMatSide:sideIA onBoard:liveBoard];
@@ -509,7 +517,9 @@ BOOL engineIsBusy = NO;
       
       /* Sauvegarde des indicateurs de roque  et de prise e.p. car RAZ plus loin par 'TestEchecFavSide' (???)
       avant de pouvoir les exploiter dans 'ConvertEnStringMove' */
-      BOOL roque = petitRoque;         BOOL ROQUE = grandRoque;         BOOL ENPASS = enPassant;
+      BOOL roque = petitRoque;
+      BOOL ROQUE = grandRoque;
+      BOOL ENPASS = enPassant;
       
       /* MCN - AJOUT DU COUP IA À LA LISTE DE CEUX DÉJÀ JOUÉS
       EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard */

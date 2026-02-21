@@ -30,6 +30,7 @@
    @synthesize lblNumCoup;
    @synthesize lblEchec;
    @synthesize lblInfo;
+   @synthesize lblCoupProposed;
 
    @synthesize lettresSideBlancs;
    @synthesize lettresSideBlancsBas;
@@ -105,7 +106,7 @@
 
    // Gestion des items du menu 'Partie->Difficulté'
    - (IBAction)SetDifficulty1:(id)sender {
-      [menuRapide    setState:YES];
+      [menuRapide    setState:YES]; // Rapide
       [menuFacile    setState:NO];
       [menuSTD       setState:NO];
       [menuReflechi  setState:NO];
@@ -118,7 +119,7 @@
 
    - (IBAction)SetDifficulty2:(id)sender {
       [menuRapide    setState:NO];
-      [menuFacile    setState:YES];
+      [menuFacile    setState:YES]; // Facile
       [menuSTD       setState:NO];
       [menuReflechi  setState:NO];
       [menuChampion  setState:NO];
@@ -131,7 +132,7 @@
    - (IBAction)SetDifficulty3:(id)sender {
       [menuRapide    setState:NO];
       [menuFacile    setState:NO];
-      [menuSTD       setState:YES];
+      [menuSTD       setState:YES]; // Standard
       [menuReflechi  setState:NO];
       [menuChampion  setState:NO];
       NUMBER_MOVES_AHEAD = 7;
@@ -144,9 +145,9 @@
       [menuRapide    setState:NO];
       [menuFacile    setState:NO];
       [menuSTD       setState:NO];
-      [menuReflechi  setState:YES];
+      [menuReflechi  setState:YES]; // Réfléchi
       [menuChampion  setState:NO];
-      NUMBER_MOVES_AHEAD = 8;
+      NUMBER_MOVES_AHEAD = 9;
       //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
       monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
@@ -157,8 +158,8 @@
       [menuFacile    setState:NO];
       [menuSTD       setState:NO];
       [menuReflechi  setState:NO];
-      [menuChampion  setState:YES];
-      NUMBER_MOVES_AHEAD = 9;
+      [menuChampion  setState:YES]; // Champions
+      NUMBER_MOVES_AHEAD = 11;
       //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
       monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
@@ -197,92 +198,90 @@
    }
 
 
-// ================================================================================================
-// Méthode d'affichage DÉLÉGUÉE
-// d'une boite de dialogue signalant qu'un camp est en position de MAT ou de PAT
--(void)AlertMsgPatMatSide:(Side)side
-                    onBoard:(ChessBoard*)board
-{
-   if ([maMinimax IsKingInCheck:(side) board:(board)]) {
-      /* Roi en échec --> MAT DÉTECTÉ
-      car on a appelé la méthode APRÈS avoir vérifié que le Roi side n'a pas d'échappatoire */
-      NSString *msgTitre;
-      NSString *msgInfo;
-      
-      while ([stringCoupsPartie characterAtIndex:(stringCoupsPartie.length-1)] == ' ') {
-         stringCoupsPartie = [stringCoupsPartie substringWithRange:NSMakeRange(0,stringCoupsPartie.length-1)];
+   // ================================================================================================
+   // Méthode d'affichage DÉLÉGUÉE
+   // d'une boite de dialogue signalant qu'un camp est en position de MAT ou de PAT
+   -(void)AlertMsgPatMatSide:(Side)side
+                       onBoard:(ChessBoard*)board
+   {
+      if ([maMinimax IsKingInCheck:(side) board:(board)]) {
+         /* Roi en échec --> MAT DÉTECTÉ
+         car on a appelé la méthode APRÈS avoir vérifié que le Roi side n'a pas d'échappatoire */
+         NSString *msgTitre;
+         NSString *msgInfo;
+         
+         while ([stringCoupsPartie characterAtIndex:(stringCoupsPartie.length-1)] == ' ') {
+            stringCoupsPartie = [stringCoupsPartie substringWithRange:NSMakeRange(0,stringCoupsPartie.length-1)];
+         }
+         while ([stringCoupsPartie characterAtIndex:(stringCoupsPartie.length-1)] == '+') {
+            stringCoupsPartie = [stringCoupsPartie substringWithRange:NSMakeRange(0,stringCoupsPartie.length-1)];
+         }
+         
+         monConnecteur.lblEchec.cell.stringValue = @"Échec et Mat !";
+         
+         if (side == sideBlack) {
+            msgTitre = @"Les NOIRS sont Mat !";
+            msgInfo  = @"Partie terminée, Les BLANCS gagnent !";
+            stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t1-0"];
+            [monConnecteur MaJtxtCoups];
+         }
+         else if (side == sideWhite) {
+            msgTitre = @"Les BLANCS sont Mat !";
+            msgInfo  = @"Partie terminée, Les NOIRS gagnent !";
+            stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t0-1"];
+            [monConnecteur MaJtxtCoups];
+         }
+         
+         NSAlert *alertMat = [[NSAlert alloc] init];
+         [alertMat addButtonWithTitle:@"OK"];
+         [alertMat setMessageText:msgTitre];
+         [alertMat setInformativeText:msgInfo];
+         [alertMat setAlertStyle:NSAlertStyleInformational];
+         
+         NSModalResponse boutonChoisi = [alertMat runModal];
+         if (boutonChoisi == NSAlertFirstButtonReturn) {
+            stopMatOuPat = YES;
+         }
+         
+         // Message en Log
+         NSString *strRoiMat = (side == sideBlack)? @"\"Noirs\"":@"\"Blancs\"";
+         NSLog(@"\nLe Roi %@ est Mat\n", strRoiMat);
       }
-      while ([stringCoupsPartie characterAtIndex:(stringCoupsPartie.length-1)] == '+') {
-         stringCoupsPartie = [stringCoupsPartie substringWithRange:NSMakeRange(0,stringCoupsPartie.length-1)];
-      }
-      
-      monConnecteur.lblEchec.cell.stringValue = @"Échec et Mat !";
-      
-      if (side == sideBlack) {
-         msgTitre = @"Les NOIRS sont Mat !";
-         msgInfo  = @"Partie terminée, Les BLANCS gagnent !";
-         stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t1-0"];
+      else {
+         /* Roi pas en échec --> PAT DÉTECTÉ */
+         stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"\n\t1/2-1/2"];
          [monConnecteur MaJtxtCoups];
+         
+         NSString *msgTitre;
+         NSString *msgInfo;
+         
+         if (side == sideBlack) {
+            msgTitre = @"Les NOIRS sont Pat !";
+            msgInfo  = @"Le Roi Noir est Pat, la partie est déclarée nulle !";
+         }
+         else if (side == sideWhite) {
+            msgTitre = @"Les BLANCS sont Pat !";
+            msgInfo  = @"Le Roi Blanc est Pat, la partie est déclarée nulle !";
+         }
+         
+         monConnecteur.lblEchec.cell.stringValue = @"Pat !";
+         
+         NSAlert *alertPat = [[NSAlert alloc] init];
+         [alertPat addButtonWithTitle:@"OK"];
+         [alertPat setMessageText:msgTitre];
+         [alertPat setInformativeText:msgInfo];
+         [alertPat setAlertStyle:NSAlertStyleInformational];
+         
+         NSModalResponse boutonChoisi = [alertPat runModal];
+         if (boutonChoisi == NSAlertFirstButtonReturn) {
+            stopMatOuPat = YES;
+         }
+         
+         // Message en Log
+         NSString *strRoiPat = (side == sideBlack)? @"\"Noirs\"":@"\"Blancs\"";
+         NSLog(@"\nLe Roi %@ est Pat\n", strRoiPat);
       }
-      else if (side == sideWhite) {
-         msgTitre = @"Les BLANCS sont Mat !";
-         msgInfo  = @"Partie terminée, Les NOIRS gagnent !";
-         stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t0-1"];
-         [monConnecteur MaJtxtCoups];
-      }
-      
-      NSAlert *alertMat = [[NSAlert alloc] init];
-      [alertMat addButtonWithTitle:@"OK"];
-      [alertMat setMessageText:msgTitre];
-      [alertMat setInformativeText:msgInfo];
-      [alertMat setAlertStyle:NSAlertStyleInformational];
-      
-      NSModalResponse boutonChoisi = [alertMat runModal];
-      if (boutonChoisi == NSAlertFirstButtonReturn) {
-         stopMatOuPat = YES;
-      }
-      
-      // Message en Log
-      NSString *strRoiMat = (side == sideBlack)? @"\"Noirs\"":@"\"Blancs\"";
-      NSLog(@"\nLe Roi %@ est Mat\n", strRoiMat);
    }
-   else {
-      /* Roi pas en échec --> PAT DÉTECTÉ */
-      stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"\n\t1/2-1/2"];
-      [monConnecteur MaJtxtCoups];
-      
-      NSString *msgTitre;
-      NSString *msgInfo;
-      
-      if (side == sideBlack) {
-         msgTitre = @"Les NOIRS sont Pat !";
-         msgInfo  = @"Le Roi Noir est Pat, la partie est déclarée nulle !";
-      }
-      else if (side == sideWhite) {
-         msgTitre = @"Les BLANCS sont Pat !";
-         msgInfo  = @"Le Roi Blanc est Pat, la partie est déclarée nulle !";
-      }
-      
-      monConnecteur.lblEchec.cell.stringValue = @"Pat !";
-      
-      NSAlert *alertPat = [[NSAlert alloc] init];
-      [alertPat addButtonWithTitle:@"OK"];
-      [alertPat setMessageText:msgTitre];
-      [alertPat setInformativeText:msgInfo];
-      [alertPat setAlertStyle:NSAlertStyleInformational];
-      
-      NSModalResponse boutonChoisi = [alertPat runModal];
-      if (boutonChoisi == NSAlertFirstButtonReturn) {
-         stopMatOuPat = YES;
-      }
-      
-      // Message en Log
-      NSString *strRoiPat = (side == sideBlack)? @"\"Noirs\"":@"\"Blancs\"";
-      NSLog(@"\nLe Roi %@ est Pat\n", strRoiPat);
-   }
-}
-
-
 
 
 @end

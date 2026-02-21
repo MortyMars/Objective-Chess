@@ -57,6 +57,12 @@
       
       // Ajout de l'indication Échec / Échec et Mat, par exploitation du paramètre 'strEchec'
       NSString *advEstEnEchec = strEchec;
+      // ✅ DEBUG : Afficher les valeurs
+      NSLog(@"🔍 ConvertEnStringMove:");
+      NSLog(@"   strEchec = '%@'", strEchec);
+      NSLog(@"   checkCount = %d", checkCount);
+      NSLog(@"   [advEstEnEchec isEqual:@\"Echec\"] = %d", [advEstEnEchec isEqual:@"Echec"]);
+      
       if ([advEstEnEchec isEqual:@"Mat"]) {
          [moveMCN appendString:@"#"];
       }

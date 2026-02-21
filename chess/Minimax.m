@@ -11,6 +11,7 @@
 #import "ChessConfig.h"
 #import "Util.h"
 
+
 #define SCORE_INF 10000000
 
 
@@ -1243,6 +1244,7 @@ static int nbCallsIsKingCheck = 0;
    }
 
 
+   /*
    // ================================================================================================
    // MÉTHODE 8 : TestEchecFavSide - DÉTECTION ÉCHEC AVEC NOTIFICATION
    -(NSString *)TestEchecFavSide:(Side)side Board:(ChessBoard *)board
@@ -1264,10 +1266,24 @@ static int nbCallsIsKingCheck = 0;
                // Parcours de toutes les destinations possibles
                for (Pos *possibleDest in PosAcceptees) {
                   // Création du move correspondant (on ne l'exécute pas)
-                  Move *moveSide = [[Move alloc] initWithStart:pos Dest:possibleDest];
+                  Move *moveOfSide = [[Move alloc] initWithStart:pos Dest:possibleDest];
                   // Création d'une pièce adverse potentiellement présente à l'arrivée du move
-                  Piece *pieceAdv = [board piece_colX:moveSide.dest.x rangY:moveSide.dest.y];
+                  Piece *pieceAdv = [board piece_colX:moveOfSide.dest.x rangY:moveOfSide.dest.y];
                   // Si cette pièce est le Roi adverse, alors ça signifie que celui-ci est en 'échec'
+                  
+                  // Test de DEBUG
+                  if (pieceAdv.type == Roi) {
+                     NSLog(@"👍 La pièce %@ en déplacement a trouvé le Roi %@",
+                           (piece.side==sideWhite)? @"Blanche":
+                           (piece.side==sideBlack)? @"Noire":
+                           @"?",
+                           (pieceAdv.side==sideWhite)? @"Blanc":
+                           (pieceAdv.side==sideBlack)? @"Noir":
+                           @"?"
+                     );
+                  }
+                  // Fin de test de DEBUG
+         
                   if (pieceAdv.type == Roi && pieceAdv.side == otherSide) {
                      strEchec = @"Echec";
                      checkCount++;
@@ -1286,8 +1302,59 @@ static int nbCallsIsKingCheck = 0;
       }
       
       return strEchec;
-   }
+   }     */
 
+
+// Ne plus alerter ici, juste retourner l'info
+-(NSString *)TestEchecFavSide:(Side)side Board:(ChessBoard *)board
+{
+    Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
+    checkCount = 0;  // Reset
+    
+    if ([self IsKingInCheck:otherSide board:board]) {
+        
+        // Trouver le roi
+        Pos *kingPos = nil;
+        for (int x = 0; x < 8; x++) {
+            for (int y = 0; y < 8; y++) {
+                Piece *p = board->pieceCase[x][y];
+                if (p && p.type == Roi && p.side == otherSide) {
+                    kingPos = [Pos posWithX:x y:y];
+                    break;
+                }
+            }
+            if (kingPos) break;
+        }
+        
+        // Compter les attaquants
+        if (kingPos) {
+            for (int x = 0; x < 8; x++) {
+                for (int y = 0; y < 8; y++) {
+                    Piece *piece = board->pieceCase[x][y];
+                    if (piece && piece.side == side) {
+                        // Utiliser IsSquareAttackedAtX au lieu de générer les coups
+                        if ([self IsSquareAttackedAtX:kingPos.x
+                                                     Y:kingPos.y
+                                                bySide:side
+                                                 Board:board]) {
+                            checkCount++;
+                            // On a déjà trouvé qu'il est attaqué,
+                            // pas besoin de compter davantage
+                            break;
+                        }
+                    }
+                }
+                if (checkCount > 0) break;
+            }
+        }
+        
+        // ✅ NE PAS ALERTER ICI — laisser l'appelant le faire
+        NSLog(@"🔍 Échec détecté, checkCount=%d", checkCount);
+        return @"Echec";
+    }
+    
+    return @"";
+}
 
    // ================================================================================================
    // MÉTHODE 9 : TestEchecRoiSide - VERSION RAPIDE DE LA DÉTECTION D'ÉCHEC

@@ -598,7 +598,9 @@ NSString *strPieces;
       if (![strEchec isEqual:@""]) NSLog(@"\nLa chaîne d'échec est : '%@'", strEchec);
       
       // Restauration des indicateurs de roque pour utilisation dans 'ConvertEnStringMove'
-      petitRoque = roque;           grandRoque = ROQUE;           enPassant = ENPASS;
+      petitRoque = roque;
+      grandRoque = ROQUE;
+      enPassant = ENPASS;
       
       // REVOIR @"" PASSÉ À PROMPION ???!!! CPTE TENU DE LA GESTION PAR L'IA DE SES PROPRES PROMOS
       NSMutableString* bestMoveIA = [MoveToStr ConvertEnStringMove:aiMove    PromPion:@""
@@ -644,7 +646,7 @@ NSString *strPieces;
          
       });
       
-   } // Fin de SilentMakeIAMoveForSide
+   } // !SilentMakeIAMoveForSide
 
 
    // ==================================================================================================
@@ -657,31 +659,22 @@ NSString *strPieces;
       Side otherSide = (side == sideWhite)? sideBlack:sideWhite;
       // On s'arrête sur chaque case du 'board' courant, on regarde si on y trouve une pièce, et si
       // cette pièce est de couleur 'side'...     Si oui, pour chacune de ses destinations possibles...
-      for (int x = 0; x < 8; x++)
-      {
-         for (int y = 0; y < 8; y++)
-         {
+      for (int x = 0; x < 8; x++) {
+         for (int y = 0; y < 8; y++) {
             Pos *pos = [Pos posWithX:x y:y];
             Piece *piece = [board piece_colX:x rangY:y];
-            if (piece)
-            {
-               if (piece.side == side)
-               {
+            if (piece) {
+               if (piece.side == side) {
                   NSSet *PosAcceptees = [RuleBook PosLegalesForPiece:piece atPos:pos inBoard:board];
-                  for (Pos *possibleDest in PosAcceptees)
-                  {
+                  for (Pos *possibleDest in PosAcceptees) {
                      Move *moveSide = [[Move alloc] initWithStart:pos Dest:possibleDest];
-                     
                      // DÉTECTION MISE EN ÉCHEC  ...on regarde si sur chacune de ces cases destination,
                      // il y a une pièce de la couleur opposée dont le type est Roi. Si oui, il y a Echec
                      Piece *pieceAdv = [board piece_colX:moveSide.dest.x rangY:moveSide.dest.y];
-                     if (pieceAdv.type == Roi)
-                     {
-                        if (pieceAdv.side == otherSide)
-                        {
+                     if (pieceAdv.type == Roi) {
+                        if (pieceAdv.side == otherSide) {
                            strEchec = @"Echec";
-                           checkCount = checkCount + 1;  // incrémentation de checkCount
-                                                         //NSLog(@"\ncheckCount = %d",checkCount);
+                           checkCount++;  // incrémentation de checkCount
                         } // fin if
                      } // fin if
                   }  // fin for
@@ -690,13 +683,13 @@ NSString *strPieces;
          } // fin for
       } // Sortie du for
       
-      /*  Il est nécessaire de parcourir la boucle de détection d'ÉCHEC ci-avant jusqu'au bout sans en
-       sortir à la première détection, ceci afin de pouvoir comptabiliser les échecs multiples. On peut
-       ensuite afficher une boite de dialogue signifiant l'ÉCHEC quand il est effectivement avéré.     */
+      /* Il est nécessaire de parcourir la boucle de détection d'ÉCHEC ci-avant jusqu'au bout sans en
+      sortir à la première détection, ceci afin de pouvoir comptabiliser les échecs multiples. On peut
+      ensuite afficher une boite de dialogue signifiant l'ÉCHEC quand il est effectivement avéré.   */
       
       return strEchec;
       
-   }  // fin méthode SilentTestEchecFavSide
+   }  // !SilentTestEchecFavSide
 
 
    // ==================================================================================================

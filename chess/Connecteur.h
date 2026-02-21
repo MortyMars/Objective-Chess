@@ -18,7 +18,6 @@
    
    }
 
-
    // (1) le nom 'txtCoups' est choisi en référence à l'identifiant correspondant de
    // l'interface xib, mais ce rapprochement n'est pas exigé pour la compilation du programme
 
@@ -89,7 +88,7 @@
    @property (strong) IBOutlet NSMenuItem *menuPoursuivre;
 
    /* Déclaration des Méthodes gérant les NSAlert déléguées */
-   -(void) AlertMsgEchecSide:(Side) side;
+   -(void)AlertMsgEchecSide:(Side)side;
    -(void)AlertMsgPatMatSide:(Side)side onBoard:(ChessBoard*)board;
 
 

@@ -827,7 +827,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
          
          // Création du message à destination d'une zone de texte
          message = [NSString stringWithFormat:
-                              @"✨ Suggestion de l'IA : %@\n"
+                              @"✨ Suggestion de l'IA : %@ ✨\n"
                               @"Score : %+d centipawns\n",
                               hint,
                               hint.orderingScore  // ou le score retourné par BestMoveForSide
