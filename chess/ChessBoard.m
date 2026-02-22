@@ -21,10 +21,10 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
 
 @implementation ChessBoard
 
-   @synthesize lastMove; // Ajout MCN pour accéder à lastMove hors de sa classe, dans RuleBook
+   @synthesize lastMove; // pour accéder à lastMove hors de sa classe
 
    // ==================================================================================================
-   // Méthode d'instance
+   // Méthode d'instance initialisant un chessBoard
    -(id)init
    {
       if (self=[super init]) {
@@ -120,7 +120,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       monConnecteur.menuPoursuivre.title = @"Poursuivre avec les Noirs";
       monConnecteur.menuPoursuivre.enabled = YES;
       
-      // Déclarer la partie lancée (pour bouton de l'interface)
+      // Déclarer la partie lancée (pour bouton 'hint' de l'interface)
       partieLancee = YES;
       
       // DEBUG *********** Test d'involution ************ DEBUG
@@ -175,12 +175,12 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       
       // 🔴 DEBUG : vérifier l'état AVANT initialisation Zobrist
       #ifdef DEBUG_ZOBRIST
-      NSLog(@"🔵 AVANT init Zobrist:");
-      NSLog(@"   self = %p", self);
-      NSLog(@"   sideToMove = %d", self->sideToMove);
-      NSLog(@"   castlingRights = %d", self->castlingRights);
-      NSLog(@"   enPassantFile = %d", self->enPassantFile);
-      NSLog(@"   zobristKey = %llx", self->zobristKey);
+         NSLog(@"🔵 AVANT init Zobrist:");
+         NSLog(@"   self = %p", self);
+         NSLog(@"   sideToMove = %d", self->sideToMove);
+         NSLog(@"   castlingRights = %d", self->castlingRights);
+         NSLog(@"   enPassantFile = %d", self->enPassantFile);
+         NSLog(@"   zobristKey = %llx", self->zobristKey);
       #endif
       
       /* Initialisation de la clé Zobrist -----------------------------------*/
@@ -204,15 +204,15 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       if (self->sideToMove == sideBlack)
          self->zobristKey ^= zobristSide;
       
-      #ifdef DEBUG_ZOBRIST
-         NSLog(@"🔵 APRÈS init Zobrist:");
-         NSLog(@"   zobristKey = %llx", self->zobristKey);
-         uint64_t recalc = recomputeZobrist(self);
-         NSLog(@"   recalculé  = %llx", recalc);
-         if (self->zobristKey != recalc) {
-             NSLog(@"❌ INIT ZOBRIST A ÉCHOUÉ !");
-         }
-      #endif
+   #ifdef DEBUG_ZOBRIST
+      NSLog(@"🔵 APRÈS init Zobrist:");
+      NSLog(@"   zobristKey = %llx", self->zobristKey);
+      uint64_t recalc = recomputeZobrist(self);
+      NSLog(@"   recalculé  = %llx", recalc);
+      if (self->zobristKey != recalc) {
+         NSLog(@"❌ INIT ZOBRIST A ÉCHOUÉ !");
+      }
+   #endif
       /* Fin d'initialisation de la clé Zobrist -----------------------------*/
       
       // Chargement du board dans la vue active et rafraichissement
@@ -229,7 +229,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       monConnecteur.menuPoursuivre.title = @"Poursuivre avec les Blancs";
       monConnecteur.menuPoursuivre.enabled = YES;
       
-      // Déclarer la partie lancée (pour bouton de l'interface)
+      // Déclarer la partie lancée (pour bouton 'hint' de l'interface)
       partieLancee = YES;
       
    }
@@ -331,15 +331,15 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
    // retourne la pièce positionnée en 'pos'
    -(Piece *)pieceAtPos:(Pos *)pos
    {
-       if (!pos) return nil;
-
-       // garde ultra-importante
-       if (![pos isKindOfClass:[Pos class]]) return nil;
-
-       int x = pos.x, y = pos.y;
-       if (x < 0 || y < 0 || x > 7 || y > 7) return nil;
-
-       return pieceCase[x][y];
+      if (!pos) return nil;
+      
+      // garde ultra-importante
+      if (![pos isKindOfClass:[Pos class]]) return nil;
+      
+      int x = pos.x, y = pos.y;
+      if (x < 0 || y < 0 || x > 7 || y > 7) return nil;
+      
+      return pieceCase[x][y];
    }
 
 
@@ -402,34 +402,34 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
    // ChessBoard
    -(id)copyWithZone:(NSZone *)zone
    {
-       ChessBoard *newBoard = [[ChessBoard alloc] init];
-       
-       // Copie des pièces
-       for (int x = 0; x < 8; x++) {
-           for (int y = 0; y < 8; y++) {
-               if (pieceCase[x][y]) {
-                   newBoard->pieceCase[x][y] = pieceCase[x][y].copy;
-               } else {
-                   newBoard->pieceCase[x][y] = nil;
-               }
-           }
-       }
-       
-       // 🔴 CRITIQUE : Copier TOUS les états !
-       newBoard->sideToMove = self->sideToMove;
-       newBoard->castlingRights = self->castlingRights;
-       newBoard->enPassantFile = self->enPassantFile;
-       newBoard->zobristKey = self->zobristKey;  // ← ESSENTIEL !
-       
-       // Copier aussi les autres variables d'instance
-       newBoard->strRoque = self->strRoque;
-       newBoard->strCibleEP = self->strCibleEP;
-       newBoard->nbDemis = self->nbDemis;
-       newBoard->nbEntiers = self->nbEntiers;
-       
-       newBoard.lastMove = self.lastMove ? self.lastMove.copy : nil;
-       
-       return newBoard;
+      ChessBoard *newBoard = [[ChessBoard alloc] init];
+      
+      // Copie des pièces
+      for (int x = 0; x < 8; x++) {
+         for (int y = 0; y < 8; y++) {
+            if (pieceCase[x][y]) {
+               newBoard->pieceCase[x][y] = pieceCase[x][y].copy;
+            } else {
+               newBoard->pieceCase[x][y] = nil;
+            }
+         }
+      }
+      
+      // 🔴 CRITIQUE : Copier TOUS les états !
+      newBoard->sideToMove = self->sideToMove;
+      newBoard->castlingRights = self->castlingRights;
+      newBoard->enPassantFile = self->enPassantFile;
+      newBoard->zobristKey = self->zobristKey;  // ← ESSENTIEL !
+      
+      // Copier aussi les autres variables d'instance
+      newBoard->strRoque = self->strRoque;
+      newBoard->strCibleEP = self->strCibleEP;
+      newBoard->nbDemis = self->nbDemis;
+      newBoard->nbEntiers = self->nbEntiers;
+      
+      newBoard.lastMove = self.lastMove ? self.lastMove.copy : nil;
+      
+      return newBoard;
    }
 
    // ==================================================================================================
@@ -537,29 +537,29 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
    // Méthode d'instance gérant le choix de promotion du joueur
    -(PieceType)SelectPromoPionForSide:(Side)side
    {
-       NSString *msgTitre = (side == sideWhite)
-           ? @"Pion Blanc éligible à promotion"
-           : @"Pion Noir éligible à promotion";
-       
-       NSString *msgInfo = @"Choisissez la promotion souhaitée pour votre Pion...";
-       
-       NSAlert *promoPion = [[NSAlert alloc] init];
-       [promoPion addButtonWithTitle:@"Dame"];
-       [promoPion addButtonWithTitle:@"Tour"];
-       [promoPion addButtonWithTitle:@"Fou"];
-       [promoPion addButtonWithTitle:@"Cavalier"];
-       [promoPion setMessageText:msgTitre];
-       [promoPion setInformativeText:msgInfo];
-       [promoPion setAlertStyle:NSAlertStyleInformational];
-       
-       NSModalResponse boutonChoisi = [promoPion runModal];
-       
-       switch (boutonChoisi) {
-           case NSAlertFirstButtonReturn:  return Dame;
-           case NSAlertSecondButtonReturn: return Tour;
-           case NSAlertThirdButtonReturn:  return Fou;
-           default:                        return Cava;
-       }
+      NSString *msgTitre = (side == sideWhite)
+      ? @"Pion Blanc éligible à promotion"
+      : @"Pion Noir éligible à promotion";
+      
+      NSString *msgInfo = @"Choisissez la promotion souhaitée pour votre Pion...";
+      
+      NSAlert *promoPion = [[NSAlert alloc] init];
+      [promoPion addButtonWithTitle:@"Dame"];
+      [promoPion addButtonWithTitle:@"Tour"];
+      [promoPion addButtonWithTitle:@"Fou"];
+      [promoPion addButtonWithTitle:@"Cavalier"];
+      [promoPion setMessageText:msgTitre];
+      [promoPion setInformativeText:msgInfo];
+      [promoPion setAlertStyle:NSAlertStyleInformational];
+      
+      NSModalResponse boutonChoisi = [promoPion runModal];
+      
+      switch (boutonChoisi) {
+         case NSAlertFirstButtonReturn:  return Dame;
+         case NSAlertSecondButtonReturn: return Tour;
+         case NSAlertThirdButtonReturn:  return Fou;
+         default:                        return Cava;
+      }
    }
 
 
@@ -568,56 +568,56 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
    -(void) CalculerStrRoque {
       
       /* La situation du Roque est dépendante de 6 pièces : les 2 rois et les 4 tours...
-      Il est donc nécessaire de vérifier que ces pièces sont présentes sur leur position d'origine
-      et qu'elles n'ont pas bougé entretemps
-      On passe par une String provisoire   */
+       Il est donc nécessaire de vérifier que ces pièces sont présentes sur leur position d'origine
+       et qu'elles n'ont pas bougé entretemps
+       On passe par une String provisoire   */
       
       /* Si, dans la partie, strRoque est déjà positionnée sur '-' c'est que plus aucun roque n'est autorisé
-      Pas la peine alors de rééxécuter la méthode à chaque move...   */
+       Pas la peine alors de rééxécuter la méthode à chaque move...   */
       if (!([monConnecteur.maChessView->liveBoard->strRoque isEqual:@"-"])) {
          
          NSString *strProvRoque = @"";
          
          //if (sideJoueur == sideWhite) {
          //if (!monConnecteur.maChessView.uiFlipped) {
-            if (([self piece_colX:4 rangY:0].numMoves == 0) && ([self piece_colX:7 rangY:0].numMoves == 0) &&
-                ([self piece_colX:4 rangY:0].type == Roi)   && ([self piece_colX:7 rangY:0].type == Tour))
-               strProvRoque = [strProvRoque stringByAppendingString:@"K"];
-            
-            if (([self piece_colX:4 rangY:0].numMoves == 0) && ([self piece_colX:0 rangY:0].numMoves == 0) &&
-                ([self piece_colX:4 rangY:0].type == Roi)   && ([self piece_colX:0 rangY:0].type == Tour))
-               strProvRoque = [strProvRoque stringByAppendingString:@"Q"];
-            
-            if (([self piece_colX:4 rangY:7].numMoves == 0) && ([self piece_colX:7 rangY:7].numMoves == 0) &&
-                ([self piece_colX:4 rangY:7].type == Roi)   && ([self piece_colX:7 rangY:7].type == Tour))
-               strProvRoque = [strProvRoque stringByAppendingString:@"k"];
-            
-            if (([self piece_colX:4 rangY:7].numMoves == 0) && ([self piece_colX:0 rangY:7].numMoves == 0) &&
-                ([self piece_colX:4 rangY:7].type == Roi)   && ([self piece_colX:0 rangY:7].type == Tour))
-               strProvRoque = [strProvRoque stringByAppendingString:@"q"];
-            
-            if ([strProvRoque isEqual:@""]) strProvRoque = [strProvRoque stringByAppendingString:@"-"];
+         if (([self piece_colX:4 rangY:0].numMoves == 0) && ([self piece_colX:7 rangY:0].numMoves == 0) &&
+             ([self piece_colX:4 rangY:0].type == Roi)   && ([self piece_colX:7 rangY:0].type == Tour))
+            strProvRoque = [strProvRoque stringByAppendingString:@"K"];
+         
+         if (([self piece_colX:4 rangY:0].numMoves == 0) && ([self piece_colX:0 rangY:0].numMoves == 0) &&
+             ([self piece_colX:4 rangY:0].type == Roi)   && ([self piece_colX:0 rangY:0].type == Tour))
+            strProvRoque = [strProvRoque stringByAppendingString:@"Q"];
+         
+         if (([self piece_colX:4 rangY:7].numMoves == 0) && ([self piece_colX:7 rangY:7].numMoves == 0) &&
+             ([self piece_colX:4 rangY:7].type == Roi)   && ([self piece_colX:7 rangY:7].type == Tour))
+            strProvRoque = [strProvRoque stringByAppendingString:@"k"];
+         
+         if (([self piece_colX:4 rangY:7].numMoves == 0) && ([self piece_colX:0 rangY:7].numMoves == 0) &&
+             ([self piece_colX:4 rangY:7].type == Roi)   && ([self piece_colX:0 rangY:7].type == Tour))
+            strProvRoque = [strProvRoque stringByAppendingString:@"q"];
+         
+         if ([strProvRoque isEqual:@""]) strProvRoque = [strProvRoque stringByAppendingString:@"-"];
          //}
          //else if (sideJoueur == sideBlack) {
          /*else {
-            if (([self piece_colX:3 rangY:7].numMoves == 0) && ([self piece_colX:0 rangY:7].numMoves == 0) &&
-                ([self piece_colX:3 rangY:7].type == Roi) && ([self piece_colX:0 rangY:7].type == Tour))
-               strProvRoque = [strProvRoque stringByAppendingString:@"K"];
-            
-            if (([self piece_colX:3 rangY:7].numMoves == 0) && ([self piece_colX:7 rangY:7].numMoves == 0) &&
-                ([self piece_colX:3 rangY:7].type == Roi) && ([self piece_colX:7 rangY:7].type == Tour))
-               strProvRoque = [strProvRoque stringByAppendingString:@"Q"];
-            
-            if (([self piece_colX:3 rangY:0].numMoves == 0) && ([self piece_colX:0 rangY:0].numMoves == 0) &&
-                ([self piece_colX:3 rangY:0].type == Roi) && ([self piece_colX:0 rangY:0].type == Tour))
-               strProvRoque = [strProvRoque stringByAppendingString:@"k"];
-            
-            if (([self piece_colX:3 rangY:0].numMoves == 0) && ([self piece_colX:7 rangY:0].numMoves == 0) &&
-                ([self piece_colX:3 rangY:0].type == Roi) && ([self piece_colX:7 rangY:0].type == Tour))
-               strProvRoque = [strProvRoque stringByAppendingString:@"q"];
-            
-            if ([strProvRoque isEqual:@""]) strProvRoque = [strProvRoque stringByAppendingString:@"-"];
-         } */
+          if (([self piece_colX:3 rangY:7].numMoves == 0) && ([self piece_colX:0 rangY:7].numMoves == 0) &&
+          ([self piece_colX:3 rangY:7].type == Roi) && ([self piece_colX:0 rangY:7].type == Tour))
+          strProvRoque = [strProvRoque stringByAppendingString:@"K"];
+          
+          if (([self piece_colX:3 rangY:7].numMoves == 0) && ([self piece_colX:7 rangY:7].numMoves == 0) &&
+          ([self piece_colX:3 rangY:7].type == Roi) && ([self piece_colX:7 rangY:7].type == Tour))
+          strProvRoque = [strProvRoque stringByAppendingString:@"Q"];
+          
+          if (([self piece_colX:3 rangY:0].numMoves == 0) && ([self piece_colX:0 rangY:0].numMoves == 0) &&
+          ([self piece_colX:3 rangY:0].type == Roi) && ([self piece_colX:0 rangY:0].type == Tour))
+          strProvRoque = [strProvRoque stringByAppendingString:@"k"];
+          
+          if (([self piece_colX:3 rangY:0].numMoves == 0) && ([self piece_colX:7 rangY:0].numMoves == 0) &&
+          ([self piece_colX:3 rangY:0].type == Roi) && ([self piece_colX:7 rangY:0].type == Tour))
+          strProvRoque = [strProvRoque stringByAppendingString:@"q"];
+          
+          if ([strProvRoque isEqual:@""]) strProvRoque = [strProvRoque stringByAppendingString:@"-"];
+          } */
          
          // Affectation de la valeur trouvée à la variable d'instance ad-hoc
          monConnecteur.maChessView->liveBoard->strRoque = strProvRoque;
@@ -724,55 +724,55 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
    }
 
 
-   
+
 
    // ==================================================================================================
    // Nouvelle Méthode de construction d'un move complet (avec ses attributs)
    - (Move *)buildMoveFrom:(Pos *)start to:(Pos *)dest board:(ChessBoard *)board
    {
-       Move *m = [[Move alloc] initWithStart:start Dest:dest];
-       
-       Piece *p = [board pieceAtPos:start];
-       m.movingPiece = p;
-       
-       m.fromSquare = start.y * 8 + start.x;
-       m.toSquare   = dest.y  * 8 + dest.x;
-       
-       // Roque
-       if (p.type == Roi && abs(dest.x - start.x) == 2) {
-           m.isCastling = YES;
-       }
-       
-       // Promotion
-       if (p.type == Pion && (dest.y == 0 || dest.y == 7)) {
-           m.isPromotion = YES;
-       }
-       
-       // Capture
-       Piece *target = [board pieceAtPos:dest];
-       if (target) {
-           m.isCapture = YES;
-           m.capturedPiece = target;
-       }
-       
-       // 🔴 EN PASSANT - CORRECTION CRITIQUE !
+      Move *m = [[Move alloc] initWithStart:start Dest:dest];
+      
+      Piece *p = [board pieceAtPos:start];
+      m.movingPiece = p;
+      
+      m.fromSquare = start.y * 8 + start.x;
+      m.toSquare   = dest.y  * 8 + dest.x;
+      
+      // Roque
+      if (p.type == Roi && abs(dest.x - start.x) == 2) {
+         m.isCastling = YES;
+      }
+      
+      // Promotion
+      if (p.type == Pion && (dest.y == 0 || dest.y == 7)) {
+         m.isPromotion = YES;
+      }
+      
+      // Capture
+      Piece *target = [board pieceAtPos:dest];
+      if (target) {
+         m.isCapture = YES;
+         m.capturedPiece = target;
+      }
+      
+      // 🔴 EN PASSANT - CORRECTION CRITIQUE !
       // C'est EP si :
       // 1. Le pion se déplace en diagonale (changement de colonne)
       // 2. La case destination est vide
       // 3. Il y a un enPassantFile défini
       if (p.type == Pion && !target) {  // Pion qui bouge sur case vide
-          if (dest.x != start.x && board->enPassantFile == dest.x) {
-              int expectedRank = (p.side == sideWhite) ? 5 : 2;
-              if (dest.y == expectedRank) {
-                  m.isEnPassant = YES;
-                  // 🔴 IMPORTANT : définir aussi capturedPiece !
-                  int captureY = (p.side == sideWhite) ? 4 : 3;
-                  m.capturedPiece = [board pieceAtPos:[Pos posWithX:dest.x y:captureY]];
-              }
-          }
+         if (dest.x != start.x && board->enPassantFile == dest.x) {
+            int expectedRank = (p.side == sideWhite) ? 5 : 2;
+            if (dest.y == expectedRank) {
+               m.isEnPassant = YES;
+               // 🔴 IMPORTANT : définir aussi capturedPiece !
+               int captureY = (p.side == sideWhite) ? 4 : 3;
+               m.capturedPiece = [board pieceAtPos:[Pos posWithX:dest.x y:captureY]];
+            }
+         }
       }
-       
-       return m;
+      
+      return m;
    }
 
 
@@ -784,9 +784,9 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       Piece *rk, *rq, *k, *RK, *RQ, *K;
       
       /* Aux emplacements c-dessous ne se trouvent pas forcément les pièces attendues.
-      Si c'est le cas pas de problème ; mais si ça n'est pas le cas, les pièces s'y trouvant
-      auront forcément pris la place des pièces attendues et accuseront donc un nombre de moves
-      différent de 0, ce que l'on regarde finalement dans les tests -------------------------*/
+       Si c'est le cas pas de problème ; mais si ça n'est pas le cas, les pièces s'y trouvant
+       auront forcément pris la place des pièces attendues et accuseront donc un nombre de moves
+       différent de 0, ce que l'on regarde finalement dans les tests -------------------------*/
       rk = pieceCase[7][7];
       rq = pieceCase[0][7];
       k  = pieceCase[4][7];
@@ -823,18 +823,20 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       NSString *message;
       Move *hint = nil;
       if (partieLancee) {
+         
          // Calculer le meilleur coup pour le joueur
          hint = [maMinimax BestMoveForSide:sideJoueur Board:monConnecteur.maChessView->liveBoard];
          
+         // Retournement horizontal de la représentation du move si on joue les Noirs
+         if (sideJoueur == sideBlack) hint = [Move mirrorMove:hint];
+         
          // Création du message à destination d'une zone de texte
          message = [NSString stringWithFormat:
-                              @"✨ Suggestion de l'IA : %@ ✨\n"
-                              @"Score : %+d centipawns\n",
-                              hint,
-                              hint.orderingScore  // ou le score retourné par BestMoveForSide
+                        @"✨ Suggestion de l'IA : %@ ✨\n"
+                        @"Score : %+d centipawns\n",
+                        hint,
+                        hint.orderingScore  // ou le score retourné par BestMoveForSide
          ];
-         
-         
          
       } else {
          message = @"Merci de lancer d'abord une partie !\n"
@@ -845,19 +847,15 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       monConnecteur.lblCoupProposed.cell.stringValue = message;
       
       // ✨ Surligner les cases
-     [monConnecteur.maChessView highlightHintSquareStart:hint.start dest:hint.dest];
-     
-     // Optionnel : effacer après 3 secondes
-     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC),
-                   dispatch_get_main_queue(), ^{
+      [monConnecteur.maChessView highlightHintSquareStart:hint.start dest:hint.dest];
+      
+      // Désactiver automatiquement le surlignement après 3 secondes
+      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC),
+                     dispatch_get_main_queue(), ^{
          [monConnecteur.maChessView clearHintHighlight];
-     });
-      
-      
+      });
       
    }
-
-
 
 
 @end

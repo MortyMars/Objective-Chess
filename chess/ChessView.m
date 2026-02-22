@@ -365,7 +365,7 @@ BOOL engineIsBusy = NO;
          self.needsDisplay = YES;
       });
       
-   } // Fin de MakeComputerMove
+   } // !MakeComputerMove
 
 
    // ==================================================================================================
@@ -517,7 +517,7 @@ BOOL engineIsBusy = NO;
          self.needsDisplay = YES;
       });
       
-   } // Fin de MakeJoueurMoveVersDest
+   } // !MakeJoueurMoveVersDest
 
 
    // ==================================================================================================
@@ -602,7 +602,7 @@ BOOL engineIsBusy = NO;
       
       self.needsDisplay = YES; // MàJ affichage board
       
-   } // Fin de MakeIAMoveForSide
+   } // !MakeIAMoveForSide
 
 
    // ==================================================================================================
@@ -637,10 +637,10 @@ BOOL engineIsBusy = NO;
       }
       else                  monConnecteur.lblEchec.cell.stringValue = @"Échec :";
       
-      /* lblInfo : traité par ailleurs et en dehors des seuls cas des moves exécutés, puisqu'il s'agit
-       davantage de renseigner l'utilisateur sur le déroulement de la partie...*/
+      /* lblInfo est traité ailleurs, et hors des seuls cas des moves exécutés, puisqu'il
+      s'agit davantage de renseigner l'utilisateur sur le déroulement de la partie.    */
       
-   } // Fin de Méthode 'MajStatusBarViaMove'
+   } // !MajStatusBarViaMove
 
 
    // ==================================================================================================
@@ -696,6 +696,8 @@ BOOL engineIsBusy = NO;
       return evalString;
    }
 
+   
+   // ==================================================================================================
    // Ajout méthodes de retournement des coordonnées pour l'UI
    -(int)engineXFromUIX:(int)x {
        return uiFlipped ? 7 - x : x;
@@ -705,7 +707,7 @@ BOOL engineIsBusy = NO;
        return uiFlipped ? 7 - y : y;
    }
 
-   
+   // ==================================================================================================
    // Méthodes définissant la surbrillanec
    // Activer la surbrillance
    -(void)highlightHintSquareStart:(Pos *)start dest:(Pos *)dest
@@ -729,17 +731,16 @@ BOOL engineIsBusy = NO;
    // Méthode helper pour calculer le rectangle d'une case
    -(CGRect)rectForSquareAtX:(int)x Y:(int)y
    {
-       CGFloat tileSize = self.bounds.size.width / 8.0;
-       
-       // Adapter selon ton orientation
-       // Si les Blancs sont en bas :
-       CGFloat drawX = x * tileSize;
-       //CGFloat drawY = (7 - y) * tileSize;  // Inverser Y pour Cocoa
-       CGFloat drawY = y * tileSize;  // Inverser Y pour Cocoa
+      CGFloat tileSize = self.bounds.size.width / 8.0;
+      CGFloat drawX;
+      CGFloat drawY;
       
-       // Si le board est orienté différemment, ajuste ici
-       
-       return CGRectMake(drawX, drawY, tileSize, tileSize);
+      // Pas de retournement Joueur Blancs ou Noirs à faire ici,
+      // l'ajustement nécessaire est réalisé dans 'onHint...'
+      drawX = x * tileSize;
+      drawY = y * tileSize;
+      
+      return CGRectMake(drawX, drawY, tileSize, tileSize);
    }
 
 

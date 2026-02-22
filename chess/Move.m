@@ -112,7 +112,7 @@
 
 
    // ==================================================================================================
-   // Méthode permettant de déterminer le move opposé à un move par rapport au centre du Board
+   // Méthode permettant de déterminer le move opposé à un move par rapport au centre du Board ;
    // utile pour afficher un move dans la liste des coups lorsque le plateau est retourné
    +(Move *)opMove:(Move *) move {
       
@@ -125,5 +125,21 @@
       
       return opMove;
    }
+
+   // ==================================================================================================
+   // Méthode permettant de déterminer le move mirroir d'un move par rapport au centre horizontal du
+   // Board ; utile pour afficher un move dans la zone de texte du 'hint'
+   +(Move *)mirrorMove:(Move *) move {
+      
+      int mirrorXs = move.start.x;
+      int mirrorYs = 7 - move.start.y;
+      int mirrorXd = move.dest.x;
+      int mirrorYd = 7 - move.dest.y;
+      
+      Move * mirrorMove = [Move newMoveFromX:mirrorXs Y:mirrorYs ToNx:mirrorXd Ny:mirrorYd];
+      
+      return mirrorMove;
+   }
+
 
 @end

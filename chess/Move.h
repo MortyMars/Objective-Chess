@@ -15,7 +15,7 @@
  de faire des copies d'objets Move, ...ce dont nous avons besoin            */
 @interface Move : NSObject <NSCopying>
 
-   // ...comprenant 2 propriétés, start et dest...
+   // Propriétés de la classe (iVars publiques)
    @property (nonatomic, strong) Pos         *start;
    @property (nonatomic, strong) Pos         *dest;
 
@@ -38,21 +38,25 @@
    @property (nonatomic)         int         orderingScore;
 
    
-   // ...et une méthode initWithStart permettant d'en initialiser les valeurs
-   -(id) initWithStart:(Pos *)start
+   // Méthode permettant d'en initialiser les valeurs
+   -(id)initWithStart:(Pos *)start
                   Dest:(Pos *)dest;
 
    // ✨ méthode (de classe) de confort (sucre syntaxique)
-   +(Move *) newMoveFromX:(int)x
-                        Y:(int)y
-                     ToNx:(int)nx
-                       Ny:(int)ny;
-   
-   +(Move *)opMove:(Move *) move;
+   +(Move *)newMoveFromX:(int)x
+                       Y:(int)y
+                    ToNx:(int)nx
+                      Ny:(int)ny;
 
-   // Méthode system
+   
+   // Méthodes 'system'
    -(id) copyWithZone:(NSZone *)zone;
    -(NSString *) description;
+
+   
+   // Méthodes de transformations de 'Moves'
+   +(Move *)opMove:(Move *) move;
+   +(Move *)mirrorMove:(Move *) move;
 
 
 @end
