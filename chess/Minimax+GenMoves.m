@@ -172,11 +172,21 @@
    }
    
    // 3️⃣ PRISE EN PASSANT
-   if (board->enPassantFile == -1) return;  // Pas d'EP possible
+   if (board->enPassantFile == -1) {
+      NSLog(@"   Pas d'EP possible (enPassantFile=-1)");
+      return;
+   }  // Pas d'EP possible
 
    // Le pion doit être sur le bon rang
+   NSLog(@"🟡 EP possible ! enPassantFile=%d, pion en (%d,%d)",
+         board->enPassantFile, x, y);
    int epRank = (p.side == sideWhite) ? 4 : 3;  // 5ème rang pour Blancs, 4ème pour Noirs
-   if (y != epRank) return;
+   if (y != epRank) {
+      NSLog(@"   Pion pas au bon rang (y=%d, attendu=%d)", y, epRank);
+      return;
+   }
+   
+   
 
    // Le pion doit être adjacent à la colonne EP
    int epFile = board->enPassantFile;
@@ -212,6 +222,8 @@
    ep.capturedPiece = capturedPawn;
    ep.fromSquare    = SQ(x,y);
    ep.toSquare      = SQ(epX,epY);
+   
+   NSLog(@"   ✅ Coup EP créé: %@ (isEnPassant=%d)", ep, ep.isEnPassant);
 
    [moves addObject:ep];
    

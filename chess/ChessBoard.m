@@ -730,6 +730,8 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
    // Nouvelle Méthode de construction d'un move complet (avec ses attributs)
    - (Move *)buildMoveFrom:(Pos *)start to:(Pos *)dest board:(ChessBoard *)board
    {
+      NSLog(@" ☑️☑️🟡 ENTRÉE dans buildMoveFrom");
+      
       Move *m = [[Move alloc] initWithStart:start Dest:dest];
       
       Piece *p = [board pieceAtPos:start];
@@ -748,7 +750,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
          m.isPromotion = YES;
       }
       
-      // Capture
+      // Capture normale
       Piece *target = [board pieceAtPos:dest];
       if (target) {
          m.isCapture = YES;
@@ -762,15 +764,28 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       // 3. Il y a un enPassantFile défini
       if (p.type == Pion && !target) {  // Pion qui bouge sur case vide
          if (dest.x != start.x && board->enPassantFile == dest.x) {
-            int expectedRank = (p.side == sideWhite) ? 5 : 2;
-            if (dest.y == expectedRank) {
+            // ✅ Vérifier la rangée de DÉPART, pas de destination !
+            // int epRank = (p.side == sideWhite) ? 5 : 2; <- rangées de destination ❌
+            int epRank = (p.side == sideWhite) ? 4 : 3;  // <- rangées de départ     ✅
+            
+            //if (dest.y == epRank) { // Incorrect, ne pas vérifier dest.y ❌
+            if (start.y == epRank) {  // ← Vérifier start.y, pas dest.y !  ✅
                m.isEnPassant = YES;
+               m.isCapture = YES;  // <- Ajouter ✅
                // 🔴 IMPORTANT : définir aussi capturedPiece !
-               int captureY = (p.side == sideWhite) ? 4 : 3;
-               m.capturedPiece = [board pieceAtPos:[Pos posWithX:dest.x y:captureY]];
+               // Le pion capturé est au même rang que le pion attaquant
+               // int captureY = (p.side == sideWhite) ? 4 : 3;
+               int captureY = start.y; // <- plus simple ✅
+               //m.capturedPiece = [board pieceAtPos:[Pos posWithX:dest.x y:captureY]];
+               m.capturedPiece = board->pieceCase[dest.x][captureY]; // <- Plus simple ✅
+               
+               NSLog(@" ☑️☑️🟡 buildMoveFrom détecte EP: (%d,%d)→(%d,%d), capture en (%d,%d)",
+                                 start.x, start.y, dest.x, dest.y, dest.x, captureY);
             }
          }
       }
+      
+      NSLog(@" ☑️☑️🟡 buildMoveFrom NE DÉTECTE PAS d'EP");
       
       return m;
    }

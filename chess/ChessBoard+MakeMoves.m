@@ -108,6 +108,29 @@
          }
       }
       
+      // LOG DE DEBUG E.P.
+      if (m.isEnPassant) {
+          NSLog(@"🟡 EP détecté dans makeMove:");
+          NSLog(@"   Move: %@", m);
+          NSLog(@"   isEnPassant: %d", m.isEnPassant);
+          
+          st.wasEnPassant = YES;
+          
+      }
+      else {
+          // ✅ Ajouter ce log pour voir si on passe par ici
+          if (moving.type == Pion && monConnecteur.maChessView->liveBoard->enPassantFile == tx) {
+              NSLog(@"⚠️ Pion capture en (%d,%d) mais isEnPassant=NO !", tx, ty);
+              NSLog(@"   enPassantFile=%d, tx=%d, ty=%d", monConnecteur.maChessView->liveBoard->enPassantFile, tx, ty);
+             
+             // ✅ STACKTRACE pour voir d'où vient cet appel
+             NSLog(@"📍 Call stack:");
+             for (NSString *line in [NSThread callStackSymbols]) {
+                NSLog(@"   %@", line);
+             }
+         }
+      } // FIN DE LOG DE DEBUG E.P.
+      
       /*----------------------- DÉPLACEMENT PRINCIPAL -----------------------------*/
       pieceCase[tx][ty] = moving;
       pieceCase[fx][fy] = nil;

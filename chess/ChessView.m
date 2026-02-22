@@ -270,9 +270,27 @@ BOOL engineIsBusy = NO;
       
       // Véritable début de réalisation du move AI
       Move *aiMove = [maMinimax BestMoveForSide:sideIA Board:liveBoard];   // Version MCN
+      
+      // ✅ LOG IMMÉDIAT
+      NSLog(@"🔵 MakeComputerMove reçoit:");
+      NSLog(@"   Move: %@", aiMove);
+      NSLog(@"   isEnPassant: %d", aiMove.isEnPassant);
+      NSLog(@"   isCapture: %d", aiMove.isCapture);
+      NSLog(@"   Adresse mémoire: %p", aiMove);
+      
       ChessBoard* savedBoard = liveBoard.copy; // Sauvegardé pour ConvertEnStringMove avant PerformMove
       
-      // Réalisation du move 
+      // ✅ LOG DEBUG
+      NSLog(@"🔵 MakeComputerMove va exécuter:");
+      NSLog(@"   Move: %@", aiMove);
+      NSLog(@"   isEnPassant: %d", aiMove.isEnPassant);
+      NSLog(@"   isCapture: %d", aiMove.isCapture);
+      NSLog(@"   enPassantFile: %d", liveBoard->enPassantFile);
+      NSLog(@"🔵 Board copié:");
+      NSLog(@"   enPassantFile original: %d", liveBoard->enPassantFile);
+      NSLog(@"   enPassantFile copie: %d", savedBoard->enPassantFile);
+      
+      // Réalisation du move
       MoveState st = [liveBoard makeMove:aiMove];
       
       // Gestion des indicateurs d'affichage du Roque dans la liste des coups joués

@@ -65,5 +65,5 @@ r1b1k2r/ppp1qppp/8/3Pn3/7B/8/PPP2PPP/RN1QKN1R w - - 0 1                    |  Tr
                                                                            |
 Test d'affichage de la prise en passant :                                  |
 -----------------------------------------                                  |
-6k1/8/8/8/1p6/8/P7/4K3 w - - 0 1                                           |  Trait aux Blancs : Pa2>a4 -> Noirs : Pb4>a3 e.p.
+7k/5Q2/8/8/1p6/1P6/P7/4K3 w - - 0 1                                        |  Trait aux Blancs : Pa2>a4 -> Noirs : Pb4>a3 e.p.
 

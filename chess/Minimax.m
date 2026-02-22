@@ -111,8 +111,10 @@ static int nbCallsIsKingCheck = 0;
       Move *bestMove = nil;
       Side otherSide = (side == sideWhite)? sideBlack:sideWhite;
       
-      /* ========== FILTRAGE SÉCURITÉ ========== */
-      NSMutableSet *safeMovesOnly = [[NSMutableSet alloc] init];
+      // ========== FILTRAGE SÉCURITÉ ========== //
+      NSMutableSet *safeMovesOnly = [[NSMutableSet alloc] init];             // ⚠️ Version Filtrage de sécu
+      //NSMutableSet *safeMovesOnly = [NSMutableSet setWithSet:movesPossibles];  // ⚠️ Copie directe sans filtrage
+       
       int dangerousMovesFiltered = 0;
       
       for (Move *move in movesPossibles) {
@@ -123,16 +125,16 @@ static int nbCallsIsKingCheck = 0;
          
          BOOL isDangerous = NO;
          
-         /* Valeur de la pièce qui bouge */
+         // Valeur de la pièce qui bouge
          int movingValue = [self ValueOfPiece:movingPiece.type];
          
-         /* Valeur capturée */
+         // Valeur capturée
          int capturedValue = 0;
          if (capturedPiece && capturedPiece.type != Invalide) {
             capturedValue = [self ValueOfPiece:capturedPiece.type];
          }
          
-         /* Vérifier seulement pour les pièces chères */
+         // Vérifier seulement pour les pièces chères
          if (movingValue >= 300) {
             
                #ifdef DEBUG_ZOBRIST
@@ -163,18 +165,13 @@ static int nbCallsIsKingCheck = 0;
             
             Side enemySide = (movingPiece.side == sideWhite) ? sideBlack : sideWhite;
             
-            /* Utiliser le helper */
+            // Utiliser le helper
             int cheapestAttacker = [self CheapestAttackValue:move.dest
                                                       bySide:enemySide
                                                      inBoard:testBoard];
             
             if (cheapestAttacker > 0) {  // Case attaquée
                int netGain = capturedValue - movingValue;
-               
-               /* if (netGain < -200) {
-                  isDangerous = YES;
-                  dangerousMovesFiltered++;
-               } */
             }
          }
          
@@ -187,9 +184,11 @@ static int nbCallsIsKingCheck = 0;
          NSLog(@"🛡️ BMFS - Filtrage : %d coups dangereux bloqués, %lu gardés",
                dangerousMovesFiltered, (unsigned long)safeMovesOnly.count);
       }
-      /* ======= FIN DE FILTRAGE SÉCURITÉ ======= */
       
-      /* TRI DES COUPS */
+      // ======= FIN DE FILTRAGE SÉCURITÉ ======= //
+      
+      
+      // TRI DES COUPS
       NSArray *sortedMoves = [self SortMovesByPriority:safeMovesOnly
                                                  board:board
                                                   side:side // c'est side qui joue
@@ -198,6 +197,8 @@ static int nbCallsIsKingCheck = 0;
       NSLog(@"=== IA (%@) analyse %lu coups ===",
             (side == sideWhite) ? @"Blancs" : @"Noirs",
             (unsigned long)sortedMoves.count);
+      
+      
       
       /* ========== ÉVALUATION DE CHAQUE COUP ========== */
       for (Move *moveEnCours in sortedMoves)
@@ -239,6 +240,13 @@ static int nbCallsIsKingCheck = 0;
       [self.transpositionTable printStats];
       // Fin de stats
       
+      // ✅ LOG CRITIQUE
+      NSLog(@"🔵 BestMoveForSide retourne:");
+      NSLog(@"   Move: %@", bestMove);
+      NSLog(@"   isEnPassant: %d", bestMove.isEnPassant);
+      NSLog(@"   isCapture: %d", bestMove.isCapture);
+      NSLog(@"   Adresse mémoire: %p", bestMove);
+      
       
       return bestMove;
       
@@ -272,7 +280,7 @@ static int nbCallsIsKingCheck = 0;
       // 🔍 PROBE TT : Consulter la table de transposition
       Move *ttMove = nil;
       TTEntry *ttEntry = [self.transpositionTable probe:board->zobristKey
-                                                bestMove:&ttMove];
+                                               bestMove:&ttMove];
 
       if (ttEntry) {
           // ttMove est déjà rempli automatiquement !
@@ -320,6 +328,7 @@ static int nbCallsIsKingCheck = 0;
       [self GenMovesForSide:side board:board into:moves];
       
       // Move Ordering avec bonus TT
+      NSLog(@"🔵 AVANT ScoreMovesList, enPassantFile=%d", board->enPassantFile);
       [self ScoreMovesList:moves board:board side:side];
       
       // ✨ Bonus énorme pour le coup TT (essayer en premier)
@@ -724,6 +733,10 @@ static int nbCallsIsKingCheck = 0;
                     board:(ChessBoard *)board
                      side:(Side)side
    {
+      NSLog(@"🔵 ScoreMovesList appelé:");
+      NSLog(@"   Nombre de moves: %lu", (unsigned long)moves.count);
+      NSLog(@"   enPassantFile: %d", board->enPassantFile);
+      
       for (Move *m in moves) {
          
          int score = 0;
@@ -756,7 +769,7 @@ static int nbCallsIsKingCheck = 0;
          
          m.orderingScore = score;
       }
-   }
+   } // !ScoreMovesList
 
 
 
@@ -1213,6 +1226,7 @@ static int nbCallsIsKingCheck = 0;
    } // !EvalBoardForSide
 
 
+   /* ANCIEN CODE
    // ================================================================================================
    // MÉTHODE 7 : PossibleMovesForSide - GÉNÉRATION DES COUPS LÉGAUX
    -(NSSet *)PossibleMovesForSide:(Side)side
@@ -1231,7 +1245,7 @@ static int nbCallsIsKingCheck = 0;
                for (Pos *possibleDest in PosAcceptees) {
                   Move *move = [[Move alloc] initWithStart:pos Dest:possibleDest];
                   
-                  /* Vérification que le coup ne met pas son propre roi en échec */
+                  // Vérification que le coup ne met pas son propre roi en échec
                   ChessBoard *newBoard = board.copy;
                   MoveState st = [newBoard makeMove:move];
                   [moves addObject:move];
@@ -1241,6 +1255,31 @@ static int nbCallsIsKingCheck = 0;
       }
       
       return moves;
+   } */
+
+   // ================================================================================================
+   // MÉTHODE 7 : PossibleMovesForSide - GÉNÉRATION DES COUPS LÉGAUX
+   -(NSSet *)PossibleMovesForSide:(Side)side board:(ChessBoard *)board
+   {
+       NSMutableArray *allMoves = [NSMutableArray array];
+       [self GenMovesForSide:side board:board into:allMoves];
+       
+       NSMutableSet *legalMoves = [NSMutableSet set];
+       
+       for (Move *m in allMoves) {
+           // ✅ Copier le board pour tester l'échec
+           ChessBoard *testBoard = board.copy;
+           
+           MoveState st = [testBoard makeMove:m];
+           
+           if (![self IsKingInCheck:side board:testBoard]) {
+               [legalMoves addObject:m];  // ← Move intact !
+           }
+           
+           // Pas besoin d'unmakeMove sur testBoard (il sera libéré)
+       }
+       
+       return legalMoves;
    }
 
 
@@ -1514,13 +1553,18 @@ static int nbCallsIsKingCheck = 0;
       // Coût : pièce qui capture
       int attackerValue = [self ValueOfPiece:move.movingPiece.type];
       
-      MoveState st = [board makeMove:move];
+      // ✅ CRITIQUE : Copier le board pour ne pas affecter l'original
+      ChessBoard *testBoard = board.copy;
+      
+      
+      /* Le traitement concernera uniquement une copie du board -- */
+      MoveState st = [testBoard makeMove:move];
       
       Side side = move.movingPiece.side;
       Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
       
       NSMutableArray<Move *> *recaptures = [NSMutableArray arrayWithCapacity:8];
-      [self GenCapturForSide:otherSide board:board into:recaptures];
+      [self GenCapturForSide:otherSide board:testBoard into:recaptures];
       
       int worstRecapture = 0;
       
@@ -1531,11 +1575,14 @@ static int nbCallsIsKingCheck = 0;
          }
       }
       
-      [board unmakeMove:move state:st];
+      [testBoard unmakeMove:move state:st];
+      /* Fin de traitement sur la copie du board ----------------- */
+      
       
       // 👉 BILAN MATÉRIEL RÉEL
       return gain - attackerValue - worstRecapture;
-   }
+      
+   } // !SEEForMove
 
 
    // ================================================================================================
