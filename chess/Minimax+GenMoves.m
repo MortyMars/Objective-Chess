@@ -173,16 +173,13 @@
    
    // 3️⃣ PRISE EN PASSANT
    if (board->enPassantFile == -1) {
-      NSLog(@"   Pas d'EP possible (enPassantFile=-1)");
       return;
    }  // Pas d'EP possible
 
    // Le pion doit être sur le bon rang
-   NSLog(@"🟡 EP possible ! enPassantFile=%d, pion en (%d,%d)",
-         board->enPassantFile, x, y);
    int epRank = (p.side == sideWhite) ? 4 : 3;  // 5ème rang pour Blancs, 4ème pour Noirs
    if (y != epRank) {
-      NSLog(@"   Pion pas au bon rang (y=%d, attendu=%d)", y, epRank);
+      // Pion pas au bon rang
       return;
    }
    
@@ -202,15 +199,15 @@
    // 🔴 VÉRIFIER que le pion adverse est bien là !
    Piece *capturedPawn = board->pieceCase[epX][captureY];
    if (!capturedPawn) {
-       NSLog(@"⚠️ EP impossible: pas de pion à capturer en (%d,%d)", epX, captureY);
+       // pas de pion à capturer
        return;
    }
    if (capturedPawn.type != Pion) {
-       NSLog(@"⚠️ EP impossible: pièce en (%d,%d) n'est pas un pion", epX, captureY);
+       // EP impossible: la pièce n'est pas un pion
        return;
    }
    if (capturedPawn.side == p.side) {
-       NSLog(@"⚠️ EP impossible: pion en (%d,%d) est du même camp", epX, captureY);
+       // EP impossible: le pion est du même camp
        return;
    }
    

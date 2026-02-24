@@ -222,7 +222,6 @@
                         if (piece.side == side)
                         {
                            roiSideEnEchec = YES;
-                           //NSLog(@"\nLes %@ SONT Échec",(side==1)?@"Noirs":@"Blancs");
                            return roiSideEnEchec;
                         }
                      }

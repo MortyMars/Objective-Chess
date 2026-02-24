@@ -112,7 +112,6 @@
       [menuReflechi  setState:NO];
       [menuChampion  setState:NO];
       NUMBER_MOVES_AHEAD = 3;
-      //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
       monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
@@ -124,7 +123,6 @@
       [menuReflechi  setState:NO];
       [menuChampion  setState:NO];
       NUMBER_MOVES_AHEAD = 5;
-      //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
       monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
@@ -136,7 +134,6 @@
       [menuReflechi  setState:NO];
       [menuChampion  setState:NO];
       NUMBER_MOVES_AHEAD = 7;
-      //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
       monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
@@ -148,7 +145,6 @@
       [menuReflechi  setState:YES]; // Réfléchi
       [menuChampion  setState:NO];
       NUMBER_MOVES_AHEAD = 9;
-      //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
       monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
@@ -160,7 +156,6 @@
       [menuReflechi  setState:NO];
       [menuChampion  setState:YES]; // Champions
       NUMBER_MOVES_AHEAD = 11;
-      //NSLog(@"\n Valeur de NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD);
       monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }

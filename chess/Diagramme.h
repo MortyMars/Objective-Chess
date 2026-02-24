@@ -34,14 +34,12 @@
    -(void)       SilentMakeIAMoveForSide:(Side)side
                                    Board:(ChessBoard *)board;
    
-   +(NSString *) SilentTestEchecFavSide:(Side)side
-                                  Board:(ChessBoard *)board;
+   //+(NSString *) SilentTestEchecFavSide:(Side)side Board:(ChessBoard *)board;
    
    -(void)       SilentMajStatusBarViaMove:(Move *)move
                                  PrecBoard:(ChessBoard *)precBoard
                                   StrCheck:(NSString *)strCheck;
    
-   +(void)       SilentAlertMsgPatMatSide:(Side)side
-                                    onBoard:(ChessBoard*)board;
+   //+(void)       SilentAlertMsgPatMatSide:(Side)side onBoard:(ChessBoard*)board;
 
 @end

@@ -79,7 +79,6 @@ ce qui permettra notamment de faire des copies d'objets ChessBoard, ...ce dont n
 
 
    // Ajout des Méthodes d'instance MCN
-   -(void)       DefCouleurJoueur;  // désuette depuis refonte de l'UI et démarrage sur un échiquier vide
    -(void)       PremCoupAIBlancs;
    -(PieceType)  SelectPromoPionForSide:(Side)side;
    -(void)       CalculerStrRoque;
@@ -89,9 +88,9 @@ ce qui permettra notamment de faire des copies d'objets ChessBoard, ...ce dont n
    -(void)       AlertePartieNulle;
 
    
-   
-   -(Move *)     buildMoveFrom:(Pos *)start to:(Pos *)dest board:(ChessBoard *)board;
+   -(Move *)buildMoveFrom:(Pos *)start
+                       to:(Pos *)dest
+                    board:(ChessBoard *)board;
 
-   -(int)        ComputeCastlingRights:(ChessBoard *) board;
 
 @end

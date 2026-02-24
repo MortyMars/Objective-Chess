@@ -64,7 +64,7 @@
            table = (TTEntry *)calloc(numEntries, TT_ENTRY_SIZE);
            
            if (!table) {
-               NSLog(@"❌ TranspositionTable: Échec allocation mémoire (%zu MB)", sizeMB);
+               // Échec allocation mémoire
                return nil;
            }
            

@@ -31,7 +31,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
          
          /* INITIALISATION DES VARIABLES D'INSTANCE : c'est dans une méthode 'init' qu'il faut faire les
           initialisations des variables dont on désire fixer une valeur initiale autre que '0/NULL/nil' */
-         strRoque    = @"KQkq";
+         strRoque    = @"KQkq";  // dans l'ordre de phrase FEN
          strCibleEP  = @"-";
          nbDemis     = 0;
          //nbDemis     = 49; // pour tester NSAlert50coups
@@ -39,7 +39,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
          
          // 🔴 Init pour Zobrist et état du jeu
          sideToMove = sideWhite;      // Les Blancs commencent toujours
-         castlingRights = 0b1111;     // KQkq
+         castlingRights = 0b1111;     // qkQK dans l'ordre des bits poids fort vers faible
          enPassantFile = -1;          // Pas d'EP en début de partie
          zobristKey = 0;              // Sera recalculé après SetupPieces
          
@@ -454,51 +454,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
 
 
    // ==================================================================================================
-   // MCN
-   // Méthode d'instance permettant d'affecter la couleur de chacun des adversaires, Humain et Machine
-   // MÉTHODE DÉSUETTE DEPUIS LA REFONTE DE L'UI DÉMARRANT SUR UN ÉCHIQUIER VIDE...
-   -(void)DefCouleurJoueur
-   {
-      if ((sideJoueur == sideInvalid) || (sideIA == sideInvalid))
-      {
-         // Création d'une boite d'alerte pour le choix de la couleur
-         NSAlert *alertChoixCouleur = [[NSAlert alloc] init];
-         [alertChoixCouleur addButtonWithTitle:@"Les Blancs"];
-         [alertChoixCouleur addButtonWithTitle:@"Les Noirs"];
-         [alertChoixCouleur setMessageText:@"Choix de la couleur pour le Joueur"];
-         [alertChoixCouleur setInformativeText:@"Avec quelle couleur souhaitez-vous affronter l'IA ?"];
-         [alertChoixCouleur setAlertStyle:NSAlertStyleInformational];
-         
-         // Récupération du choix fait par le joueur et détermination de sideJoueur
-         NSModalResponse boutonChoisi = [alertChoixCouleur runModal];
-         if (boutonChoisi == NSAlertFirstButtonReturn) {
-            sideJoueur = sideWhite;}
-         else {
-            sideJoueur = sideBlack;}
-         
-         /* NB : La boite d'alerte est modale et interdit donc la poursuite du programme
-          avant d'avoir choisi la couleur que l'on souhaite jouer dans cette partie.
-          Lorsque la boite d'alerte se ferme et perd le focus de premier plan,
-          la fenêtre de l'échiquier ne le récupère pas systématiquement et dans la
-          négative il faut penser à aller chercher l'application qui tourne
-          souvent dans l'arrière plan de X-Code lui-même                               */
-         
-         // sideIA prend la couleur laissée par le JOUEUR
-         sideIA = (sideJoueur == sideWhite) ? sideBlack : sideWhite;
-         
-         NSLog(@"\nLe JOUEUR a les %@, l'IA les %@", (sideJoueur == sideWhite)? @"Blancs" : @"Noirs",
-               (sideIA == sideWhite)? @"Blancs" : @"Noirs");
-      }
-      else{
-         NSLog(@"\nLe JOUEUR a les %@, l'IA les %@", (sideJoueur == sideWhite)? @"Blancs" : @"Noirs",
-               (sideIA == sideWhite)? @"Blancs" : @"Noirs");
-      }
-   } // Fin de DefCouleurJoueur
-
-
-
-   // ==================================================================================================
-   // Méthode d'instance, appelée en fin d'initialisation du plateau quand l'IA a les blancs
+   // Méthode appelée en fin d'initialisation du plateau quand l'IA a les blancs
    // LE TOUT PREMIER COUP DE LA PARTIE REVIENT À L'IA QUAND ELLE A LES BLANCS
    -(void)PremCoupAIBlancs
    {
@@ -730,8 +686,6 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
    // Nouvelle Méthode de construction d'un move complet (avec ses attributs)
    - (Move *)buildMoveFrom:(Pos *)start to:(Pos *)dest board:(ChessBoard *)board
    {
-      NSLog(@" ☑️☑️🟡 ENTRÉE dans buildMoveFrom");
-      
       Move *m = [[Move alloc] initWithStart:start Dest:dest];
       
       Piece *p = [board pieceAtPos:start];
@@ -778,60 +732,15 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
                int captureY = start.y; // <- plus simple ✅
                //m.capturedPiece = [board pieceAtPos:[Pos posWithX:dest.x y:captureY]];
                m.capturedPiece = board->pieceCase[dest.x][captureY]; // <- Plus simple ✅
-               
-               NSLog(@" ☑️☑️🟡 buildMoveFrom détecte EP: (%d,%d)→(%d,%d), capture en (%d,%d)",
-                                 start.x, start.y, dest.x, dest.y, dest.x, captureY);
             }
          }
       }
-      
-      NSLog(@" ☑️☑️🟡 buildMoveFrom NE DÉTECTE PAS d'EP");
       
       return m;
    }
 
 
    // ==================================================================================================
-   // Méthode de recalcul des droits de Roque
-   -(int) ComputeCastlingRights:(ChessBoard *) board {
-      
-      int NewCastlingRights = 15;
-      Piece *rk, *rq, *k, *RK, *RQ, *K;
-      
-      /* Aux emplacements c-dessous ne se trouvent pas forcément les pièces attendues.
-       Si c'est le cas pas de problème ; mais si ça n'est pas le cas, les pièces s'y trouvant
-       auront forcément pris la place des pièces attendues et accuseront donc un nombre de moves
-       différent de 0, ce que l'on regarde finalement dans les tests -------------------------*/
-      rk = pieceCase[7][7];
-      rq = pieceCase[0][7];
-      k  = pieceCase[4][7];
-      RK = pieceCase[7][0];
-      RQ = pieceCase[0][0];
-      K  = pieceCase[4][0];
-      
-      // Aucune pièce n'a bougé parmi les emplacements ciblés -> CastlingRights = "KQkq"
-      if (rk.numMoves == 0 && rq.numMoves == 0 &&
-          RK.numMoves == 0 && RQ.numMoves == 0 &&
-          k.numMoves  == 0 && K.numMoves  == 0) {
-         NewCastlingRights = 15;
-         return NewCastlingRights;
-      }
-      
-      // Bloc Roque Roi Noir
-      if (rk.numMoves == 1 && k.numMoves == 0) NewCastlingRights -= 4;  // on retire 'k'
-      if (rq.numMoves == 1 && k.numMoves == 0) NewCastlingRights -= 8;  // on retire 'q'
-      if (k.numMoves == 1) NewCastlingRights -= 12;                     // on retire 'kq'
-      
-      // Bloc Roque Roi Blanc
-      if (RK.numMoves == 1 && K.numMoves == 0) NewCastlingRights -= 1;  // on retire 'K'
-      if (RQ.numMoves == 1 && K.numMoves == 0) NewCastlingRights -= 2;  // on retire 'Q'
-      if (K.numMoves == 1) NewCastlingRights -= 3;                      // on retire 'KQ'
-      
-      return NewCastlingRights;
-      
-   }
-
-
    // Bouton "Hint" cliqué
    -(IBAction)onHintButtonClicked:(id)sender
    {

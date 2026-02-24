@@ -59,7 +59,6 @@
       [monConnecteur SetDifficulty2:self];
       
       
-      
       // Revoir finalité de cette commande car je ne me rappelle plus...
       monConnecteur.maChessView.delegate = monConnecteur;
       
@@ -67,11 +66,8 @@
       //maMinimax = maMinimax;
       maMinimax = [[Minimax alloc] init];
       
-      
       // NSLog pour le fun...
       NSLog(@"Welcome sur Objective-Chess\n");
-      //NSLog(@"La taille de stockage pour un 'int' est de %li bits", sizeof(int));
-      //NSLog(@"La valeur maxi pour un 'int' est ±%d \n",INT_MAX);
       
       // MCN - NSLog de contrôle
       NSLog(@"Interface initialisée et chargée\n");
@@ -84,9 +80,6 @@
 
       
    } // !applicationDidFinishLaunching
-
-
-
 
 @end
 

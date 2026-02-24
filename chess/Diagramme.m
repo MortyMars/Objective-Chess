@@ -481,10 +481,10 @@ NSString *strPieces;
       for (int x=0; x<8; x++) {
          // si un pion blanc est en rangée 1, c'est qu'il n'a pas encore avancé
          if ((board->pieceCase[x][1].type == Pion) && (board->pieceCase[x][1].side == sideWhite))
-                           board->pieceCase[x][1].numMoves = 0;
+            board->pieceCase[x][1].numMoves = 0;
          // si un pion noir est en rangée 6, c'est qu'il n'a pas encore avancé
          if ((board->pieceCase[x][6].type == Pion) && (board->pieceCase[x][6].side == sideBlack))
-                           board->pieceCase[x][6].numMoves = 0;
+            board->pieceCase[x][6].numMoves = 0;
       }
    } // Fin de Méthode OkDeuxCasesPionsBoard
 
@@ -512,7 +512,6 @@ NSString *strPieces;
             x++;
          }
       }
-      //NSLog(@"Espaces en sous-chaîne de Partie  : %d, %d, %d, et %d", e[0],e[1],e[2],e[3]);
       
       // Récupération des 4 chaines unitaires suivantes
       // Roque
@@ -521,13 +520,6 @@ NSString *strPieces;
       monConnecteur.lblRoque.cell.stringValue = [NSString stringWithFormat:@"Roque : %@", sRoque];;
       NSLog(@"Sous-chaîne du Roque              : '%@'", sRoque);
       
-      /* ChessBoard *board = Diagramme
-      if ([sRoque containsString:@"K"]) {
-         if (sideJoueur==sideWhite) {
-            Piece *p = board->pieceCase[nx][ny];
-            if (p.type == Roi && p.side == sideWhite) {pouet}
-         }
-      } */
       
       // CibleEP
       NSString *sCibleEP = [secondStr substringWithRange:NSMakeRange(e[1]+1, e[2]-(e[1]+1))];
@@ -547,7 +539,7 @@ NSString *strPieces;
       monConnecteur.lblNumCoup.cell.stringValue = [NSString stringWithFormat:@"Coup n° : %@", sCoup];;
       NSLog(@"Sous-chaîne du n° du Coup         : '%@'\n", sCoup);
    
-   } // Fin de Méthode 'LireSecondPartStrFEN'
+   } // !LireSecondPartStrFEN
 
    
    // ==================================================================================================
@@ -626,7 +618,8 @@ NSString *strPieces;
          
          // 2) Notification Pat/Mat si nécessaire
          if (movesPossibles.count == 0) {
-            [Diagramme SilentAlertMsgPatMatSide:otherSide onBoard:board];
+            //[Diagramme SilentAlertMsgPatMatSide:otherSide onBoard:board];
+            [monConnecteur AlertMsgPatMatSide:otherSide onBoard:board];
          }
          
          // 3) MISE À JOUR 'STATUS BAR' HORS EVAL ET TRAIT
@@ -650,6 +643,7 @@ NSString *strPieces;
    } // !SilentMakeIAMoveForSide
 
 
+   /* MÉTHODE OBSOLÈTE À DÉSACTIVER
    // ==================================================================================================
    // MCN - Version silencieuse de 'TestEchecFavSide'
    // Détection des positions d'Échec en faveur du coté 'Side' (autrement dit Roi 'otherSide' en échec)
@@ -684,13 +678,15 @@ NSString *strPieces;
          } // fin for
       } // Sortie du for
       
-      /* Il est nécessaire de parcourir la boucle de détection d'ÉCHEC ci-avant jusqu'au bout sans en
-      sortir à la première détection, ceci afin de pouvoir comptabiliser les échecs multiples. On peut
-      ensuite afficher une boite de dialogue signifiant l'ÉCHEC quand il est effectivement avéré.   */
+      // Il est nécessaire de parcourir la boucle de détection d'ÉCHEC ci-avant jusqu'au bout sans en
+      // sortir à la première détection, ceci afin de pouvoir comptabiliser les échecs multiples. On peut
+      // ensuite afficher une boite de dialogue signifiant l'ÉCHEC quand il est effectivement avéré.
       
       return strEchec;
       
    }  // !SilentTestEchecFavSide
+
+    Fin de méthode obsolète à désactiver */
 
 
    // ==================================================================================================
@@ -729,6 +725,7 @@ NSString *strPieces;
 
 
 
+   /* MÉTHODE OBSOLÈTE À DÉSACTIVER
    // ==================================================================================================
    // MCN - Méthode de classe pour assurer la gestion du Pat et du Mat - Version silencieuse
    // CETTE MÉTHODE NE DOIT ÊTRE APPELÉE QU'APRÈS QU'UN TEST SUR 'PossibleMovesForSide' AIT RÉVÉLÉ QUE LE
@@ -805,6 +802,8 @@ NSString *strPieces;
          
       } // fin else de niv 1 et de PAT
    } // Fin de Méthode 'SilentAlertMsgPatMatSide'
+
+   FIN DE MÉTHODE À DÉSACTIVER */
 
 
 

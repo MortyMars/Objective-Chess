@@ -199,7 +199,6 @@ static int nbCallsIsKingCheck = 0;
             (unsigned long)sortedMoves.count);
       
       
-      
       /* ========== ÉVALUATION DE CHAQUE COUP ========== */
       for (Move *moveEnCours in sortedMoves)
       {
@@ -239,14 +238,6 @@ static int nbCallsIsKingCheck = 0;
       NSLog(@"🎯 Nœuds explorés: %llu", nodes);
       [self.transpositionTable printStats];
       // Fin de stats
-      
-      // ✅ LOG CRITIQUE
-      NSLog(@"🔵 BestMoveForSide retourne:");
-      NSLog(@"   Move: %@", bestMove);
-      NSLog(@"   isEnPassant: %d", bestMove.isEnPassant);
-      NSLog(@"   isCapture: %d", bestMove.isCapture);
-      NSLog(@"   Adresse mémoire: %p", bestMove);
-      
       
       return bestMove;
       
@@ -733,10 +724,6 @@ static int nbCallsIsKingCheck = 0;
                     board:(ChessBoard *)board
                      side:(Side)side
    {
-      NSLog(@"🔵 ScoreMovesList appelé:");
-      NSLog(@"   Nombre de moves: %lu", (unsigned long)moves.count);
-      NSLog(@"   enPassantFile: %d", board->enPassantFile);
-      
       for (Move *m in moves) {
          
          int score = 0;
@@ -1283,66 +1270,6 @@ static int nbCallsIsKingCheck = 0;
    }
 
 
-   /* ANCIEN CODE
-   // ================================================================================================
-   // MÉTHODE 8 : TestEchecFavSide - DÉTECTION ÉCHEC AVEC NOTIFICATION
-   -(NSString *)TestEchecFavSide:(Side)side Board:(ChessBoard *)board
-   {
-      NSString *strEchec = @"";
-      NSString *strOtherSide = @"";
-      checkCount = 0;
-      Side otherSide = (side == sideWhite)? sideBlack:sideWhite;
-      
-      // Parcours de l'échiquier
-      for (int x = 0; x < 8; x++) {
-         for (int y = 0; y < 8; y++) {
-            Pos *pos = [Pos posWithX:x y:y];
-            Piece *piece = [board piece_colX:x rangY:y];
-            // Si 'piece' existe et qu'elle est de la couleur 'side'
-            if (piece && piece.side == side) {
-               // Création du jeu des destinations possibles pour la pièce
-               NSSet *PosAcceptees = [RuleBook PosLegalesForPiece:piece atPos:pos inBoard:board];
-               // Parcours de toutes les destinations possibles
-               for (Pos *possibleDest in PosAcceptees) {
-                  // Création du move correspondant (on ne l'exécute pas)
-                  Move *moveOfSide = [[Move alloc] initWithStart:pos Dest:possibleDest];
-                  // Création d'une pièce adverse potentiellement présente à l'arrivée du move
-                  Piece *pieceAdv = [board piece_colX:moveOfSide.dest.x rangY:moveOfSide.dest.y];
-                  // Si cette pièce est le Roi adverse, alors ça signifie que celui-ci est en 'échec'
-                  
-                  // Test de DEBUG
-                  if (pieceAdv.type == Roi) {
-                     NSLog(@"👍 La pièce %@ en déplacement a trouvé le Roi %@",
-                           (piece.side==sideWhite)? @"Blanche":
-                           (piece.side==sideBlack)? @"Noire":
-                           @"?",
-                           (pieceAdv.side==sideWhite)? @"Blanc":
-                           (pieceAdv.side==sideBlack)? @"Noir":
-                           @"?"
-                     );
-                  }
-                  // Fin de test de DEBUG
-         
-                  if (pieceAdv.type == Roi && pieceAdv.side == otherSide) {
-                     strEchec = @"Echec";
-                     checkCount++;
-                  }
-               }
-            }
-         }
-      }
-      
-      // Message en Log
-      strOtherSide = (side == sideWhite)? @"Noir":@"Blanc";
-      if ([strEchec isEqual:@"Echec"]) {
-         //[monConnecteur.maChessView.delegate AlertMsgEchecSide:otherSide];
-         [monConnecteur AlertMsgEchecSide:otherSide];
-         NSLog(@"\nLe Roi %@ est en situation : %@", strOtherSide, strEchec);
-      }
-      
-      return strEchec;
-   }     */
-
    // ================================================================================================
    // MÉTHODE 8 : TestEchecFavSide - DÉTECTION ÉCHEC EN FAVEUR DE SIDE
    -(NSString *)TestEchecFavSide:(Side)side Board:(ChessBoard *)board
@@ -1602,15 +1529,10 @@ static int nbCallsIsKingCheck = 0;
    }
 
 
-   
    // ================================================================================================
    // Méthode permettant de détecter si le Roi 'side' est en échec
    -(BOOL)IsKingInCheck:(Side)side board:(ChessBoard *)board
    {
-      /* nbCallsIsKingCheck++;
-      NSLog(@"Call n°%d from: %@",nbCallsIsKingCheck,([NSThread callStackSymbols].count > 1 ? [NSThread callStackSymbols][1] : @"inconnu"));
-      NSLog(@"Recherche du Roi: %@ sur le board: \n%@ ",(side == sideBlack)? @"Noir":@"Blanc",board); */
-      
       int kingX = -1, kingY = -1;
       
       // 1️⃣ Trouver le roi
@@ -1620,9 +1542,7 @@ static int nbCallsIsKingCheck = 0;
             if (p && p.type == Roi && p.side == side) {
                kingX = x;
                kingY = y;
-               /* NSLog(@"Les %@ sont en bas --> Le Roi %@ est en col:%d rang:%d = %@\n",
-                     (sideJoueur == sideWhite)? @"BLANCS":@"NOIRS",(side == sideWhite)? @"BLANC":@"NOIR",x,y,p); */
-               break;                                          // On sort du 'for'
+               break;   // On sort du 'for'
             }
          }
       }

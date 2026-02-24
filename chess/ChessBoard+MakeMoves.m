@@ -108,28 +108,9 @@
          }
       }
       
-      // LOG DE DEBUG E.P.
       if (m.isEnPassant) {
-          NSLog(@"🟡 EP détecté dans makeMove:");
-          NSLog(@"   Move: %@", m);
-          NSLog(@"   isEnPassant: %d", m.isEnPassant);
-          
           st.wasEnPassant = YES;
-          
       }
-      else {
-          // ✅ Ajouter ce log pour voir si on passe par ici
-          if (moving.type == Pion && monConnecteur.maChessView->liveBoard->enPassantFile == tx) {
-              NSLog(@"⚠️ Pion capture en (%d,%d) mais isEnPassant=NO !", tx, ty);
-              NSLog(@"   enPassantFile=%d, tx=%d, ty=%d", monConnecteur.maChessView->liveBoard->enPassantFile, tx, ty);
-             
-             // ✅ STACKTRACE pour voir d'où vient cet appel
-             NSLog(@"📍 Call stack:");
-             for (NSString *line in [NSThread callStackSymbols]) {
-                NSLog(@"   %@", line);
-             }
-         }
-      } // FIN DE LOG DE DEBUG E.P.
       
       /*----------------------- DÉPLACEMENT PRINCIPAL -----------------------------*/
       pieceCase[tx][ty] = moving;
@@ -148,15 +129,6 @@
       
       /*----------------------- ROQUE (tour) --------------------------------------*/
       if (m.isCastling) {
-         // Recherche bug Roque Roi Noir IA
-         NSLog(@"🏰 ROQUE makeMove:");
-         NSLog(@"   Roi : (%d,%d) → (%d,%d)", fx, fy, tx, ty);
-         NSLog(@"   kingSide = %d", (tx == 6));
-         NSLog(@"   rookFromX = %d, y = %d", (tx==6)?7:0, fy);
-         NSLog(@"   pieceCase[%d][%d] = %@", (tx==6)?7:0, fy,
-                   pieceCase[(tx==6)?7:0][fy]);
-         NSLog(@"   Tour numMoves = %d",
-                   pieceCase[(tx==6)?7:0][fy].numMoves);
          
          int y = fy;
          BOOL kingSide = (tx == 6);
@@ -165,18 +137,9 @@
          int rookToX   = kingSide ? 5 : 3;
          
          Piece *rook = pieceCase[rookFromX][y];
-         // ✅ DIAGNOSTIC détaillé au lieu d'un simple assert
+         
          if (!rook || rook.type != Tour) {
-            NSLog(@"❌ ROQUE IMPOSSIBLE:");
-            NSLog(@"   Roi: (%d,%d) → (%d,%d), side=%@, kingSide=%d",
-                    fx, fy, tx, ty,
-                    (moving.side == sideWhite ? @"White" : @"Black"),
-                    kingSide);
-            NSLog(@"   rookFromX=%d, y=%d", rookFromX, y);
-            NSLog(@"   pieceCase[%d][%d] = %@", rookFromX, y, rook);
-            NSLog(@"   Move: %@", m);
-            NSLog(@"   isCastling=%d", m.isCastling);
-              
+            
             // Afficher tout le board
             for (int yy = 7; yy >= 0; yy--) {
                NSMutableString *line = [NSMutableString stringWithFormat:@"   y=%d: ", yy];
@@ -190,9 +153,7 @@
                           [line appendString:@".. "];
                      }
                }
-               NSLog(@"%@", line);
             }
-              
             NSAssert(NO, @"Roque: tour absente ou incorrecte");
          }
          
@@ -232,14 +193,6 @@
          LOG_PROMO(@"%@ pawn promotes at (%d,%d)",
                    (moving.side == sideWhite ? @"White" : @"Black"),
                    m.dest.x, m.dest.y);
-         
-         // ✅ LOG DE DIAGNOSTIC
-         NSLog(@"🔵 PROMOTION dans makeMove:");
-         NSLog(@"   m.promotionType = %d (%@)", m.promotionType,
-                  @[@"?", @"Pion", @"Cavalier", @"Fou", @"Tour", @"Dame"][m.promotionType]);
-         NSLog(@"   moving.type après = %d (%@)", moving.type,
-                  @[@"?", @"Pion", @"Cavalier", @"Fou", @"Tour", @"Dame"][moving.type]);
-         
       }
       
       /*----------------------- DROITS DE ROQUE -----------------------------------*/
@@ -431,11 +384,6 @@
       
       moving.numMoves--;
       
-      if (pieceCase[m.dest.x][m.dest.y] &&
-          pieceCase[m.dest.x][m.dest.y] == moving) {
-         NSLog(@"❌ ERREUR: pièce encore présente sur dest après unmake %@", m);
-      }
-      
       // New DEBUG_ZOBRIST
       #ifdef DEBUG_ZOBRIST
          uint64_t hashAfterUnmake = zobristKey;
@@ -454,39 +402,74 @@
    } // !unmakeMove
 
 
-   // Méthode déterminant les droits de roque
-   -(uint8_t)updateCastlingRights:(uint8_t)rights
+   // ==================================================================================================
+   // Méthode de recalcul des droits de Roque
+   - (uint8_t)updateCastlingRights:(uint8_t)rights
                            forMove:(Move *)m
                      capturedPiece:(Piece *)captured
    {
-       uint8_t newRights = rights;
-       Piece *moving = m.movingPiece;
+      uint8_t newRights = rights;
+      Piece *moving = m.movingPiece;
+      
+      /* Noter que les droits sont initialisés à 0b1111 qkQK, q=bit de pds fort et K=bit de pds faible
+      (ATTENTION : l'ordre d'affectation des bits est 'qkQK' alors que la phrase FEN est 'KQkq')
+      Noter également qu'en & binaire, un 0 efface le bit considéré
+      Noter enfin l'utilisation du 'non binaire' ~ : ~0b0101 = 0b1010
+      
+      Logique binaire
+      
+      Bit3   Bit2   Bit1   Bit0
+      q      k      Q      K
+      │      │      │      └─ Blanc petit roque (h1) = 0b0001 (bit de poids faible)
+      │      │      └──────── Blanc grand roque (a1) = 0b0010
+      │      └─────────────── Noir  petit roque (h8) = 0b0100
+      └────────────────────── Noir  grand roque (a8) = 0b1000 (bit de poids fort)
+      
+      
+      Convention FEN
        
-       // Roi bouge
-       if (moving.type == Roi) {
-           newRights &= (moving.side == sideWhite) ? ~0b0011 : ~0b1100;
-       }
-       
-       // Tour bouge (comparaison sur square linéaire)
-       if (moving.type == Tour) {
-           int fromSq = m.fromSquare;
-           if (fromSq == 0)  newRights &= ~0b0010; // a1
-           if (fromSq == 7)  newRights &= ~0b0001; // h1
-           if (fromSq == 56) newRights &= ~0b1000; // a8
-           if (fromSq == 63) newRights &= ~0b0100; // h8
-       }
-       
-       // Tour capturée
-       if (captured && captured.type == Tour) {
-           int toSq = m.toSquare;
-           if (toSq == 0)  newRights &= ~0b0010;
-           if (toSq == 7)  newRights &= ~0b0001;
-           if (toSq == 56) newRights &= ~0b1000;
-           if (toSq == 63) newRights &= ~0b0100;
-       }
-       
-       return newRights;
-   }
+      K Q k q
+      │ │ │ └─ Noir  grand roque (a8)
+      │ │ └─── Noir  petit roque (h8)
+      │ └───── Blanc grand roque (a1)
+      └─────── Blanc petit roque (h1)
+      
+      ---------------------------------------------------------------------------------------------- */
+      
+      // Si un Roi bouge
+      if (moving.type == Roi) {
+         // si Roi blanc bouge -> on ajoute ~0b0011 sinon ~0b1100
+         newRights &= (moving.side == sideWhite) ? ~0b0011 : ~0b1100;
+         // 0b1111 & 0b1100 -> 0b1100 càd qk--
+         // 0b1111 & 0b0011 -> 0b0011 càd --QK
+      }
+      
+      // Tour bouge (comparaison sur square linéaire)
+      if (moving.type == Tour) {
+         int fromSq = m.fromSquare;
+         // Tour Q bouge -> 0b1111 && 0b0010 ->
+         if (fromSq == 0)  newRights &= ~0b0010; // a1 -> qk-K
+         // Tour K bouge
+         if (fromSq == 7)  newRights &= ~0b0001; // h1 -> qkQ-
+         // Tour q bouge
+         if (fromSq == 56) newRights &= ~0b1000; // a8 -> -kQK
+         // Tour k bouge
+         if (fromSq == 63) newRights &= ~0b0100; // h8 -> q-QK
+      }
+      
+      // Tour capturée (même logique et résultats que fromSq)
+      if (captured && captured.type == Tour) {
+         int toSq = m.toSquare;
+         if (toSq == 0)  newRights &= ~0b0010;
+         if (toSq == 7)  newRights &= ~0b0001;
+         if (toSq == 56) newRights &= ~0b1000;
+         if (toSq == 63) newRights &= ~0b0100;
+      }
+      
+      return newRights;
+      
+   } // !updateCastlingRights
+
 
 
 @end

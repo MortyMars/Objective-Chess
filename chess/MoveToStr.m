@@ -41,7 +41,7 @@
       
       // Ajout de l'indication de prise et 'en passant' si c'est le cas
       // sachant que dans ce cas, le dernier move ajouté à la chaine est forcément de la forme 'd5-e6'
-      if (enPassant) {
+      if (move.isEnPassant) {
          // Passage par une NSString provisoire
          NSString *moveMCNprov;
          // remplacement du dernier '-' par un 'x' signalant une prise de pièce, l'ajout devient 'd5xe6'
@@ -57,11 +57,6 @@
       
       // Ajout de l'indication Échec / Échec et Mat, par exploitation du paramètre 'strEchec'
       NSString *advEstEnEchec = strEchec;
-      // ✅ DEBUG : Afficher les valeurs
-      NSLog(@"🔍 ConvertEnStringMove:");
-      NSLog(@"   strEchec = '%@'", strEchec);
-      NSLog(@"   checkCount = %d", checkCount);
-      NSLog(@"   [advEstEnEchec isEqual:@\"Echec\"] = %d", [advEstEnEchec isEqual:@"Echec"]);
       
       if ([advEstEnEchec isEqual:@"Mat"]) {
          [moveMCN appendString:@"#"];
