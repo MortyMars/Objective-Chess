@@ -408,14 +408,14 @@ BOOL engineIsBusy = NO;
       /* Réalisation du move - AVEC mise à jour Zobrist */
       MoveState st = [liveBoard makeMove:moveJoueur];
       
-   #ifdef DEBUG_ZOBRIST
-      uint64_t hashApres = liveBoard->zobristKey;
-      uint64_t recalcApres = recomputeZobrist(liveBoard);
-      NSLog(@"🎮 APRÈS makeMove: hash=%llx, recalc=%llx", hashApres, recalcApres);
-      if (hashApres != recalcApres) {
-         NSLog(@"❌ Le coup joueur a corrompu le Zobrist !");
-      }
-   #endif
+      #ifdef DEBUG_ZOBRIST
+         uint64_t hashApres = liveBoard->zobristKey;
+         uint64_t recalcApres = recomputeZobrist(liveBoard);
+         NSLog(@"🎮 APRÈS makeMove: hash=%llx, recalc=%llx", hashApres, recalcApres);
+         if (hashApres != recalcApres) {
+            NSLog(@"❌ Le coup joueur a corrompu le Zobrist !");
+         }
+      #endif
       
       // Gestion des indicateurs d'affichage du Roque dans la liste des coups joués
       petitRoque = NO;

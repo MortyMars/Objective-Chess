@@ -1310,7 +1310,7 @@ static int nbCallsIsKingCheck = 0;
                            }
                        }
                    }
-                   if (checkCount > 1) break; // Permettre la détection de l'échec multiple
+                   if (checkCount > 0) break; // 
                }
            }
            

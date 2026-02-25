@@ -20,6 +20,7 @@ Structurelles :
 - Le niveau de jeu de l'IA peut être modifié tout au long de la partie
 - La règle imposant de proposer la nullité d'une partie après 50 coups sans prise de pièce ou déplacement de pion est implémentée
 - Il est possible de demander à l'IA de résoudre des diagrammes de situations de partie
+- Le Joueur peut demander à l'IA de lui suggérer un (bon) coup
 
 Cosmétiques :
 - Le dessin des pièces a été modifié pour un résultat plus esthétique
@@ -43,10 +44,10 @@ Notes de mise à jour (02/2026)
 - v1.0.9-beta : Possibilité de demander à l'IA de résoudre un diagramme de situation de partie
 - v1.1.0-beta : Refactoring du moteur de jeu (Minimax, ChessBoard, RuleBook) pour de meilleures performances - Ajout de critères positionnels à la fonction d'évaluation
 - v1.1.0 : Involutivité makeMove/unmakeMove acquise - Hachage Zobrist en place - Tables de transposition implémentées = Ces modifications concourent à une amélioration très significatives des performances du moteur
+- v1.1.1 : Le Joueur peut demander à l'IA de lui suggérer un (bon) coup
 
 Ce qui reste à faire (ma TODO list)
 -----------------------------------
 - Reprendre certains bugs mineurs ou pertes de fonctionnalités annexes, apparus lors du refactoring profond du moteur
 - Améliorer la qualité de jeu de l'IA concernant les coups les plus immédiats et certains sacrifices inutiles
 - Implémenter la possibilité d'enregistrer le déroulement d'une partie, board après board
-- Offrir au Joueur la possibilité de se voir proposer un prochain bon coup

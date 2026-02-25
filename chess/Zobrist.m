@@ -15,8 +15,6 @@ uint64_t zobristCastle[16];
 uint64_t zobristEnPassant[8];
 
 
-
-
 // =====================================================================================================
 // Implémentation des fonctions Zobrist
 

@@ -31,28 +31,28 @@
       Un appel trop tôt dans le code, avec des objets encore 'nil' rendrait inefficace la mise à jour
       souhaitée de l'affichage (c'est en tous cas ce que je crois avoir compris...)  */
       
-      /* MCN - INITIALISATION DE LA VARIABLE GLOBALE 'monConnecteur' DÉCLARÉE DANS 'UTIL.H'.
+      /* INITIALISATION DE LA VARIABLE GLOBALE 'monConnecteur' DÉCLARÉE DANS 'UTIL.H'.
       L'instance créée par Interface Builder 'connecteurFromIB' est assignée à la variable globale
       'monConnecteur' qui devient ainsi accessible depuis n'importe quelle classe qui importe Util.h,
       tout en restant retenue en mémoire durant toute la durée de vie de l'application. */
       monConnecteur = connecteurFromIB;
       
       
-      // MCN - MÀJ des repères de cases selon l'affichage standard
+      // MÀJ des repères de cases selon l'affichage standard
       sideJoueur = sideWhite;  sideIA = sideBlack; //choix arbitraire à ce stade, qui sera confirmé + tard
       [monConnecteur MajReperesCases];
       
-      /* MCN - MÀJ du listing des coups joués
+      /* MÀJ du listing des coups joués
       'InitialiseTxtCoups' est appelée afin d'afficher le premier coup lorsque l'IA a les Blancs, sachant
       qu'il faut d'abord définir la police utilisée dans le contrôle txtCoups (exigence de TextView)...  */
       [monConnecteur.txtCoups setFont:[NSFont fontWithName:@"Helvetica" size:14]];
       //[monConnecteur InitialiseTxtCoups:stringCoupsPartie];
       
-      // MCN - Initialisation des indicateurs
+      // Initialisation des indicateurs
       monConnecteur.indicIAdoitJouer.transparent = YES;
       monConnecteur.indicJdoitJouer.transparent = NO;
       
-      /* MCN - Initialisation du niveau de prospection de l'IA par appel de la méthode 'SetDifficulty' ad-hoc
+      /* Initialisation du niveau de prospection de l'IA par appel de la méthode 'SetDifficulty' ad-hoc
       On note qu'ici c'est AppDelegate (self) qui envoi le message à SetDifficulty3 qui est une IBAction
       ici on choisit le niveau 2... qui correspond à fixer NUMBER_MOVE_AHEAD à 3
       (le mini = Difficulty1 -> NUMBER_MOVE_AHEAD = 0, et le maxi = Difficulty5 -> NUMBER_MOVE_AHEAD = 4) */

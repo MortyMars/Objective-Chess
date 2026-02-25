@@ -20,6 +20,7 @@ Structural:
 - The AI's playing level can be modified throughout the game. Game:
 - The rule requiring a draw after 50 moves without a capture or pawn movement is implemented.
 - It is possible to ask the AI to solve game situation diagrams.
+- The Player can ask the AI to suggest a (good) move.
 
 Visual:
 - The piece designs have been modified for a more aesthetically pleasing result.
@@ -43,10 +44,10 @@ Release Notes (02/2026)
 - v1.0.9-beta: Ability to ask the AI to solve a game situation diagram
 - v1.1.0-beta: Refactoring of the game engine (Minimax, ChessBoard, RuleBook) for better performance - Added positional criteria to the evaluation function
 - v1.1.0: Involutive makeMove/unmakeMove functionality achieved - Zobrist hashing implemented - Transposition tables implemented = These changes contribute to a very significant improvement in the engine's performance
+- v1.1.1: The Player can ask the AI to suggest a (good) move.
 
 What remains to be done (my TODO list)
 -----------------------------------
 - Fix some minor bugs or loss of secondary features that appeared during the deep engine refactoring
 - Improve the game quality of AI regarding the most immediate moves and certain unnecessary sacrifices
 - Implement the ability to record the progress of a game, board by board
-- Offer the player the possibility of being suggested a good next move

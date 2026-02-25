@@ -520,16 +520,17 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
 
 
    // ==================================================================================================
-   // Méthode permettant de déterminer la chaine décrivant les possibilités de Roque
+   // Méthode permettant de déterminer la CHAINE affichant en barre d'état les possibilités de Roque
+   // Les droits de Roque utilisés par le moteur sont déterminés par une autre méthode
    -(void) CalculerStrRoque {
       
       /* La situation du Roque est dépendante de 6 pièces : les 2 rois et les 4 tours...
-       Il est donc nécessaire de vérifier que ces pièces sont présentes sur leur position d'origine
-       et qu'elles n'ont pas bougé entretemps
-       On passe par une String provisoire   */
+      Il est donc nécessaire de vérifier que ces pièces sont présentes sur leur position d'origine
+      et qu'elles n'ont pas bougé entretemps
+      On passe par une String provisoire   */
       
       /* Si, dans la partie, strRoque est déjà positionnée sur '-' c'est que plus aucun roque n'est autorisé
-       Pas la peine alors de rééxécuter la méthode à chaque move...   */
+      Pas la peine alors de rééxécuter la méthode à chaque move...   */
       if (!([monConnecteur.maChessView->liveBoard->strRoque isEqual:@"-"])) {
          
          NSString *strProvRoque = @"";
