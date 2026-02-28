@@ -100,6 +100,15 @@
    // Détecte si une position a déjà été vue (répétition = nulle)
    -(BOOL)isRepetition:(uint64_t)zobristKey;
 
+   // Helper IsKingInCheck
+   -(BOOL)doesPieceAtX:(int)px Y:(int)py
+         attackSquareX:(int)tx Y:(int)ty
+                 board:(ChessBoard *)board;
+
+   // Helper 'doesPieceAtX'
+   -(BOOL)isPathClearFromX:(int)fx Y:(int)fy
+                       toX:(int)tx Y:(int)ty
+                     board:(ChessBoard *)board;
    
 
    

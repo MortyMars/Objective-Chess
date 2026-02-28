@@ -1275,53 +1275,49 @@ static int nbCallsIsKingCheck = 0;
    -(NSString *)TestEchecFavSide:(Side)side Board:(ChessBoard *)board
    {
        Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
-       checkCount = 0;  // Reset
+       checkCount = 0;
        
-       if ([self IsKingInCheck:otherSide board:board]) {
-           
-           // Trouver le roi
-           Pos *kingPos = nil;
-           for (int x = 0; x < 8; x++) {
-               for (int y = 0; y < 8; y++) {
-                   Piece *p = board->pieceCase[x][y];
-                   if (p && p.type == Roi && p.side == otherSide) {
-                       kingPos = [Pos posWithX:x y:y];
-                       break;
-                   }
-               }
-               if (kingPos) break;
-           }
-           
-           // Compter les attaquants
-           if (kingPos) {
-               for (int x = 0; x < 8; x++) {
-                   for (int y = 0; y < 8; y++) {
-                       Piece *piece = board->pieceCase[x][y];
-                       if (piece && piece.side == side) {
-                           // Utiliser IsSquareAttackedAtX au lieu de générer les coups
-                           if ([self IsSquareAttackedAtX:kingPos.x
-                                                        Y:kingPos.y
-                                                   bySide:side
-                                                    Board:board]) {
-                               checkCount++;
-                               // On a déjà trouvé qu'il est attaqué,
-                               // pas besoin de compter davantage
-                               break;
-                           }
-                       }
-                   }
-                   if (checkCount > 0) break; // 
-               }
-           }
-           
-           // ✅ NE PAS ALERTER ICI — laisser l'appelant le faire
-           NSLog(@"🔍 Échec détecté, checkCount=%d", checkCount);
-           return @"Echec";
+       if (![self IsKingInCheck:otherSide board:board]) {
+           return @"";
        }
        
-       return @"";
-   }
-
+       // Trouver le roi
+       Pos *kingPos = nil;
+       for (int x = 0; x < 8; x++) {
+           for (int y = 0; y < 8; y++) {
+               Piece *p = board->pieceCase[x][y];
+               if (p && p.type == Roi && p.side == otherSide) {
+                   kingPos = [Pos posWithX:x y:y];
+                   break;
+               }
+           }
+           if (kingPos) break;
+       }
+       
+       // Compter les attaquants distincts
+       if (kingPos) {
+           for (int x = 0; x < 8; x++) {
+               for (int y = 0; y < 8; y++) {
+                   Piece *piece = board->pieceCase[x][y];
+                   if (piece && piece.side == side) {
+                       
+                       if ([self doesPieceAtX:x Y:y
+                              attackSquareX:kingPos.x
+                                          Y:kingPos.y
+                                      board:board]) {
+                           checkCount++;
+                           
+                           if (checkCount >= 2) break;  // Pas besoin de chercher plus
+                       }
+                   }
+               }
+               if (checkCount >= 2) break;
+           }
+       }
+       
+       NSLog(@"🔍 Échec détecté, checkCount=%d", checkCount);
+       return @"Echec";
+   } // !TestEchecFavSide
 
    // ================================================================================================
    // MÉTHODE 9 : TestEchecRoiSide - VERSION RAPIDE DE LA DÉTECTION D'ÉCHEC
@@ -1655,6 +1651,73 @@ static int nbCallsIsKingCheck = 0;
    }
 
 
+   // ================================================================================================
+   // Helper appelée par IsKingInCheck
+   -(BOOL)doesPieceAtX:(int)px Y:(int)py
+        attackSquareX:(int)tx Y:(int)ty
+                board:(ChessBoard *)board
+   {
+       Piece *piece = board->pieceCase[px][py];
+       if (!piece) return NO;
+       
+       int dx = tx - px;
+       int dy = ty - py;
+       int adx = abs(dx);
+       int ady = abs(dy);
+       
+       switch (piece.type) {
+           case Pion: {
+               int dir = (piece.side == sideWhite) ? 1 : -1;
+               // Pion attaque en diagonale
+               return (dy == dir && adx == 1);
+           }
+           
+           case Cava:
+               return (adx == 2 && ady == 1) || (adx == 1 && ady == 2);
+           
+           case Fou:
+               if (adx != ady) return NO;  // Pas diagonal
+               // Vérifier qu'il n'y a pas d'obstacle
+               return [self isPathClearFromX:px Y:py toX:tx Y:ty board:board];
+           
+           case Tour:
+               if (dx != 0 && dy != 0) return NO;  // Pas droit
+               return [self isPathClearFromX:px Y:py toX:tx Y:ty board:board];
+           
+           case Dame:
+               // Diagonal OU droit
+               if (adx == ady || dx == 0 || dy == 0) {
+                   return [self isPathClearFromX:px Y:py toX:tx Y:ty board:board];
+               }
+               return NO;
+           
+           case Roi:
+               return (adx <= 1 && ady <= 1);
+           
+           default:
+               return NO;
+       }
+   }
+
+   
+   // ================================================================================================
+   // Helper pour vérifier le chemin, appelée par 'doesPieceAtX', elle-même appelée par 'IsKingInCheck'
+   -(BOOL)isPathClearFromX:(int)fx Y:(int)fy toX:(int)tx Y:(int)ty board:(ChessBoard *)board
+   {
+       int dx = (tx > fx) ? 1 : (tx < fx) ? -1 : 0;
+       int dy = (ty > fy) ? 1 : (ty < fy) ? -1 : 0;
+       
+       int x = fx + dx;
+       int y = fy + dy;
+       
+       while (x != tx || y != ty) {
+           if (board->pieceCase[x][y]) return NO;  // Obstacle
+           x += dx;
+           y += dy;
+       }
+       
+       return YES;
+   }
    
 
 

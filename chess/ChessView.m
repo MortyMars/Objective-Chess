@@ -566,7 +566,9 @@ BOOL engineIsBusy = NO;
       if (![strEchec isEqual:@""]) NSLog(@"\n La chaine d'échec est : '%@'", strEchec);
       
       // Restauration des indicateurs de roque pour utilisation dans 'ConvertEnStringMove'
-      petitRoque = roque;           grandRoque = ROQUE;           enPassant = ENPASS;
+      petitRoque = roque;
+      grandRoque = ROQUE;
+      enPassant = ENPASS;
       
       // REVOIR LE @"" PASSÉ À PROMPION ???!!! CPTE TENU DE LA GESTION PAR L'IA DE SES PROPRES PROMOTIONS
       NSMutableString* bestMoveIA = [MoveToStr ConvertEnStringMove:aiMove    PromPion:@""
