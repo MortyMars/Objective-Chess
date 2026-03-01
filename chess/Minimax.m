@@ -1274,19 +1274,20 @@ static int nbCallsIsKingCheck = 0;
    // MÉTHODE 8 : TestEchecFavSide - DÉTECTION ÉCHEC EN FAVEUR DE SIDE
    -(NSString *)TestEchecFavSide:(Side)side Board:(ChessBoard *)board
    {
-       Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
+       Side enemySide = (side == sideWhite) ? sideBlack : sideWhite;
        checkCount = 0;
        
-       if (![self IsKingInCheck:otherSide board:board]) {
+      // Si le roi ennemi n'est pas en échec on sort en retournant une chaine vide
+       if (![self IsKingInCheck:enemySide board:board]) {
            return @"";
        }
        
-       // Trouver le roi
+       // Sinon trouver le roi...
        Pos *kingPos = nil;
        for (int x = 0; x < 8; x++) {
            for (int y = 0; y < 8; y++) {
                Piece *p = board->pieceCase[x][y];
-               if (p && p.type == Roi && p.side == otherSide) {
+               if (p && p.type == Roi && p.side == enemySide) {
                    kingPos = [Pos posWithX:x y:y];
                    break;
                }
@@ -1294,17 +1295,17 @@ static int nbCallsIsKingCheck = 0;
            if (kingPos) break;
        }
        
-       // Compter les attaquants distincts
+       // ... et compter les attaquants distincts
        if (kingPos) {
            for (int x = 0; x < 8; x++) {
                for (int y = 0; y < 8; y++) {
                    Piece *piece = board->pieceCase[x][y];
                    if (piece && piece.side == side) {
-                       
+                       // Appel du helper 'doesPieceAtX'
                        if ([self doesPieceAtX:x Y:y
-                              attackSquareX:kingPos.x
-                                          Y:kingPos.y
-                                      board:board]) {
+                                attackSquareX:kingPos.x
+                                            Y:kingPos.y
+                                        board:board]) {
                            checkCount++;
                            
                            if (checkCount >= 2) break;  // Pas besoin de chercher plus

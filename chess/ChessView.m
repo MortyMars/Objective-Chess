@@ -46,13 +46,12 @@ BOOL engineIsBusy = NO;
 
 
    // ==================================================================================================
-   // MÉTHODE DE CLASSE - DESSIN DE L'ÉCHIQUIER - APPELÉE PAR 'drawRect'
-   // La Méthode est appelée automatiquement (en fait c'est 'drawRect' qui est appelée...) dès que notre
-   // ChessView nécessite d'être dessinée ou mise à jour...
+   // MÉTHODE ASSURANT LE DESSIN DE L'ÉCHIQUIER - APPELÉE PAR 'drawRect'
+   // La Méthode est appelée automatiquement (en fait c'est 'drawRect' qui est appelée) dès que ChessView
+   // nécessite d'être dessinée ou mise à jour...
    -(void)drawBoard
    {
       if (engineIsBusy) return;
-
       
       /* 'self.bounds.size' pointe sur les dimensions de la vue ChessView contenant l'échiquier
       La vue ChessView est définie à 600x600 (cf. le fichier xib)
@@ -73,38 +72,41 @@ BOOL engineIsBusy = NO;
             // Détermination des coordonnées moteur (ex et ey)
             int ex = self.uiFlipped ? 7 - x : x;
             int ey = self.uiFlipped ? 7 - y : y;
-
             
-            // Dessin des cases de l'échiquier
+            // DESSIN DES CASES DE L'ÉCHIQUIER, UNE À UNE
+            // Détermination de la case concernée
             CGRect destRect = CGRectMake(x * tileWidth, y * tileHeight, tileWidth, tileHeight);
             
-            if (isThereTileSelected && selTile.x == ex && selTile.y == ey) { // case de la pièce sélectionnée
-               // (0.12, 0.63, 0.33, 1) = VERT opaque    (0.72, 0.12, 0.06, 1) = ROUGE opaque
-               CGContextSetRGBFillColor(context, 0, 0, 1, 1);              // --> BLEU opaque
+            // ✅ 1️⃣ DESSINER LE FOND D'ABORD
+            // si x+y n'est pas un multiple de 2 c'est une case 'Blanche'
+            if ((x + y) % 2 == 1) {
+               CGContextSetRGBFillColor(context, 1, 1, 1, 1);        // BLANC opaque
             }
-            
-            else if ([PosAcceptees containsObject:[Pos posWithX:ex y:ey]]) { // déplacts autorisés pour la pièce
-               // (0.72, 0.12, 0.06, 1) = ROUGE opaque
-               CGContextSetRGBFillColor(context, 0.12, 0.63, 0.33, 1);  // --> VERT opaque
-            }
-            
-            else {                                                   // autres cases (cases ordinaires)
-               if ((x + y) % 2 == 1) {                               // si abs+ordo n'est pas un mult. de 2
-                  CGContextSetRGBFillColor(context, 1, 1, 1, 1);     // BLANC opaque
-               }
-               
-               else {                                                // à l'inverse si c'est un multiple de 2
-                  // (0, 0, 1, 1) = BLEU opaque remplacé par un gris que je trouve plus échiquéen
-                  CGContextSetRGBFillColor(context, 0.5, 0.5, 0.5, 1);    // --> en GRIS opaque
-               }
+            // dans le cas contraire c'est une case 'Noire'
+            else {
+               CGContextSetRGBFillColor(context, 0.5, 0.5, 0.5, 1);  // GRIS opaque
             }
             CGContextFillRect(context, destRect);
             
-            // Dessin des pièces sur l'échiquier, tout au long de la partie
+            // ✅ 2️⃣ AJOUTER LES OVERLAYS PAR-DESSUS
+            // Si la case est celle de la pièce sélectionnée
+            if (isThereTileSelected && selTile.x == ex && selTile.y == ey) {
+               CGContextSetRGBFillColor(context, 0.5, 0.3, 1, 1);    // MAUVE opaque
+               CGContextFillRect(context, destRect);
+            }
+            // Si la case fait partie des positions autorisées pour la pièce
+            else if ([PosAcceptees containsObject:[Pos posWithX:ex y:ey]]) {
+               CGContextSetRGBFillColor(context, 0, 1, 0, 0.4);      // VERT transparent
+               CGContextFillRect(context, destRect);
+            }
+            
+            
+            // ✅ 3️⃣ DESSIN DES PIÈCES, TOUT AU LONG DE LA PARTIE
             Piece *piece = [liveBoard pieceAtPos:[Pos posWithX:ex y:ey]];
             Side side = piece.side;
             
-            if (piece) {    // si une pièce (invisible à ce stade) existe sur la case active, alors on la dessine
+            // Si une pièce (invisible à ce stade) existe sur la case active, alors on la dessine
+            if (piece) {
                int index = 0;
                switch (piece.type) {
                   case Invalide:         break;
@@ -117,58 +119,58 @@ BOOL engineIsBusy = NO;
                   default:                     break;
                }
                /* Le dessin de chaque pièce est un carré de 60x60 extrait de la planche piècesMCN de 360x120
-                'index' sert à positionner le curseur de sélection sur l'abcisse 0, 60, 120, 180, 240 ou 300
-                Si la pièce est Noire l'ordonnée = 0, sinon elle est = 60 pour atteindre les pièces blanches */
+               'index' sert à positionner le curseur de sélection sur l'abcisse 0, 60, 120, 180, 240 ou 300
+               Si la pièce est Noire l'ordonnée = 0, sinon elle est = 60 pour atteindre les pièces blanches */
                CGRect sourceRect = CGRectMake(index * 60, (side == sideBlack) ? 0 : 60, 60, 60);
                [piecesImage drawInRect:destRect fromRect:sourceRect operation:NSCompositingOperationSourceOver fraction:1];
             }
          }
       }
       
-      // ✨ NOUVEAU : Dessiner la surbrillance du hint
-       if (hintStartSquare || hintDestSquare) {
-           CGContextRef context = [[NSGraphicsContext currentContext] CGContext];
-           
-           // Surbrillance case de départ (jaune)
-           if (hintStartSquare) {
-               CGRect startRect = [self rectForSquareAtX:hintStartSquare.x Y:hintStartSquare.y];
-               
-               CGContextSetRGBFillColor(context, 1.0, 1.0, 0.0, 0.4);  // Jaune transparent
-               CGContextFillRect(context, startRect);
-               
-               // Optionnel : bordure
-               CGContextSetRGBStrokeColor(context, 1.0, 0.8, 0.0, 0.8);  // Jaune foncé
-               CGContextSetLineWidth(context, 3.0);
-               CGContextStrokeRect(context, startRect);
-           }
-           
-           // Surbrillance case de destination (vert)
-           if (hintDestSquare) {
-               CGRect destRect = [self rectForSquareAtX:hintDestSquare.x Y:hintDestSquare.y];
-               
-               CGContextSetRGBFillColor(context, 0.0, 1.0, 0.0, 0.4);  // Vert transparent
-               CGContextFillRect(context, destRect);
-               
-               // Optionnel : bordure
-               CGContextSetRGBStrokeColor(context, 0.0, 0.8, 0.0, 0.8);  // Vert foncé
-               CGContextSetLineWidth(context, 3.0);
-               CGContextStrokeRect(context, destRect);
-           }
-       }
-   } // Fin de méthode DESSIN DE L'ECHIQUIER
-
+      // ✨ DESSIN DE LA SURBRILLANCE DU 'HINT'
+      if (hintStartSquare || hintDestSquare) {
+         CGContextRef context = [[NSGraphicsContext currentContext] CGContext];
+         
+         // Surbrillance case de départ (mauve)
+         if (hintStartSquare) {
+            CGRect startRect = [self rectForSquareAtX:hintStartSquare.x Y:hintStartSquare.y];
+            
+            // Fond de case (abandonné pour éviter une surcharge de couleur)
+            //CGContextSetRGBFillColor(context, 1, 1, 0, 0.3);       // JAUNE transparent
+            //CGContextFillRect(context, startRect);
+            
+            // Bordure de case
+            CGContextSetRGBStrokeColor(context, 0.4, 0.0, 0.8, 1);   // MAUVE opaque
+            CGContextSetLineWidth(context, 7);                       // épaisseur 7
+            CGContextStrokeRect(context, startRect);
+         }
+         
+         // Surbrillance case de destination (vert)
+         if (hintDestSquare) {
+            CGRect destRect = [self rectForSquareAtX:hintDestSquare.x Y:hintDestSquare.y];
+            
+            // Fond de case (abandonné pour éviter une surcharge de couleur)
+            //CGContextSetRGBFillColor(context, 0, 1, 0, 0.5);       // VERT transparent
+            //CGContextFillRect(context, destRect);
+            
+            // Bordure de case
+            CGContextSetRGBStrokeColor(context, 0.0, 0.8, 0.0, 1);   // VERT opaque
+            CGContextSetLineWidth(context, 7);                       // épaisseur 7
+            CGContextStrokeRect(context, destRect);
+         }
+      }
+      
+   } // !drawBoard
 
 
    // ==================================================================================================
-   // Méthode d'instance
-   // LE JOUEUR JOUE, EN DESIGNANT (LA CASE DE) LA PIECE SELECTIONNEE ET LA CASE DESTINATION
-   // GESTION DES CLICS DE SOURIS DESIGNANT LES CASES ORIGINE ET DESTINATION SUR L'ECHIQUIER
-   // PUIS REACTION DE L'IA QUI REALISE SON COUP
+   // MÉTHODE GÉRANT LA SÉLECTION À LA SOURIS DES CASES ORIGINE ET DESTINATION SUR L'ECHIQUIER
+   // Le joueur joue en désignant la (case de la) pièce sélectionnée, puis la case destination
    -(void)mouseDown:(NSEvent *)theEvent
    {
       // Comme vu plus haut, 'self.bounds.size' pointe sur les dimensions de la vue ChessView contenant l'échiquier
       float tileWidth  = self.bounds.size.width / 8;   // et ChessView est définie à 600x600 (cf. fichier xib)
-      float tileHeight = self.bounds.size.height / 8; // Les cases font donc 600/8 de large et de haut --> 75x75
+      float tileHeight = self.bounds.size.height / 8;  // Les cases font donc 600/8 de large et de haut --> 75x75
       
       /* Lorsque l'on décale ChessView dans la fenêtre de l'appli (ce qui a été le cas pour faire de la
       place pour les repères de cases qui ont été ajoutés), on décale les deux repères (O,x,y) superposés,
@@ -190,7 +192,7 @@ BOOL engineIsBusy = NO;
       // Initialisation de variables
       Piece *selPiece = [liveBoard pieceAtPos:enginePos]; // selPiece est la pièce sélectionnée
       
-      /* Modif. MCN - sideCourant, déclaré dans Util.h, prend la valeur de la couleur de la dernière pièce
+      /* sideCourant, déclaré dans Util.h, prend la valeur de la couleur de la dernière pièce
       valide sélectionnée. Si selPiece est nil, sideCourant sera sideInvalid et le move de AI sera shunté */
       
       /* SI UNE CASE (DESTINATION) N'EST PAS SÉLECTIONNÉE : C'EST LE CAS AU PREMIER CLIC
@@ -223,7 +225,7 @@ BOOL engineIsBusy = NO;
                   /* NSTimer permet de programmer un appel différé (de 2/100 de seconde ici) à
                   'MakeComputerMove' tout en permettant la poursuite du programme.
                   Ainsi, la position choisie par le JOUEUR pour son coup est prise en compte et dessinée
-                  tout de suite sur l'échiquier, ce qui est visuellement parlant plus acceptable que de
+                  tout de suite sur l'échiquier, ce qui est -visuellement parlant- plus acceptable que de
                   voir les coups Joueur et IA se matérialiser simultanément sur l'échiquier comme le ferait
                   un banal '[Minimax MakeComputerMove]' */
                   [NSTimer scheduledTimerWithTimeInterval:0.02         target:self
@@ -240,9 +242,10 @@ BOOL engineIsBusy = NO;
       } // Fin de Else --> on passe ensuite, là encore, sur 'self.needsDisplay=YES'
       
       /* On force enfin le rafraichissement de l'affichage de ChessView, ce qui provoque l'apparition des
-       positions acceptées (en vert) au premier clic, et le déplact graphique de la pièce lors du second */
+      positions acceptées (en vert) au premier clic, et le déplact graphique de la pièce lors du second */
       self.needsDisplay = YES;
-   } // Fin de gestion des clics de souris
+      
+   } // !mouseDown
 
 
 
@@ -268,7 +271,7 @@ BOOL engineIsBusy = NO;
          self.needsDisplay = YES;
       });
       
-      // Véritable début de réalisation du move AI
+      // Début effectif de réalisation du move AI
       Move *aiMove = [maMinimax BestMoveForSide:sideIA Board:liveBoard];   // Version MCN
       
       ChessBoard* savedBoard = liveBoard.copy; // Sauvegardé pour ConvertEnStringMove avant PerformMove
@@ -307,20 +310,11 @@ BOOL engineIsBusy = NO;
       BOOL ROQUE = grandRoque;
       BOOL ENPASS = enPassant;
       
-      /* MCN - AJOUT DU COUP IA À LA LISTE DE CEUX DÉJÀ JOUÉS
+      /* AJOUT DU COUP IA À LA LISTE DE CEUX DÉJÀ JOUÉS
       EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard */
-       
-       /* Désormais l'IA gère dans le code sa meilleure protion /sous-promotion
-       // Vérification s'il y a une promo de pion à réaliser
-       // Test à faire avant 'TestEchecFavSide' car la promo peut générer une mise en échec
-      Piece *pionPromo = [liveBoard pieceAtPos:aiMove.dest];          NSString *promPion = @"";
-      if (pionPromo.type == Pion) {
-         if (aiMove.dest.y == 0 || aiMove.dest.y == 7)
-            promPion = [liveBoard SelectPromoPion:pionPromo auRang:aiMove.dest.y];
-      } */
       
       /* Récup info d'une mise en échec éventuelle et de Prise e.p. pour renseigner 'ConvertEnStringMove'
-       Bizarrement 'TestEchecForSide' RAZ les indic de Roque et de Prise e.p., d'où la sauvegarde ci-avant */
+      Bizarrement 'TestEchecForSide' RAZ les indic de Roque et de Prise e.p., d'où la sauvegarde ci-avant */
       NSString * strEchec = [maMinimax TestEchecFavSide:sideCourant Board:liveBoard];
       
       // Restauration des indicateurs de roque pour utilisation dans 'ConvertEnStringMove'
@@ -405,7 +399,8 @@ BOOL engineIsBusy = NO;
       
       ChessBoard* savedBoard = liveBoard.copy;
       
-      /* Réalisation du move - AVEC mise à jour Zobrist */
+      /* Réalisation du move - AVEC mise à jour Zobrist
+      NB : on ne fera PAS d'unmakeMove car c'est un vrai coup, pas une exploration */
       MoveState st = [liveBoard makeMove:moveJoueur];
       
       #ifdef DEBUG_ZOBRIST
@@ -442,37 +437,17 @@ BOOL engineIsBusy = NO;
       }
       // Fin de gestion des indicateurs
       
-      
-      // Note : on ne fait PAS unmakeMove car c'est un vrai coup, pas une exploration
-      
       /* Sauvegarde des indicateurs de Roque et de Prise e.p., car -bizarement- [Minimax TestEchecFavSide]
-       les RAZ avant d'avoir pu les exploiter dans ConvertEnStringMove */
+      les RAZ avant d'avoir pu les exploiter dans ConvertEnStringMove */
       BOOL roque = petitRoque;
       BOOL ROQUE = grandRoque;
       BOOL ENPASS = enPassant;
       
       /* AJOUT DU COUP JOUEUR À LA LISTE DE CEUX DÉJÀ JOUÉS
-       EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard */
-       
-       
-       /* Modif de gestion
-       Vérification s'il y a une promo de pion à réaliser
-       Test à faire avant 'TestEchecFavSide' car la promo peut générer un échec
-      Piece *pionPromo = [liveBoard pieceAtPos:moveJoueur.dest];      NSString *promPion = @"";
-      if (pionPromo.type == Pion) {
-         if (moveJoueur.dest.y == 0 || moveJoueur.dest.y == 7)
-            promPion = [liveBoard SelectPromoPion:pionPromo auRang:moveJoueur.dest.y];
-      }  */
+      EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard */
       
       // Récup de l'info sur une mise en échec éventuelle pour renseigner ensuite ConvertEnStringMove
       NSString *strEchecMat = [maMinimax TestEchecFavSide:sideCourant Board:liveBoard];
-      
-      /* // Mise à jour 'Status Bar'
-       if ([strEchecMat isEqual:@"Echec"]) {
-       if (checkCount >1) monConnecteur.lblEchec.cell.stringValue = @"Échec : ++";
-       else               monConnecteur.lblEchec.cell.stringValue = @"Échec : +";
-       }
-       else monConnecteur.lblEchec.cell.stringValue = @"Échec :"; */
       
       // Restauration des indicateurs de Roque et de Prise e.p.
       petitRoque = roque;
@@ -541,26 +516,10 @@ BOOL engineIsBusy = NO;
       
       /* MCN - AJOUT DU COUP IA À LA LISTE DE CEUX DÉJÀ JOUÉS
       EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard */
-       
-      /* VÉRIF DÉSORMAIS INUTILE COMPTE TENU QUE C'EST L'IA QUI GÈRE LES PROMOTIONS /SOUS-PROMOTIONS
-      Vérification s'il y a une promo de pion à réaliser
-      Test à faire avant 'TestEchecFavSide' car la promo peut générer une mise en échec
-      Piece *pionPromo = [board pieceAtPos:aiMove.dest];       NSString *promPion = @"";
-      if (pionPromo.type == Pion) {
-         if (aiMove.dest.y == 0 || aiMove.dest.y == 7)
-            promPion = [board SelectPromoPion:pionPromo auRang:aiMove.dest.y];
-      } */
       
       /* Récup info d'une mise en échec éventuelle et de Prise e.p. pour renseigner 'ConvertEnStringMove'
       Bizarrement 'TestEchecForSide' RAZ les indic de Roque et de Prise e.p., d'où la sauvegarde ci-avant */
       NSString *strEchec = [maMinimax TestEchecFavSide:side Board:board];
-      
-      /* // Mise à jour 'Status Bar'
-       if ([strEchec isEqual:@"Echec"]) {
-       if (checkCount >1) monConnecteur.lblEchec.cell.stringValue = @"Échec : ++";
-       else               monConnecteur.lblEchec.cell.stringValue = @"Échec : +";
-       }
-       else monConnecteur.lblEchec.cell.stringValue = @"Échec :"; */
       
       NSLog(@"\nLe Move effectué par les %@ est : %@", (sideCourant == 2)? @"Blancs":@"Noirs ", aiMove);
       if (![strEchec isEqual:@""]) NSLog(@"\n La chaine d'échec est : '%@'", strEchec);

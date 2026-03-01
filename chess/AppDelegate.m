@@ -53,9 +53,9 @@
       monConnecteur.indicJdoitJouer.transparent = NO;
       
       /* Initialisation du niveau de prospection de l'IA par appel de la méthode 'SetDifficulty' ad-hoc
-      On note qu'ici c'est AppDelegate (self) qui envoi le message à SetDifficulty3 qui est une IBAction
-      ici on choisit le niveau 2... qui correspond à fixer NUMBER_MOVE_AHEAD à 3
-      (le mini = Difficulty1 -> NUMBER_MOVE_AHEAD = 0, et le maxi = Difficulty5 -> NUMBER_MOVE_AHEAD = 4) */
+      On note qu'ici c'est AppDelegate (self) qui envoi le message à SetDifficulty2 qui est une IBAction
+      ici on choisit le niveau 2... qui correspond à fixer NUMBER_MOVE_AHEAD à 5
+      (le mini = Difficulty1 -> NUMBER_MOVE_AHEAD = 3, et le maxi = Difficulty5 -> NUMBER_MOVE_AHEAD = 11) */
       [monConnecteur SetDifficulty2:self];
       
       
