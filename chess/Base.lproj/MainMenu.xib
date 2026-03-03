@@ -492,7 +492,7 @@ CA
                 <outlet property="menuRapide" destination="SVH-PX-VLW" id="ZTY-Fp-paV"/>
                 <outlet property="menuReflechi" destination="dwH-Mx-0KQ" id="MUc-t3-rbm"/>
                 <outlet property="menuSTD" destination="lNJ-f3-93u" id="R9V-7T-Jrb"/>
-                <outlet property="txtCoups" destination="hcA-ub-qgC" id="DKO-H5-yQN"/>
+                <outlet property="txtListeCoupsPartie" destination="hcA-ub-qgC" id="DKO-H5-yQN"/>
             </connections>
         </customObject>
         <customObject id="3iP-Qx-zvq" userLabel="monDiagramme" customClass="Diagramme"/>

@@ -101,18 +101,10 @@
               self.dest.y == other.dest.y);
    }
 
-   /* Méthode obsolète
-   // ==================================================================================================
-   // Méthode implémentée pour utilisation par les 'Killer Moves' dans Minimax
-   -(NSUInteger)hash {
-      return self.start.x + self.start.y * 8 + self.dest.x * 64 + self.dest.y * 512;
-   }
-   */
-
    
    // ==================================================================================================
-   // Méthode permettant de déterminer le move opposé à un move par rapport au centre du Board ;
-   // utile pour afficher un move dans la liste des coups lorsque le plateau est retourné
+   // Méthode permettant de déterminer le move opposé à un move par rapport au centre du Board, nécessaire
+   // pour afficher un move dans la liste des coups ou dans le 'hint' lorsque le plateau est retourné
    +(Move *)opMove:(Move *) move {
       
       int opXs = 7 - move.start.x;
@@ -123,22 +115,6 @@
       Move * opMove = [Move newMoveFromX:opXs Y:opYs ToNx:opXd Ny:opYd];
       
       return opMove;
-   }
-
-   
-   // ==================================================================================================
-   // Méthode permettant de déterminer le move mirroir d'un move par rapport au centre horizontal du
-   // Board ; utile pour afficher un move dans la zone de texte du 'hint'
-   +(Move *)mirrorMove:(Move *) move {
-      
-      int mirrorXs = move.start.x;
-      int mirrorYs = 7 - move.start.y;
-      int mirrorXd = move.dest.x;
-      int mirrorYd = 7 - move.dest.y;
-      
-      Move * mirrorMove = [Move newMoveFromX:mirrorXs Y:mirrorYs ToNx:mirrorXd Ny:mirrorYd];
-      
-      return mirrorMove;
    }
 
 

@@ -628,39 +628,41 @@ BOOL engineIsBusy = NO;
       float pawns = round(evalWhitePOV/10.0)/10.0;
       
       /* // Limiter entre -5 et +5
-       if (roundedPawns > 5) roundedPawns = 5;
-       if (roundedPawns < -5) roundedPawns = -5; */
+      if (roundedPawns > 5) roundedPawns = 5;
+      if (roundedPawns < -5) roundedPawns = -5; */
       
       // Préparation de la NSString d'affichage
       NSString *evalString;
       if (pawns > 0)    evalString = [NSString stringWithFormat:@"Eval : +%.1f", pawns];
       else              evalString = [NSString stringWithFormat:@"Eval : %.1f", pawns];
       
-      /* // Construire la barre
-       NSMutableString *visual = [NSMutableString string];
-       if (roundedPawns >= 0) {
-       // Avantage Blancs : remplir de gauche
-       for (int i = 0; i < 5; i++) {
-       [visual appendString:(i < roundedPawns) ? @"●" : @"○"];
-       }
-       // Partie droite vide
-       [visual appendString:@"○○○○○"];
-       } else {
-       // Avantage Noirs : partie gauche vide
-       [visual appendString:@"○○○○○"];
-       // Remplir de droite
-       int filledRight = -roundedPawns;  // Convertir en positif
-       for (int i = 0; i < 5; i++) {
-       [visual appendString:(i < filledRight) ? @"●" : @"○"];
-       }
-       } */
+      /* Version graphique de l'indicateur, en suspens pour l'instant
+      // Construire la barre
+      NSMutableString *visual = [NSMutableString string];
+      if (roundedPawns >= 0) {
+         // Avantage Blancs : remplir de gauche
+         for (int i = 0; i < 5; i++) {
+            [visual appendString:(i < roundedPawns) ? @"●" : @"○"];
+         }
+         // Partie droite vide
+         [visual appendString:@"○○○○○"];
+      } else {
+         // Avantage Noirs : partie gauche vide
+         [visual appendString:@"○○○○○"];
+         // Remplir de droite
+         int filledRight = -roundedPawns;  // Convertir en positif
+         for (int i = 0; i < 5; i++) {
+            [visual appendString:(i < filledRight) ? @"●" : @"○"];
+         }
+      }
+      Fin de version en suspens ---------------------------------- */
       
       return evalString;
    }
 
    
    // ==================================================================================================
-   // Ajout méthodes de retournement des coordonnées pour l'UI
+   // Méthodes de retournement des coordonnées pour l'UI
    -(int)engineXFromUIX:(int)x {
        return uiFlipped ? 7 - x : x;
    }
@@ -672,8 +674,7 @@ BOOL engineIsBusy = NO;
    // ==================================================================================================
    // Méthodes définissant la surbrillanec
    // Activer la surbrillance
-   -(void)highlightHintSquareStart:(Pos *)start dest:(Pos *)dest
-   {
+   -(void)highlightHintSquareStart:(Pos *)start dest:(Pos *)dest {
        hintStartSquare = start;
        hintDestSquare = dest;
        
@@ -682,8 +683,7 @@ BOOL engineIsBusy = NO;
    }
 
    // Désactiver la surbrillance
-   -(void)clearHintHighlight
-   {
+   -(void)clearHintHighlight {
        hintStartSquare = nil;
        hintDestSquare = nil;
        [self setNeedsDisplay:YES];
@@ -691,8 +691,7 @@ BOOL engineIsBusy = NO;
 
 
    // Méthode helper pour calculer le rectangle d'une case
-   -(CGRect)rectForSquareAtX:(int)x Y:(int)y
-   {
+   -(CGRect)rectForSquareAtX:(int)x Y:(int)y {
       CGFloat tileSize = self.bounds.size.width / 8.0;
       CGFloat drawX;
       CGFloat drawY;
@@ -708,12 +707,3 @@ BOOL engineIsBusy = NO;
 
 @end
 
-/*
- static inline int engineX(int uiX, BOOL flipped) {
- return flipped ? 7 - uiX : uiX;
- }
- 
- static inline int engineY(int uiY, BOOL flipped) {
- return flipped ? 7 - uiY : uiY;
- }
- */

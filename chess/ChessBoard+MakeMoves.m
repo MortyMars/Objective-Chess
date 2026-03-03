@@ -169,7 +169,7 @@
          // 🔴 XOR APRÈS le déplacement physique
          zobristKey ^= zobristPiece[rook.side][Tour][rookToSq];
          
-         rook.numMoves++;  // ✅ FIX : Tour a bougé !
+         rook.numMoves++;  // ✅ Enregistrer le déplacement de la Tour !
          
          LOG_CASTLE(@"%@ castles %@ side (king %d,%d → %d,%d)",
                     (moving.side == sideWhite ? @"White" : @"Black"),
@@ -310,7 +310,7 @@
          // 🔴 XOR APRÈS le déplacement physique
          zobristKey ^= zobristPiece[rook.side][Tour][rookToSq];
          
-         rook.numMoves--;  // ✅ FIX : Restaurer numMoves de la tour
+         rook.numMoves--;  // ✅ Restaurer numMoves de la tour
          
          LOG_CASTLE(@"UNMAKE roque %@ side for %@",
                     kingSide ? @"KING" : @"QUEEN",

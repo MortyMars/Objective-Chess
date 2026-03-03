@@ -64,8 +64,7 @@
    // ==================================================================================================
    // 'description' est une @property de NSObject, dont l'appel est implicite
    // Elle est surdéfinie ici pour nos besoins de notation des coups joués
-   -(NSString *)description
-   {
+   -(NSString *)description {
       /* La 'description' d'un objet Pos est définie ci-dessous en tant que NSString au format 'a1'
       Il est nécessaire de tenir cpte de l'orientation de l'échiquier, d'où le recours à 2 tableaux de
       valeurs différents : Absc1 (lettres croissantes de a à h) et Absc2 (lettres décroissantes de h à a)

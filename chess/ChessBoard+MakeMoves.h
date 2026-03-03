@@ -7,13 +7,13 @@
 
 @interface ChessBoard (MakeMoves)   // Extension de la Classe ChessBoard
 
-   -(MoveState)makeMove:(Move *)m ;
+   -(MoveState) makeMove:(Move *)m ;
 
-   -(void)unmakeMove:(Move *)m state:(MoveState)state;
+   -(void)      unmakeMove:(Move *)m state:(MoveState)state;
 
-   -(uint8_t)updateCastlingRights:(uint8_t)rights
-                          forMove:(Move *)m
-                    capturedPiece:(Piece *)captured;
+   -(uint8_t)   updateCastlingRights:(uint8_t)rights
+                             forMove:(Move *)m
+                       capturedPiece:(Piece *)captured;
 
 
 @end

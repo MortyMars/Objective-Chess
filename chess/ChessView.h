@@ -10,14 +10,17 @@
 
 @class ChessBoard, Pos;
 
+
 @protocol ChessViewDelegate <NSObject>
    -(void)AlertMsgEchecSide:(Side)side;
 @end
 
+
 @interface ChessView : NSView
     
+   // IVARS ET PROPERTIES ------------------------------------------------
    {
-      // Déclaration des variables d'instance utiles
+      // Déclaration des variables d'instance
       @public ChessBoard *liveBoard; // déclarée publique
       BOOL isThereTileSelected;
       Pos *selTile;
@@ -32,40 +35,35 @@
 
    @property BOOL uiFlipped;
 
-   // Déclaration de méthodes devant être appelées à l'ext de la classe (dans ChessTests pour le coup...)
+   
+   // MÉTHODES -----------------------------------------------------------
    -(id)   initWithFrame:(NSRect)frame;
 
-   // dito pour méthodes MCN
+   // Méthodes de gestion de l'interface graphique
+   -(void) drawBoard;
+   -(void) drawRect:(NSRect)dirtyRect;
+   -(void) mouseDown:(NSEvent *)theEvent;
+
+   // Déclaration de méthodes de génération des coups
+   -(void) MakeComputerMove;
+   -(void) MakeJoueurMoveVersDest:(Pos *) dest;
    -(void) MakeIAMoveForSide:(Side)side Board:(ChessBoard *)board;
-   
+
+   // Méthodes gérant l'affichage des infos de partie
    -(void) MajStatusBarViaMove:(Move *)move
                      PrecBoard:(ChessBoard *)precBoard
                       StrCheck:(NSString *)strCheck;
 
-   // rappel des autres méthodes
-   -(void) drawBoard;
-   -(void) mouseDown:(NSEvent *)theEvent;
-   -(void) MakeComputerMove;
-   -(void) drawRect:(NSRect)dirtyRect;
-
-   // rappel des méthodes MCN
-   -(void) MakeJoueurMoveVersDest:(Pos *) dest;
-
    +(NSString *)VisualIndicator:(int)evalWhitePOV;
 
-   // Méthode de retournement du board pour l'UI
+   // Méthodes de conversion pour retournement du board pour l'UI
    -(int)engineXFromUIX:(int)x;
    -(int)engineYFromUIY:(int)y ;
 
-   // Méthode pour surbrillance du 'Hint'
+   // Méthodes gérant la surbrillance du 'Hint'
    -(void)highlightHintSquareStart:(Pos *)start dest:(Pos *)dest;
    -(void)clearHintHighlight;
 
+
 @end
-
-
-
-static inline int engineX(int uiX, BOOL flipped);
-
-static inline int engineY(int uiY, BOOL flipped);
 

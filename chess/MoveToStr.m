@@ -6,16 +6,16 @@
 #import "MoveToStr.h"
 #import "ChessConfig.h"
 
-   /* Classe créée afin d'abriter les Méthodes implémentées ...
-      1) pour EXTRAIRE d'un 'Move' le déplacement exécuté
-      2) pour le TRANSFORMER en une NSString aussi compréhensible que proche de la 'Notation algébrique réversible'
-   ... et utilisées pour l'affichage de la liste des coups joués successivement par l'IA et par le Joueur
+   /* Classe créée afin d'abriter les Méthodes implémentées :
+    1) pour EXTRAIRE d'un 'Move' le déplacement exécuté
+    2) pour le TRANSFORMER en une NSString aussi compréhensible que proche de la 'Notation algébrique réversible'
+   Elles sont utilisées pour l'affichage de la liste des coups joués successivement par l'IA et par le Joueur
 
    Les deux méthodes sont appelées l'une après l'autre :
-      - dans ChessBoard.m lors du premier coup de l'IA lorsqu'elle a les blancs
-      - dans ChessView.m à chaque coup Joueur, qu'il ait les blancs ou les noirs
-      - dans ChessView.m encore, à chaque coup de l'IA quand elle a les noirs
-        et à partir du deuxième coup quand elle a les blancs  */
+    - dans ChessBoard.m lors du premier coup de l'IA lorsqu'elle a les blancs
+    - dans ChessView.m à chaque coup Joueur, qu'il ait les blancs ou les noirs
+    - dans ChessView.m encore, à chaque coup de l'IA quand elle a les noirs
+      et à partir du deuxième coup quand elle a les blancs  */
 
 @implementation MoveToStr
 
@@ -108,15 +108,14 @@
                            [NSString stringWithFormat:@"%@ : %@", strJ_IA, moveToStr]];
       
       // Mise à jour du contrôle 'txtView' affichant la liste des coups
-      [monConnecteur MaJtxtCoups];
+      [monConnecteur MaJtxtListeCoupsPartie];
       
    } // !MettreEnFormeChaine
 
 
    // ==================================================================================================
-   // Méthode de classe
-   // Transforme la représentation des coups (1 , 1) vers (2 , 2) en a1-b2
-   // La méthode est appelée par ConvertEnStringMove et par certains contrôle de NSLog
+   // Méthode transformant la représentation des coups (1 , 1) vers (2 , 2) en a1-b2
+   // Elle est appelée par ConvertEnStringMove et par certains contrôles de NSLog
    +(NSString *)Modif00EnA1:(Move *)move surBoard:(ChessBoard*)board
    {
       NSString* movVerStr = @"";

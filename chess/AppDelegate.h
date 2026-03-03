@@ -23,7 +23,7 @@
    //@property Minimax *maMinimax;
 
    // Déclaration de l'unique méthode d'instance
-   - (void)applicationDidFinishLaunching:(NSNotification *)aNotification;
+   -(void)applicationDidFinishLaunching:(NSNotification *)aNotification;
 
 
 @end

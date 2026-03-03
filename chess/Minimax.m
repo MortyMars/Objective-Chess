@@ -262,9 +262,9 @@ static int nbCallsIsKingCheck = 0;
       #endif
       
       // ✅ NOUVEAU : Détection de répétition AVANT probe TT
-       if ([self isRepetition:board->zobristKey]) {
-           return 0;  // Position répétée = nulle (draw)
-       }
+      if ([self isRepetition:board->zobristKey]) {
+        return 0;  // Position répétée = nulle (draw)
+      }
       
       
       // ========================================================================
@@ -1549,7 +1549,7 @@ static int nbCallsIsKingCheck = 0;
       
       Side enemy = (side == sideWhite) ? sideBlack : sideWhite;
       
-      // 2️⃣ Cavaliers
+      // 2️⃣ Menace de Cavaliers
       static const int knightMoves[8][2] = {
          {1,2},{2,1},{-1,2},{-2,1},
          {1,-2},{2,-1},{-1,-2},{-2,-1}
@@ -1565,7 +1565,7 @@ static int nbCallsIsKingCheck = 0;
             return YES;
       }
       
-      // 3️⃣ Pions
+      // 3️⃣ Menace de Pions
       int pawnDir = (enemy == sideWhite) ? 1 : -1;
       for (int dx = -1; dx <= 1; dx += 2) {
          int px = kingX + dx;
@@ -1577,7 +1577,7 @@ static int nbCallsIsKingCheck = 0;
             return YES;
       }
       
-      // 4️⃣ Fous / Dames (diagonales)
+      // 4️⃣ Menaces de Fous /Dames (diagonales)
       for (int d = 0; d < 4; d++) {
          int dx = bishopDirs[d][0];
          int dy = bishopDirs[d][1];
@@ -1597,7 +1597,7 @@ static int nbCallsIsKingCheck = 0;
          }
       }
       
-      // 5️⃣ Tours / Dames (lignes droites)
+      // 5️⃣ Menaces de Tours /Dames (lignes droites)
       for (int d = 0; d < 4; d++) {
          int dx = rookDirs[d][0];
          int dy = rookDirs[d][1];
@@ -1617,7 +1617,7 @@ static int nbCallsIsKingCheck = 0;
          }
       }
       
-      // 6️⃣ Roi adverse (cases adjacentes)
+      // 6️⃣ Menace du Roi adverse (cases adjacentes)
       for (int dx = -1; dx <= 1; dx++) {
          for (int dy = -1; dy <= 1; dy++) {
             if (dx == 0 && dy == 0) continue;

@@ -77,7 +77,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       // Réinitialisation de la liste des coups
       stringCoupsPartie = @"";
       numCoup = 2; // N° des coups joués, initialisé à 2 car le n°1 est intégré au 1er coup
-      [monConnecteur MaJtxtCoups];
+      [monConnecteur MaJtxtListeCoupsPartie];
       
       // Définition Couleurs Joueur et IA et MàJ repères de cases
       // sideJoueur = sideWhite;    sideIA = sideBlack;
@@ -160,7 +160,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       // Réinitialisation de la liste des coups
       stringCoupsPartie = @"";
       numCoup = 2; // N° des coups joués, initialisé à 2 car le n°1 est intégré au 1er coup
-      [monConnecteur MaJtxtCoups];
+      [monConnecteur MaJtxtListeCoupsPartie];
       
       // Définition Couleurs Joueur et IA et MàJ repères de cases
       // sideJoueur = sideBlack;    sideIA = sideWhite;
@@ -221,7 +221,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       [self PremCoupAIBlancs];
       
       // Affichage du 1er coup de l'IA qui joue les BLANCS
-      [monConnecteur InitialiseTxtCoups:stringCoupsPartie];
+      [monConnecteur InitialiseListeCoupsPartie:stringCoupsPartie];
       
       // Activation du menu 'Poursuivre avec ...' pour permettre un changement de côté
       monConnecteur.menuPoursuivre.title = @"Poursuivre avec les Blancs";
@@ -645,7 +645,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       switch (boutonChoisi) {
          case NSAlertFirstButtonReturn :
             stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"\n\t1/2-1/2"];
-            [monConnecteur MaJtxtCoups];
+            [monConnecteur MaJtxtListeCoupsPartie];
             [self AlertePartieNulle];
             stopMatOuPat = YES;
             break;
@@ -656,7 +656,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
             break;
       }
       
-   } // !NotifieNulle50Coups
+   } // !ProposerNulle50Coups
 
 
    // ==================================================================================================
@@ -743,7 +743,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
          // Calculer le meilleur coup pour le joueur
          hint = [maMinimax BestMoveForSide:sideJoueur Board:monConnecteur.maChessView->liveBoard];
          
-         // Retournement H et V de la représentation du move si on joue les Noirs
+         // Transformation du move en son opposé si on joue les Noirs
          if (sideJoueur == sideBlack) hint = [Move opMove:hint];
          
          // Création du message à destination d'une zone de texte

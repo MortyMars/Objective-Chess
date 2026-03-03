@@ -25,7 +25,7 @@
 // Score invalide pour détection d'entrée vide
 #define SCORE_NONE INT16_MIN
 
-// ============================================================================
+
 // Interface privée
 @interface TranspositionTable () {
    @public
@@ -37,14 +37,12 @@
    }
 @end
 
-// ============================================================================
-// Implémentation
+
 @implementation TranspositionTable
 
-   // ----------------------------------------------------------------------------
+   // ==============================================================================
    // Initialisation
-   - (instancetype)initWithSizeMB:(size_t)sizeMB
-   {
+   - (instancetype)initWithSizeMB:(size_t)sizeMB {
        self = [super init];
        if (self) {
            // Calculer le nombre d'entrées
@@ -77,30 +75,31 @@
            NSLog(@"   Nombre d'entrées: %zu", numEntries);
        }
        return self;
-   }
+      
+   } // !initWithSizeMB
 
-   // ----------------------------------------------------------------------------
+
+   // ==============================================================================
    // Deallocation
-   - (void)dealloc
-   {
+   -(void)dealloc {
        if (table) {
            free(table);
            table = NULL;
        }
    }
 
-   // ----------------------------------------------------------------------------
+   
+   // ==============================================================================
    // Calcul de l'index dans la table
-   - (size_t)indexForKey:(uint64_t)key
-   {
+   -(size_t)indexForKey:(uint64_t)key {
        // Utiliser les bits de poids fort pour meilleure distribution
        return (size_t)((key >> 32) & indexMask);
    }
 
-   // ----------------------------------------------------------------------------
-   // Encodage/décodage de Move
-   - (int16_t)encodeMove:(Move *)move
-   {
+   
+   // ==============================================================================
+   // Méthode d'encodage d'un Move
+   -(int16_t)encodeMove:(Move *)move {
        if (!move) return 0;
        
        // Format: fromSq (6 bits) | toSq (6 bits) | flags (4 bits)
@@ -121,8 +120,10 @@
        return encoded;
    }
 
-   - (Move * _Nullable)decodeMove:(int16_t)encoded
-   {
+
+   // ==============================================================================
+   // Méthode de décodage d'un Move
+   -(Move * _Nullable)decodeMove:(int16_t)encoded {
        if (encoded == 0) return nil;
        
        int fromSq = encoded & 0x3F;
@@ -144,11 +145,11 @@
        return move;
    }
 
-   // ----------------------------------------------------------------------------
-   // Probe : Consultation de la table
-   - (TTEntry * _Nullable)probe:(uint64_t)zobristKey
-                       bestMove:(Move * _Nullable * _Nullable)outBestMove
-   {
+   
+   // ==============================================================================
+   // Méthode de consultation de la table
+   -(TTEntry * _Nullable)probe:(uint64_t)zobristKey
+                       bestMove:(Move * _Nullable * _Nullable)outBestMove {
        stats.probes++;
        
        size_t index = [self indexForKey:zobristKey];
@@ -180,16 +181,18 @@
        }
        
        return entry;
-   }
+      
+   } // !probe
 
-   // ----------------------------------------------------------------------------
-   // Store : Stockage dans la table
-   - (void)store:(uint64_t)zobristKey
-           score:(int)score
-           depth:(int)depth
-        nodeType:(TTNodeType)nodeType
-        bestMove:(Move * _Nullable)bestMove
-   {
+   
+   // ==============================================================================
+   // Méthode de stockage dans la table
+   -(void)store:(uint64_t)zobristKey
+          score:(int)score
+          depth:(int)depth
+       nodeType:(TTNodeType)nodeType
+       bestMove:(Move * _Nullable)bestMove {
+      
        stats.stores++;
        
        size_t index = [self indexForKey:zobristKey];
@@ -241,43 +244,42 @@
        else {
            LOG_TT(@"TT store: REJECTED (depth too low) key=%llx", zobristKey);
        }
-   }
+      
+   } // !store
 
-   // ----------------------------------------------------------------------------
-   // Clear : Vider la table
-   - (void)clear
-   {
+   
+   // ==============================================================================
+   // Méthode de vidage de la table
+   -(void)clear {
        memset(table, 0, numEntries * TT_ENTRY_SIZE);
        memset(&stats, 0, sizeof(TTStats));
        generation = 0;
        NSLog(@"🗑️ TranspositionTable cleared");
    }
 
-   // ----------------------------------------------------------------------------
-   // New Generation : Incrémenter la génération
-   - (void)newGeneration
-   {
+   
+   // ==============================================================================
+   // Méthode d'incrémentation de la génération
+   -(void)newGeneration {
        generation++;
        if (generation == 0) generation = 1;  // Éviter 0 (signifie "vide")
        
        LOG_TT(@"📊 TT nouvelle génération: %d", generation);
    }
 
-   // ----------------------------------------------------------------------------
+   
+   // ==============================================================================
    // Statistiques
-   - (TTStats)getStats
-   {
+   -(TTStats)getStats {
        return stats;
    }
 
-   - (double)hitRate
-   {
+   -(double)hitRate {
        if (stats.probes == 0) return 0.0;
        return (double)stats.hits * 100.0 / (double)stats.probes;
    }
 
-   - (size_t)entriesUsed
-   {
+   -(size_t)entriesUsed {
        // Échantillonnage rapide (check 1000 entrées espacées)
        size_t sampleSize = 1000;
        size_t step = numEntries / sampleSize;
@@ -292,13 +294,11 @@
        return (used * numEntries) / (numEntries / step);
    }
 
-   - (double)fillRate
-   {
+   -(double)fillRate {
        return (double)[self entriesUsed] * 100.0 / (double)numEntries;
    }
 
-   - (void)printStats
-   {
+   -(void)printStats {
        NSLog(@"📊 ===== TranspositionTable Stats =====");
        NSLog(@"   Taille: %.1f MB (%zu entrées)",
              (numEntries * TT_ENTRY_SIZE) / (1024.0 * 1024.0), numEntries);

@@ -8,15 +8,15 @@
 
 @interface Minimax (GenMoves)    // Extension de la Classe Minimax
 
-
+   // MÉTHODES DE MOVES
    -(void)GenMovesForSide:(Side)side
-                     board:(ChessBoard *)board
-                      into:(NSMutableArray<Move *> *)moves;
+                    board:(ChessBoard *)board
+                     into:(NSMutableArray<Move *> *)moves;
 
    -(void)GenPawnMovesFromX:(int)x y:(int)y
-                       piece:(Piece *)p
-                       board:(ChessBoard *)board
-                        into:(NSMutableArray<Move *> *)moves;
+                      piece:(Piece *)p
+                      board:(ChessBoard *)board
+                       into:(NSMutableArray<Move *> *)moves;
 
    -(void)GenKnightMovesFromX:(int)x y:(int)y
                         piece:(Piece *)p
@@ -35,9 +35,11 @@
                       board:(ChessBoard *)board
                        into:(NSMutableArray *)moves;
 
+   
+// MÉTHODES DE CAPTURES
    -(void)GenCapturForSide:(Side)side
                      board:(ChessBoard *)board
-                     into:(NSMutableArray<Move *> *)moves;
+                      into:(NSMutableArray<Move *> *)moves;
 
    -(void)GenPawnCapturFromX:(int)x y:(int)y
                        piece:(Piece *)p
@@ -62,12 +64,13 @@
                         into:(NSMutableArray<Move *> *)moves;
 
 
-
+   // MÉTHODES HELPER
    -(BOOL)IsSquareDefended:(Square)sq bySide:(Side)side board:(ChessBoard *)board;
 
    -(BOOL)IsSquareAttackedAtX:(int)x
                             Y:(int)y
                        bySide:(Side)attackingSide
                         Board:(ChessBoard *)board;
+
 
 @end

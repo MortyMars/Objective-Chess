@@ -44,48 +44,35 @@ typedef struct {
 // Classe TranspositionTable
 @interface TranspositionTable : NSObject
 
-   // ----------------------------------------------------------------------------
-   // Initialisation
-   - (instancetype)initWithSizeMB:(size_t)sizeMB;
+   // INITIALISATION -------------------------------------------------------------
+   -(instancetype)initWithSizeMB:(size_t)sizeMB;
 
-   // ----------------------------------------------------------------------------
-   // Opérations principales
+
+   // OPÉRATIONS PRINCIPALES -----------------------------------------------------
    // Consulter la table (retourne NULL si non trouvé ou inutilisable)
    // Si bestMove n'est pas NULL, il sera rempli avec le meilleur coup décodé
-   - (TTEntry * _Nullable)probe:(uint64_t)zobristKey
-                       bestMove:(Move * _Nullable * _Nullable)outBestMove;
+   -(TTEntry * _Nullable)probe:(uint64_t)zobristKey
+                      bestMove:(Move * _Nullable * _Nullable)outBestMove;
 
    // Stocker une position dans la table
-   - (void)store:(uint64_t)zobristKey
-           score:(int)score
-           depth:(int)depth
-        nodeType:(TTNodeType)nodeType
-        bestMove:(Move * _Nullable)bestMove;
+   -(void)store:(uint64_t)zobristKey
+          score:(int)score
+          depth:(int)depth
+       nodeType:(TTNodeType)nodeType
+       bestMove:(Move * _Nullable)bestMove;
 
-   // ----------------------------------------------------------------------------
-   // Gestion
-   // Vider la table (nouveau jeu, nouvelle analyse)
-   - (void)clear;
+   
+   // GESTION --------------------------------------------------------------------
+   -(void)clear;           // Vider la table (nouveau jeu, nouvelle analyse)
+   -(void)newGeneration;   // Incrémenter la génération (début de nouvelle recherche)
 
-   // Incrémenter la génération (début de nouvelle recherche)
-   - (void)newGeneration;
-
-   // ----------------------------------------------------------------------------
-   // Statistiques
-   // Obtenir les statistiques
-   - (TTStats)getStats;
-
-   // Taux de hits (en pourcentage)
-   - (double)hitRate;
-
-   // Nombre d'entrées utilisées (approximatif)
-   - (size_t)entriesUsed;
-
-   // Taux de remplissage (en pourcentage)
-   - (double)fillRate;
-
-   // Afficher les statistiques (pour debug)
-   - (void)printStats;
+   
+   // STATISTIQUES ---------------------------------------------------------------
+   -(TTStats)getStats;     // Obtenir les statistiques
+   -(double)hitRate;       // Taux de hits (en pourcentage)
+   -(size_t)entriesUsed;   // Nombre d'entrées utilisées (approximatif)
+   -(double)fillRate;      // Taux de remplissage (en pourcentage)
+   -(void)printStats;      // Afficher les statistiques (pour debug)
 
 @end
 

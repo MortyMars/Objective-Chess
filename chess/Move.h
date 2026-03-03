@@ -26,7 +26,7 @@
    @property (nonatomic, strong) Piece       *capturedPiece;
    
    @property (nonatomic)         PieceType   oldType;       // type avant promotion
-   @property (nonatomic)         PieceType   promotionType; // ✨ NOUVEAU : type cible (Dame par défaut)
+   @property (nonatomic)         PieceType   promotionType; // ✨ type cible pour promo (Dame par défaut)
 
    @property (nonatomic)         BOOL        isCapture;     // Ce move est-il une capture
    @property (nonatomic)         BOOL        givesCheck;    // Ce move provoque t-il une mise en échec
@@ -40,7 +40,7 @@
    
    // Méthode permettant d'en initialiser les valeurs
    -(id)initWithStart:(Pos *)start
-                  Dest:(Pos *)dest;
+                 Dest:(Pos *)dest;
 
    // ✨ méthode (de classe) de confort (sucre syntaxique)
    +(Move *)newMoveFromX:(int)x
@@ -50,13 +50,12 @@
 
    
    // Méthodes 'system'
-   -(id) copyWithZone:(NSZone *)zone;
-   -(NSString *) description;
+   -(id)copyWithZone:(NSZone *)zone;
+   -(NSString *)description;
 
    
-   // Méthodes de transformations de 'Moves'
+   // Méthode de transformations d'un 'Move'
    +(Move *)opMove:(Move *) move;
-   +(Move *)mirrorMove:(Move *) move;
 
 
 @end

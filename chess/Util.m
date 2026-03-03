@@ -42,7 +42,6 @@ int NUMBER_MOVES_AHEAD = 4; /* Valeur arbitraire cohérente avec l'activation pa
                              car c'est dans AppDelegate que l'on initialise réellement NUMBER_MOVES_AHEAD par appel de
                              [Connecteur SetDifficulty1, 2, 3, 4, ou 5] qui positionne au passage le menu ad-hoc */
 
-
 // Pré initialisation de monConnecteur
 Connecteur *monConnecteur = nil;
 

@@ -17,10 +17,10 @@
    Le mot clé 'synthesize', précédant la propriété, demande au compilateur de construire
    ces accesseurs pour nous, ce qui évite de le faire manuellement... */
 
-   /* (1) le nom 'txtCoups' est choisi en référence à l'identifiant correspondant de
+   /* (1) le nom 'txtListeCoupsPartie' est choisi en référence à l'identifiant correspondant de
    l'interface xib, mais ce rapprochement n'est pas exigé pour la compilation du programme */
 
-   @synthesize txtCoups; // (1)
+   @synthesize txtListeCoupsPartie; // (1)
 
    @synthesize lblEvalBoard;
    @synthesize lblTrait;
@@ -53,24 +53,25 @@
    
    
    // =============================================================================================
-   // Implémentation Méthode MàJ 'txtCoups'
+   // Implémentation Méthode MàJ 'txtListeCoupsPartie'
    // appelée par MoveToStr
-   -(void)MaJtxtCoups;
-   {
+   -(void)MaJtxtListeCoupsPartie {
       // Affectation de la valeur de la var global 'stringCoupsPartie'
-      txtCoups.string = stringCoupsPartie;
-   
-   } // Fin de Méthode
+      txtListeCoupsPartie.string = stringCoupsPartie;
+      
+      // Forcer le scroll du contrôle vers le bas pour voir tjs les derniers coups
+      [monConnecteur.txtListeCoupsPartie
+            scrollRangeToVisible:NSMakeRange(monConnecteur.txtListeCoupsPartie.string.length, 0)];
+   }
 
    
    // =============================================================================================
    // Implémentation Méthode d'édition de la liste des coups
    // Appelée par AppDelegate pour la mise à jour du 1er coup qd l'IA a les Blancs
-   - (void)InitialiseTxtCoups:(NSString *)texteSortie
+   - (void)InitialiseListeCoupsPartie:(NSString *)texteSortie
    {
       // Sortie concaténée
-      //txtCoups.cell.title = [txtCoups.cell.title stringByAppendingString:texteSortie]; // (1)
-      txtCoups.string = [txtCoups.string stringByAppendingString:texteSortie];
+      txtListeCoupsPartie.string = [txtListeCoupsPartie.string stringByAppendingString:texteSortie];
    
    } // Fin de Méthode
 
@@ -105,7 +106,7 @@
 
 
    // Gestion des items du menu 'Partie->Difficulté'
-   - (IBAction)SetDifficulty1:(id)sender {
+   -(IBAction)SetDifficulty1:(id)sender {
       [menuRapide    setState:YES]; // Rapide
       [menuFacile    setState:NO];
       [menuSTD       setState:NO];
@@ -116,7 +117,7 @@
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
 
-   - (IBAction)SetDifficulty2:(id)sender {
+   -(IBAction)SetDifficulty2:(id)sender {
       [menuRapide    setState:NO];
       [menuFacile    setState:YES]; // Facile
       [menuSTD       setState:NO];
@@ -127,7 +128,7 @@
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
 
-   - (IBAction)SetDifficulty3:(id)sender {
+   -(IBAction)SetDifficulty3:(id)sender {
       [menuRapide    setState:NO];
       [menuFacile    setState:NO];
       [menuSTD       setState:YES]; // Standard
@@ -138,7 +139,7 @@
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
 
-   - (IBAction)SetDifficulty4:(id)sender {
+   -(IBAction)SetDifficulty4:(id)sender {
       [menuRapide    setState:NO];
       [menuFacile    setState:NO];
       [menuSTD       setState:NO];
@@ -149,7 +150,7 @@
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
 
-   - (IBAction)SetDifficulty5:(id)sender {
+   -(IBAction)SetDifficulty5:(id)sender {
       [menuRapide    setState:NO];
       [menuFacile    setState:NO];
       [menuSTD       setState:NO];
@@ -218,13 +219,13 @@
             msgTitre = @"Les NOIRS sont Mat !";
             msgInfo  = @"Partie terminée, Les BLANCS gagnent !";
             stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t1-0"];
-            [monConnecteur MaJtxtCoups];
+            [monConnecteur MaJtxtListeCoupsPartie];
          }
          else if (side == sideWhite) {
             msgTitre = @"Les BLANCS sont Mat !";
             msgInfo  = @"Partie terminée, Les NOIRS gagnent !";
             stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t0-1"];
-            [monConnecteur MaJtxtCoups];
+            [monConnecteur MaJtxtListeCoupsPartie];
          }
          
          NSAlert *alertMat = [[NSAlert alloc] init];
@@ -245,7 +246,7 @@
       else {
          /* Roi pas en échec --> PAT DÉTECTÉ */
          stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"\n\t1/2-1/2"];
-         [monConnecteur MaJtxtCoups];
+         [monConnecteur MaJtxtListeCoupsPartie];
          
          NSString *msgTitre;
          NSString *msgInfo;

@@ -172,46 +172,36 @@
       }
       
       // 3️⃣ PRISE EN PASSANT
-      if (board->enPassantFile == -1) {
-         return;
-      }  // Pas d'EP possible
+      /* Noter que l'organisation du code ci-dessous, basée sur de multiples cas de sortie de la méthode -par des 'return'
+      successifs, fonctionne uniquement parce que le traitement de la prise en passant est le dernier de la méthode et qu'ainsi,
+      une sortie forcée à ce stade ne concerne que la possibilité de prise e.p., sans interagir sur les cas 1️⃣ et 2️⃣ ci-dessus
+      générant leurs propres moves indépendamment --------------------------------------------------------------------------- */
+      
+      // L'indicateur 'enPassantFile' doit être actif
+      if (board->enPassantFile == -1)     return;  // Indicateur non positionné
       
       // Le pion doit être sur le bon rang
       int epRank = (p.side == sideWhite) ? 4 : 3;  // 5ème rang pour Blancs, 4ème pour Noirs
-      if (y != epRank) {
-         // Pion pas au bon rang
-         return;
-      }
+      if (y != epRank)                    return;  // Pion pas sur le bon rang
       
-      
-      
-      // Le pion doit être adjacent à la colonne EP
+      // Le pion doit être sur une colonne adjacente à la colonne EP
       int epFile = board->enPassantFile;
-      if (abs(x - epFile) != 1) return;
+      if (abs(x - epFile) != 1)           return;  // Pion pas sur une colonne adjacente
       
       // Case destination EP
       int epX = epFile;
       int epY = y + dir;
       
       // Case où se trouve le pion adverse à capturer
-      int captureY = y;  // Sur le même rang que notre pion
+      int captureY = y;  // Case sur le même rang que notre pion
       
-      // 🔴 VÉRIFIER que le pion adverse est bien là !
+      // 🔴 Vérifier qu'un pion adverse est bien là !
       Piece *capturedPawn = board->pieceCase[epX][captureY];
-      if (!capturedPawn) {
-         // pas de pion à capturer
-         return;
-      }
-      if (capturedPawn.type != Pion) {
-         // EP impossible: la pièce n'est pas un pion
-         return;
-      }
-      if (capturedPawn.side == p.side) {
-         // EP impossible: le pion est du même camp
-         return;
-      }
+      if (!capturedPawn)                  return;  // Pas de pion à capturer
+      if (capturedPawn.type != Pion)      return;  // La pièce n'est pas un pion
+      if (capturedPawn.side == p.side)    return;  // Le pion est du même camp
       
-      
+      // Tous les tests précédents ayant été satisfaits, on peut créer un move e.p.
       Move *ep = [Move newMoveFromX:x Y:y ToNx:epX Ny:epY];
       ep.movingPiece   = p;
       ep.isCapture     = YES;
@@ -257,7 +247,6 @@
             }
             
             [moves addObject:m];
-            
          }
       }
    }
@@ -322,7 +311,6 @@
             nx += dx;
             ny += dy;
          }
-         
       }
    }
 
@@ -375,22 +363,13 @@
          return;  // Si la pièce n'est pas un roi, ou qu'elle a déjà bougé, ou que le Roi est en échec, pas de Roque légal --> on sort
       
       
-      // Positions des Rois, sachant que quelle que soit l'orientation du plateau
-      // la case de coordonnées col x=0 et rang y=0 est tjs en bas à gauche de l'écran
-      int xRoi;   // colonne des rois (4 OU 3 selon orientation)
-      int yRoi;   // rangs des rois ( (0 et 7) OU (7 et 0) selon l'orientation)
-      //if (sideJoueur == sideWhite) {
-      xRoi = 4;   // Les Rois sont en col 4 quand les Blancs sont en bas
-      yRoi = (p.side == sideWhite) ? 0 : 7;  // Roi Blanc en bas (0), Roi Noir en haut (7)
-      //}
-      /* if (sideJoueur == sideBlack) {
-       xRoi = 3;   // Les Rois sont en col 3 quand les Noirs sont en bas
-       yRoi = (p.side == sideWhite) ? 7 : 0;  // Roi Noir en bas (0), Roi Blanc en haut (7)
-       } */
+      // Positions des Rois, sachant que du point de vue du moteur, les Blancs sont tjs en bas
+      // et que la case de coordonnées col x=0 et rang y=0 est tjs en bas à gauche de l'écran
+      int xRoi = 4;                                // La colonne des rois est tjs 4 en plateau canonique
+      int yRoi = (p.side == sideWhite) ? 0 : 7;    // Roi Blanc en bas (rang 0), Roi Noir en haut (rang 7)
       
       // Sécurité minimale : on doit être bien sur la case de départ
-      if (x != xRoi || y != yRoi)
-         return;
+      if (x != xRoi || y != yRoi) return;
       
       Side sideEnemy = (p.side == sideWhite)? sideBlack:sideWhite;
       
@@ -416,8 +395,7 @@
             
             [moves addObject:m];
          }
-         
-      } // Fin de Petit Roque ---------------------------------------------------------------------
+      } // !Petit Roque ---------------------------------------------------------------------------
       
       // Grand roque (côté Dame) ------------------------------------------------------------------
       Piece *rookA = board->pieceCase[0][yRoi];
@@ -442,13 +420,14 @@
             
             [moves addObject:m];
          }
-      } // Fin de Grand Roque ---------------------------------------------------------------------
+      } // !Grand Roque ---------------------------------------------------------------------------
+      
    } // !GenKingMovesFromX
 
 
    // ================================================================================================
-   // Méthode générant uniquement les coups bruyants (captures) des pièces présentes sur l'échiquier
-   // (contrairement à 'generatePseudo...' qui génère tous les déplacements les possibles)
+   // Méthode générant uniquement les coups bruyants (captures) des pièces présentes sur l'échiquier,
+   // contrairement à 'GenMoves...' qui génère tous les déplacements les possibles.
    - (void)GenCapturForSide:(Side)side
                       board:(ChessBoard *)board
                        into:(NSMutableArray<Move *> *)moves
@@ -709,8 +688,7 @@
 
 
    // ================================================================================================
-   // Méthode détectant si une case est attaquée
-   // (utile pour vérifier les conditions du roque)
+   // Méthode détectant si une case est attaquée, nécessaire pour vérifier les conditions du roque
    -(BOOL)IsSquareAttackedAtX:(int)x
                             Y:(int)y
                        bySide:(Side)attackingSide

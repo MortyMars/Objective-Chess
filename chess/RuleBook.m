@@ -25,8 +25,8 @@
    // positions générant la mise en échec de son Roi
    +(NSSet<Pos *> *)PosLegalesForPiece:(Piece *)piece
                                  atPos:(Pos *)pos
-                               inBoard:(ChessBoard *)board
-   {
+                               inBoard:(ChessBoard *)board {
+      
        NSMutableSet<Pos *> *result = [NSMutableSet set];
        
        #ifdef DEBUG_ZOBRIST
@@ -123,8 +123,8 @@
    // créant une mise en échec de son propre roi (elle intègre 'aSupprimer1' mais pas 'aSupprimer2')
    +(NSSet<Pos *> *)PosLegalesForPieceSAR:(Piece *)piece
                                     atPos:(Pos *)pos
-                                  inBoard:(ChessBoard *)board
-   {
+                                  inBoard:(ChessBoard *)board {
+      
       NSMutableSet<Pos *> *result = [NSMutableSet set];
       
       NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:32];
@@ -164,8 +164,8 @@
    +(NSSet *)SearchInDirection:(Pos *)start
                             dx:(int)dx
                             dy:(int)dy
-                         board:(ChessBoard *)board
-   {
+                         board:(ChessBoard *)board {
+      
       NSMutableSet *ligneDeCases = [[NSMutableSet alloc] initWithCapacity:8];
       
       int x = start.x, y = start.y;
@@ -190,8 +190,8 @@
    // MCN - Méthode de Classe Quasi-Clone de [Minimax TestEchecRoiSide] en version SAR (sans appel récursif)
    // Elle est appelée dans 'PosLegalesForPiece' et appelle une version renommée 'PosLegalesForPieceSAR'
    // pour éviter l'appel récursif qui plante le programme
-   +(BOOL)TestEchecRoiSideSAR:(Side)side inBoard:(ChessBoard *)board
-   {
+   +(BOOL)TestEchecRoiSideSAR:(Side)side inBoard:(ChessBoard *)board {
+      
       BOOL roiSideEnEchec = NO;
       //NSMutableSet *movesSideAdv = [[NSMutableSet alloc] init];
       Side otherSide = (side == sideWhite)? sideBlack:sideWhite;

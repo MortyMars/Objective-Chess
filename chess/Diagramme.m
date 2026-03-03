@@ -84,7 +84,7 @@ NSString *strPieces;
                /* Forcement du thread principal pour MàJ ChessView et liste coups */
                dispatch_async(dispatch_get_main_queue(), ^{
                   [viewEC setNeedsDisplay:YES];
-                  [monConnecteur MaJtxtCoups];
+                  [monConnecteur MaJtxtListeCoupsPartie];
                }); // Fin Dispatch
             
                /* Si les Noirs ne se retrouvent pas Pat ou Mat après le coup Blancs ci-dessus... */
@@ -101,7 +101,7 @@ NSString *strPieces;
                   /* Forcement du thread principal pour MàJ ChessView et liste coups */
                   dispatch_async(dispatch_get_main_queue(), ^{
                      [viewEC setNeedsDisplay:YES];
-                     [monConnecteur MaJtxtCoups];
+                     [monConnecteur MaJtxtListeCoupsPartie];
                   }); // Fin Dispatch
                } // Fin if
             
@@ -142,7 +142,7 @@ NSString *strPieces;
                 /* Forcement du thread principal pour MàJ ChessView et liste coups */
                 dispatch_async(dispatch_get_main_queue(), ^{
                    [viewEC setNeedsDisplay:YES];
-                   [monConnecteur MaJtxtCoups];
+                   [monConnecteur MaJtxtListeCoupsPartie];
                 }); // Fin Dispatch
              
                 /* Si les Blancs ne se retrouvent pas Pat ou Mat après le coup Noirs ci-dessus... */
@@ -159,7 +159,7 @@ NSString *strPieces;
                    /* Forcement du thread principal pour MàJ ChessView et liste coups */
                    dispatch_async(dispatch_get_main_queue(), ^{
                       [viewEC setNeedsDisplay:YES];
-                      [monConnecteur MaJtxtCoups];
+                      [monConnecteur MaJtxtListeCoupsPartie];
                    }); // Fin Dispatch
                 } // Fin if
              
@@ -461,7 +461,7 @@ NSString *strPieces;
       
       // Réinitialisation de la liste des coups
       stringCoupsPartie = @"";
-      [monConnecteur MaJtxtCoups];
+      [monConnecteur MaJtxtListeCoupsPartie];
       
       // Définition Couleurs Joueur et IA et MàJ repères de cases
       sideJoueur = sideWhite;    sideIA = sideBlack;
@@ -613,7 +613,7 @@ NSString *strPieces;
       // MAIN THREAD POUR MàJ DE L'UI
       dispatch_async(dispatch_get_main_queue(), ^{
           
-         // 1) Mise en forme de la chaîne (appelle MaJtxtCoups)
+         // 1) Mise en forme de la chaîne (appelle MaJtxtListeCoupsPartie)
          [MoveToStr MettreEnFormeChaine:bestMoveIA Protagoniste:(side == sideWhite)? @"B":@"N"];
          
          // 2) Notification Pat/Mat si nécessaire
@@ -761,7 +761,7 @@ NSString *strPieces;
             // Mise à jour de la liste des coups et du contrôle 'txtView'
             // on ajoute un '#' pour signifier mat, puis 1-0 pour "les Blancs gagnent"
             stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t1-0"];
-            [monConnecteur MaJtxtCoups];
+            [monConnecteur MaJtxtListeCoupsPartie];
          }
          else if (side == sideWhite)
          {  msgTitre = @"Les  BLANCS  sont Mat !";
@@ -769,7 +769,7 @@ NSString *strPieces;
             // Mise à jour de la liste des coups et du contrôle 'txtView'
             // on ajoute un '#' pour signifier mat, puis 0-1 pour "les Noirs gagnent"
             stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"#\n\t0-1"];
-            [monConnecteur MaJtxtCoups];
+            [monConnecteur MaJtxtListeCoupsPartie];
          }
          
          stopMatOuPat = YES;
@@ -782,7 +782,7 @@ NSString *strPieces;
          // Si pas de move possible mais pas de situation d'Échec alors 'Pat'
          // Mise à jour de la liste des coups et du contrôle 'textView'
          stringCoupsPartie = [stringCoupsPartie stringByAppendingString:@"\n\t1/2-1/2"];
-         [monConnecteur MaJtxtCoups];
+         [monConnecteur MaJtxtListeCoupsPartie];
          
          NSString *msgTitre;
          NSString *msgInfo;
