@@ -25,7 +25,7 @@
          _fromSquare = start.y * 8 + start.x;
          _toSquare   = dest.y  * 8 + dest.x;
          
-         _promotionType = Dame;  // ✨ NOUVEAU : Promotion en Dame par défaut
+         _promotionType = Dame;  // ✨ Promotion en Dame par défaut
          
          _movingPiece   = nil;
          _capturedPiece = nil;
@@ -55,7 +55,6 @@
    }
 
 
-
    // ==================================================================================================
    // Méthode exigée par le Protocol NSCopying dont hérite la classe Move
    // Elle n'est pas formellement appelée dans le code, mais s'active dès l'envoi d'un msg copy sur un objet
@@ -75,7 +74,6 @@
 
        return m;
    }
-
 
 
    // ==================================================================================================
@@ -103,14 +101,15 @@
               self.dest.y == other.dest.y);
    }
 
-
+   /* Méthode obsolète
    // ==================================================================================================
    // Méthode implémentée pour utilisation par les 'Killer Moves' dans Minimax
    -(NSUInteger)hash {
       return self.start.x + self.start.y * 8 + self.dest.x * 64 + self.dest.y * 512;
    }
+   */
 
-
+   
    // ==================================================================================================
    // Méthode permettant de déterminer le move opposé à un move par rapport au centre du Board ;
    // utile pour afficher un move dans la liste des coups lorsque le plateau est retourné
@@ -126,6 +125,7 @@
       return opMove;
    }
 
+   
    // ==================================================================================================
    // Méthode permettant de déterminer le move mirroir d'un move par rapport au centre horizontal du
    // Board ; utile pour afficher un move dans la zone de texte du 'hint'

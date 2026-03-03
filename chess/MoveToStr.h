@@ -20,7 +20,7 @@ NB : c'est également le cas des très respectables classes 'Minimax' et 'RuleBo
    
    }
 
-    // DÉCLARATION DES MÉTHODES, TOUTES DE CLASSE
+    // DÉCLARATION DES MÉTHODES
     // Méthode générant une chaine décrivant un Move
     +(NSMutableString *) ConvertEnStringMove:(Move *) move
                                     PromPion:(NSString *) promPion

@@ -80,7 +80,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       [monConnecteur MaJtxtCoups];
       
       // Définition Couleurs Joueur et IA et MàJ repères de cases
-      sideJoueur = sideWhite;    sideIA = sideBlack;
+      // sideJoueur = sideWhite;    sideIA = sideBlack;
       [monConnecteur MajReperesCases];
       
       // Les pièces sont créées sur le board, les BLANCS en BAS
@@ -116,7 +116,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       monConnecteur.maChessView->liveBoard = self;
       monConnecteur.maChessView.needsDisplay = YES;
       
-      //MàJ des menus
+      // Activation du menu 'Poursuivre avec ...' pour permettre un changement de côté
       monConnecteur.menuPoursuivre.title = @"Poursuivre avec les Noirs";
       monConnecteur.menuPoursuivre.enabled = YES;
       
@@ -127,7 +127,6 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       engineIsBusy = YES;
       TestInvolution();
       engineIsBusy = NO;
-      
       
    }
 
@@ -153,7 +152,6 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       sideIA     = sideWhite;
       monConnecteur.maChessView.uiFlipped  = YES;
       
-      
       // RAZ indicateurs
       nbDemis   = 0;
       nbEntiers = 1;
@@ -165,7 +163,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       [monConnecteur MaJtxtCoups];
       
       // Définition Couleurs Joueur et IA et MàJ repères de cases
-      sideJoueur = sideBlack;    sideIA = sideWhite;
+      // sideJoueur = sideBlack;    sideIA = sideWhite;
       [monConnecteur MajReperesCases];
       
       // Les pièces sont créées sur le board, les NOIRS en BAS
@@ -204,15 +202,15 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       if (self->sideToMove == sideBlack)
          self->zobristKey ^= zobristSide;
       
-   #ifdef DEBUG_ZOBRIST
-      NSLog(@"🔵 APRÈS init Zobrist:");
-      NSLog(@"   zobristKey = %llx", self->zobristKey);
-      uint64_t recalc = recomputeZobrist(self);
-      NSLog(@"   recalculé  = %llx", recalc);
-      if (self->zobristKey != recalc) {
-         NSLog(@"❌ INIT ZOBRIST A ÉCHOUÉ !");
-      }
-   #endif
+      #ifdef DEBUG_ZOBRIST
+         NSLog(@"🔵 APRÈS init Zobrist:");
+         NSLog(@"   zobristKey = %llx", self->zobristKey);
+         uint64_t recalc = recomputeZobrist(self);
+         NSLog(@"   recalculé  = %llx", recalc);
+         if (self->zobristKey != recalc) {
+            NSLog(@"❌ INIT ZOBRIST A ÉCHOUÉ !");
+         }
+      #endif
       /* Fin d'initialisation de la clé Zobrist -----------------------------*/
       
       // Chargement du board dans la vue active et rafraichissement
@@ -225,7 +223,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       // Affichage du 1er coup de l'IA qui joue les BLANCS
       [monConnecteur InitialiseTxtCoups:stringCoupsPartie];
       
-      //MàJ des menus
+      // Activation du menu 'Poursuivre avec ...' pour permettre un changement de côté
       monConnecteur.menuPoursuivre.title = @"Poursuivre avec les Blancs";
       monConnecteur.menuPoursuivre.enabled = YES;
       
@@ -236,61 +234,54 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
 
 
    // ==================================================================================================
-   // MCN IBAction vers Méthode inversant l'échiquier
+   // IBAction vers Méthode retournant l'échiquier
+   // Appelée via le menu 'Continuer avec les ...'
    - (IBAction)RetournerBoard:(id)sender {
       
-      // Recopie des pièces du boardA vers le boardB
-      ChessBoard *boardA = monConnecteur.maChessView->liveBoard;
-      ChessBoard *boardB = [[ChessBoard alloc]init];
-      for (int x=0; x<8; x++) {
-         for (int y=0; y<8; y++){
-            if (boardA->pieceCase[x][y])
-               
-               boardB->pieceCase[7-x][7-y] =
-               [[Piece alloc] initWithType:boardA->pieceCase[x][y].type                                                                          side:boardA->pieceCase[x][y].side];
-         }
-      }
+      // ✅ PRINCIPE DE LA MÉTHODE :
+      // On ne créera pas de nouveau board, il suffira d'inverser l'affichage et de changer les rôles
       
-      // Récupération des variables d'instance du board d'origine
-      boardB->strRoque   = boardA->strRoque;
-      boardB->strCibleEP = @"-";             // car de toutes façons RAZ ou MàJ par prochain coup
-      boardB->nbDemis    = boardA->nbDemis;
-      boardB->nbEntiers  = boardA->nbEntiers;
+      ChessBoard *currentBoard = monConnecteur.maChessView->liveBoard;
       
-      // Focus sur le nouveau board
-      monConnecteur.maChessView->liveBoard = boardB;
-      monConnecteur.maChessView.needsDisplay = YES;
+      // Inverser l'affichage
+      monConnecteur.maChessView.uiFlipped = !monConnecteur.maChessView.uiFlipped;
       
-      // Recalage de la partie
+      // Inverser les rôles
       if (sideJoueur == sideWhite) {
          sideJoueur = sideBlack;
          sideIA = sideWhite;
-         [monConnecteur.maChessView MakeIAMoveForSide:sideWhite Board:boardB];
+         
+         // L'IA (les Blancs) joue immédiatement
+         [monConnecteur.maChessView MakeIAMoveForSide:sideWhite Board:currentBoard];
          sideCourant = sideBlack;
       }
-      else if (sideJoueur == sideBlack) {
+      else {
          sideJoueur = sideWhite;
          sideIA = sideBlack;
-         [monConnecteur.maChessView MakeIAMoveForSide:sideBlack Board:boardB];
+         
+         // L'IA (les Noirs) joue immédiatement
+         [monConnecteur.maChessView MakeIAMoveForSide:sideBlack Board:currentBoard];
          sideCourant = sideWhite;
       }
       
-      // MàJ repérage des cases et de la 'status bar'
+      // MàJ affichage
+      monConnecteur.maChessView.needsDisplay = YES;
       [monConnecteur MajReperesCases];
-      monConnecteur.lblRoque.cell.stringValue   = [NSString stringWithFormat:@"Roque : %@",      boardB->strRoque];
-      monConnecteur.lblCibleEP.cell.stringValue = [NSString stringWithFormat:@"Cible e.p. : %@", boardB->strCibleEP];
-      monConnecteur.lbl50Coups.cell.stringValue = [NSString stringWithFormat:@"50 demis : %d",   boardB->nbDemis];
-      monConnecteur.lblNumCoup.cell.stringValue = [NSString stringWithFormat:@"Coup n° : %d",    boardB->nbEntiers];
       
-      // MàJ menus
-      if([monConnecteur.menuPoursuivre.title isEqual:@"Poursuivre avec les Blancs"])
+      // MàJ status bar (board inchangé)
+      monConnecteur.lblRoque.cell.stringValue   = [NSString stringWithFormat:@"Roque : %@", currentBoard->strRoque];
+      monConnecteur.lblCibleEP.cell.stringValue = [NSString stringWithFormat:@"Cible e.p. : %@", currentBoard->strCibleEP];
+      monConnecteur.lbl50Coups.cell.stringValue = [NSString stringWithFormat:@"50 demis : %d", currentBoard->nbDemis];
+      monConnecteur.lblNumCoup.cell.stringValue = [NSString stringWithFormat:@"Coup n° : %d", currentBoard->nbEntiers];
+      
+      // MàJ menu
+      if ([monConnecteur.menuPoursuivre.title isEqual:@"Poursuivre avec les Blancs"])
          monConnecteur.menuPoursuivre.title = @"Poursuivre avec les Noirs";
-      else      monConnecteur.menuPoursuivre.title = @"Poursuivre avec les Blancs";
-      //boardA = nil;
-      
-   } // Fin de Méthode 'RetournerBoard'
+      else
+         monConnecteur.menuPoursuivre.title = @"Poursuivre avec les Blancs";
+   }
 
-
+   
    // ==================================================================================================
    // INITIALISATION DES PIECES SUR L'ECHIQUIER (AFFECTATION DE LEUR POSITION EN DEBUT DE PARTIE)
    // Cette METHODE est appelée dans ChessView.m
@@ -752,8 +743,8 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
          // Calculer le meilleur coup pour le joueur
          hint = [maMinimax BestMoveForSide:sideJoueur Board:monConnecteur.maChessView->liveBoard];
          
-         // Retournement horizontal de la représentation du move si on joue les Noirs
-         if (sideJoueur == sideBlack) hint = [Move mirrorMove:hint];
+         // Retournement H et V de la représentation du move si on joue les Noirs
+         if (sideJoueur == sideBlack) hint = [Move opMove:hint];
          
          // Création du message à destination d'une zone de texte
          message = [NSString stringWithFormat:

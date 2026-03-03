@@ -327,7 +327,6 @@
       zobristKey ^= zobristPiece[moving.side][moving.type][fromSq];
       
       
-      
       /*----------------------- CAPTURE / EN PASSANT ------------------------------*/
       if (st.wasEnPassant) {
          pieceCase[tx][ty] = nil;
@@ -416,25 +415,21 @@
       Noter également qu'en & binaire, un 0 efface le bit considéré
       Noter enfin l'utilisation du 'non binaire' ~ : ~0b0101 = 0b1010
       
-      Logique binaire
+      Logique binaire :
+      Bit3  Bit2  Bit1  Bit0
+      q     k     Q     K
+      │     │     │     └─ Blanc petit roque (h1) = 0b0001 (bit de poids faible)
+      │     │     └─────── Blanc grand roque (a1) = 0b0010
+      │     └───────────── Noir  petit roque (h8) = 0b0100
+      └─────────────────── Noir  grand roque (a8) = 0b1000 (bit de poids fort)
       
-      Bit3   Bit2   Bit1   Bit0
-      q      k      Q      K
-      │      │      │      └─ Blanc petit roque (h1) = 0b0001 (bit de poids faible)
-      │      │      └──────── Blanc grand roque (a1) = 0b0010
-      │      └─────────────── Noir  petit roque (h8) = 0b0100
-      └────────────────────── Noir  grand roque (a8) = 0b1000 (bit de poids fort)
+      Convention FEN :
+      K   Q   k   q
+      │   │   │   └─────── Noir  grand roque (a8)
+      │   │   └─────────── Noir  petit roque (h8)
+      │   └─────────────── Blanc grand roque (a1)
+      └─────────────────── Blanc petit roque (h1)                              */
       
-      
-      Convention FEN
-       
-      K Q k q
-      │ │ │ └─ Noir  grand roque (a8)
-      │ │ └─── Noir  petit roque (h8)
-      │ └───── Blanc grand roque (a1)
-      └─────── Blanc petit roque (h1)
-      
-      ---------------------------------------------------------------------------------------------- */
       
       // Si un Roi bouge
       if (moving.type == Roi) {

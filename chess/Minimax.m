@@ -1449,7 +1449,7 @@ static int nbCallsIsKingCheck = 0;
       return isAttacked ? cheapestValue : 0;
    }
 
-
+   /* Méthode obsolète
    // ================================================================================================
    // Nouvelle méthode pour générer une clé de hachage
    -(NSString *)BoardHashKey:(ChessBoard *)board forSide:(Side)side
@@ -1465,6 +1465,7 @@ static int nbCallsIsKingCheck = 0;
       [hash appendFormat:@"_%d", side];
       return hash;
    }
+    */
 
 
    // ================================================================================================

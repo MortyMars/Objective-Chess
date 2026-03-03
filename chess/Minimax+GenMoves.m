@@ -62,8 +62,8 @@
                        into:(NSMutableArray<Move *> *)moves
    {
       /* RAPPEL : SEULE L'UI (CHESSVIEW) EST CONCERNÉE PAR UN RETOURNEMENT DU BOARD ET EST SEULE À LE GÉRER
-       Le moteur canonique basé sur make/unmake est désynchronisé de l'UI quant aux déplacements des pièces.
-       Il est toujours calé sur l'orientation classique 'Blancs en bas' ----------------------------------*/
+      Le moteur canonique basé sur make/unmake est désynchronisé de l'UI quant aux déplacements des pièces.
+      Il est toujours calé sur l'orientation classique 'Blancs en bas' ----------------------------------*/
       
       int dir = (p.side == sideWhite) ? 1 : -1;
       int startRank = (p.side == sideWhite) ? 1 : 6;

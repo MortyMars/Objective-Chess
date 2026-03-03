@@ -12,10 +12,10 @@
    ... et utilisées pour l'affichage de la liste des coups joués successivement par l'IA et par le Joueur
 
    Les deux méthodes sont appelées l'une après l'autre :
-        - dans ChessBoard.m lors du premier coup de l'IA lorsqu'elle a les blancs
-        - dans ChessView.m à chaque coup Joueur, qu'il ait les blancs ou les noirs
-        - dans ChessView.m encore, à chaque coup de l'IA quand elle a les noirs
-          et à partir du deuxième coup quand elle a les blancs  */
+      - dans ChessBoard.m lors du premier coup de l'IA lorsqu'elle a les blancs
+      - dans ChessView.m à chaque coup Joueur, qu'il ait les blancs ou les noirs
+      - dans ChessView.m encore, à chaque coup de l'IA quand elle a les noirs
+        et à partir du deuxième coup quand elle a les blancs  */
 
 @implementation MoveToStr
 
@@ -29,9 +29,9 @@
                                       Board:(ChessBoard *) board;
    {
       /* TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard
-       'move' porte l'info mais n'est pas une NSString
-       'moveProv' valeur intermédiaire pour faciliter la lisibilité du code
-       'moveMCN' est la chaine résultant de la transformation successive des caractères et de leur concaténation */
+      'move' porte l'info mais n'est pas une NSString
+      'moveProv' valeur intermédiaire pour faciliter la lisibilité du code
+      'moveMCN' chaine résultant de la transformation successive des caractères et de leur concaténation */
       
       // moveProv récupère le coup au format 'Cd3xFe5'
       NSString *moveProv = [self Modif00EnA1:move surBoard:board];
@@ -44,11 +44,11 @@
       if (move.isEnPassant) {
          // Passage par une NSString provisoire
          NSString *moveMCNprov;
-         // remplacement du dernier '-' par un 'x' signalant une prise de pièce, l'ajout devient 'd5xe6'
+         // Remplacement du dernier '-' par un 'x' signalant une prise de pièce, l'ajout devient 'd5xe6'
          moveMCNprov = [moveMCN stringByReplacingCharactersInRange:NSMakeRange((moveMCN.length-3), 1) withString:@"x"];
-         // assignation de la string obtenue à 'moveMCN'
+         // Assignation de la string obtenue à 'moveMCN'
          moveMCN = [moveMCNprov mutableCopy];
-         // ajout de l'indication e.p., pour donner finalement 'd5xe6 e.p.'
+         // Ajout de l'indication e.p., pour donner finalement 'd5xe6 e.p.'
          [moveMCN appendString:@" e.p."];
       }
 
@@ -138,11 +138,11 @@
          // affichage correct des coups joués
          Move *moveOpposed = [Move opMove:move];
          movVerStr = [NSString stringWithFormat:@"%@",
-                      (!monConnecteur.maChessView.uiFlipped)? move:moveOpposed]; //movVerStr reçoit move ou moveOpposed
+                      (!monConnecteur.maChessView.uiFlipped)? move : moveOpposed]; //movVerStr reçoit move ou moveOpposed
          
          /* Ajout du type de la pièce
-          NB : le type d'une pièce est issu d'une 'enum' ; c'est donc un indice dans une liste
-          [typPrenante-1] permet d'accéder au bon indice dans le tableau  */
+         NB : le type d'une pièce est issu d'une 'enum' ; c'est donc un indice dans une liste
+         [typPrenante-1] permet d'accéder au bon indice dans le tableau  */
          if (typPrenante) [strDuMove appendString:strType[typPrenante-1]];
          
          // Ajout de la case de départ
