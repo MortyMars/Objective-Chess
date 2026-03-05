@@ -16,7 +16,7 @@
    -(MoveState)makeMove:(Move *)m
    {
       NSAssert(m.fromSquare == m.start.y * 8 + m.start.x, @"Move incohérent: fromSquare");
-      NSAssert(m.toSquare   == m.dest.y  * 8 + m.dest.x, @"Move incohérent: toSquare");
+      NSAssert(m.toSquare   == m.dest.y  * 8 + m.dest.x,  @"Move incohérent: toSquare");
       
       #ifdef DEBUG_ZOBRIST
          uint64_t hashAnteMove = zobristKey;

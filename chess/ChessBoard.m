@@ -718,6 +718,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
             if (start.y == epRank) {  // ← Vérifier start.y, pas dest.y !  ✅
                m.isEnPassant = YES;
                m.isCapture = YES;  // <- Ajouter ✅
+               
                // 🔴 IMPORTANT : définir aussi capturedPiece !
                // Le pion capturé est au même rang que le pion attaquant
                // int captureY = (p.side == sideWhite) ? 4 : 3;

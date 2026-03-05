@@ -15,16 +15,16 @@
 
 typedef struct
 {
-    Piece      *captured;     // pièce capturée (ou nil)
-    PieceType  oldType;       // type avant promotion
+    Piece      *captured;     // pièce capturée lors du move (ou nil s'il n'y en a pas)
+    PieceType  oldType;       // type de la pièce déplacée avant sa promotion
     BOOL       wasPromotion;
     BOOL       wasEnPassant;
-    int        enPassantX;    // coordonnées du pion capturé
-    int        enPassantY;    //
+    int        enPassantX;    // coordonnée X du pion capturé e.p.
+    int        enPassantY;    // ---------- Y --------------------
    
     // ajouts TT - Zobrist
-    uint8_t    oldCastleRights;
-    int8_t     oldEnPassantFile;
+    uint8_t    oldCastleRights;  // anciens droits de roque
+    int8_t     oldEnPassantFile; // ancienne colonne de prise en passant
    
 } MoveState;
 
@@ -37,16 +37,16 @@ ce qui permettra notamment de faire des copies d'objets ChessBoard, ...ce dont n
        Déclarée publique pour pouvoir y accéder via l'opérateur '->' dans d'autres classes */
       @public Piece *pieceCase[8][8];
       
-      /* Autres variables d'instances MCN, créées pour stocker les valeurs liées à la 'Status Bar' */
+      /* Autres variables d'instances, créées pour stocker les valeurs liées à la 'Status Bar' */
       @public NSString *strRoque;
       @public NSString *strCibleEP;
       @public int       nbDemis;
       @public int       nbEntiers;
    
-      // Ajouts pour Table de Transposition (TT)
+      // Ajout d'iVars pour Table de Transposition (TT)
       @public uint64_t  zobristKey;       // clé Zobrist 64 bits
-      @public uint8_t   castlingRights;   // bits : 1=K,2=Q,4=k,8=q
-                                          // 15 -> KQkq
+      @public uint8_t   castlingRights;   // bit1 vaut 1 : K,bit2 vaut 2 : Q, bit3 vaut 4 : k et bit4 vaut 8 : q
+                                          // 15 -> qkQK
       @public int8_t    enPassantFile;    // -1 ou 0..7
       @public Side      sideToMove;
 
@@ -60,7 +60,7 @@ ce qui permettra notamment de faire des copies d'objets ChessBoard, ...ce dont n
    //@property int currentEvaluation;
    
 
-   // Méthodes d'instance
+   // Méthodes (d'instance)
    -(id)         init;
    -(void)       SetupPieces;
    -(Piece *)    piece_colX:(int)x rangY:(int)y;
@@ -70,15 +70,6 @@ ce qui permettra notamment de faire des copies d'objets ChessBoard, ...ce dont n
    -(id)         copyWithZone:(NSZone *)zone;
    -(NSString *) description;
 
-   // Ajout des Méthodes IB MCN liées à l'utilisation des menus
-   -(IBAction)   NewPartieJoueurBlancs:(id)sender;
-   -(IBAction)   NewPartieJoueurNoirs:(id)sender;
-   -(IBAction)   RetournerBoard:(id)sender;
-
-   -(IBAction)   onHintButtonClicked:(id)sender;
-
-
-   // Ajout des Méthodes d'instance MCN
    -(void)       PremCoupAIBlancs;
    -(PieceType)  SelectPromoPionForSide:(Side)side;
    -(void)       CalculerStrRoque;
@@ -87,10 +78,16 @@ ce qui permettra notamment de faire des copies d'objets ChessBoard, ...ce dont n
    -(void)       ProposerNulle50Coups;
    -(void)       AlertePartieNulle;
 
-   
    -(Move *)buildMoveFrom:(Pos *)start
                        to:(Pos *)dest
                     board:(ChessBoard *)board;
 
+   // Ajout des Méthodes IBAction liées à l'utilisation des menus et boutons
+   -(IBAction)   NewPartieJoueurBlancs:(id)sender;
+   -(IBAction)   NewPartieJoueurNoirs:(id)sender;
+   -(IBAction)   RetournerBoard:(id)sender;
 
+   -(IBAction)   onHintButtonClicked:(id)sender;
+
+   
 @end

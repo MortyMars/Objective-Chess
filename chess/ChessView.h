@@ -29,6 +29,10 @@
       // iVar mémorisant les cases du 'Hint' à mettre en surbrillance
       Pos *hintStartSquare;   // Case de départ du hint
       Pos *hintDestSquare;    // Case d'arrivée du hint
+      
+      // iVars des cases d'un coup IA à 'surbriller'
+      Pos *IaStartSquare;
+      Pos *IaDestSquare;
    }
 
    @property (weak) id <ChessViewDelegate> delegate;

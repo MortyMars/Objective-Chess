@@ -141,7 +141,7 @@ BOOL engineIsBusy = NO;
             
             // Bordure de case
             CGContextSetRGBStrokeColor(context, 0.4, 0.0, 0.8, 1);   // MAUVE opaque
-            CGContextSetLineWidth(context, 7);                       // épaisseur 7
+            CGContextSetLineWidth(context, 5);                       // épaisseur 5
             CGContextStrokeRect(context, startRect);
          }
          
@@ -155,7 +155,40 @@ BOOL engineIsBusy = NO;
             
             // Bordure de case
             CGContextSetRGBStrokeColor(context, 0.0, 0.8, 0.0, 1);   // VERT opaque
-            CGContextSetLineWidth(context, 7);                       // épaisseur 7
+            CGContextSetLineWidth(context, 5);                       // épaisseur 5
+            CGContextStrokeRect(context, destRect);
+         }
+      }
+      
+      // 🔦 DESSIN DE LA SURBRILLANCE DU AIMOVE
+      if (IaStartSquare || IaDestSquare) {
+         CGContextRef context = [[NSGraphicsContext currentContext] CGContext];
+         
+         // Surbrillance case de départ (mauve)
+         if (IaStartSquare) {
+            CGRect startRect = [self rectForSquareAtX:IaStartSquare.x Y:IaStartSquare.y];
+            
+            // Fond de case (abandonné pour éviter une surcharge de couleur)
+            //CGContextSetRGBFillColor(context, 1, 1, 0, 0.3);       // JAUNE transparent
+            //CGContextFillRect(context, startRect);
+            
+            // Bordure de case
+            CGContextSetRGBStrokeColor(context, 1.0, 0.87, 0.13, 1); // JAUNE vif opaque
+            CGContextSetLineWidth(context, 5);                       // épaisseur 5
+            CGContextStrokeRect(context, startRect);
+         }
+         
+         // Surbrillance case de destination (vert)
+         if (IaDestSquare) {
+            CGRect destRect = [self rectForSquareAtX:IaDestSquare.x Y:IaDestSquare.y];
+            
+            // Fond de case (abandonné pour éviter une surcharge de couleur)
+            //CGContextSetRGBFillColor(context, 0, 1, 0, 0.5);       // VERT transparent
+            //CGContextFillRect(context, destRect);
+            
+            // Bordure de case
+            CGContextSetRGBStrokeColor(context, 1.0, 0.46, 0.09, 1); // ORANGE vif opaque
+            CGContextSetLineWidth(context, 5);                       // épaisseur 5
             CGContextStrokeRect(context, destRect);
          }
       }
@@ -226,7 +259,7 @@ BOOL engineIsBusy = NO;
                   'MakeComputerMove' tout en permettant la poursuite du programme.
                   Ainsi, la position choisie par le JOUEUR pour son coup est prise en compte et dessinée
                   tout de suite sur l'échiquier, ce qui est -visuellement parlant- plus acceptable que de
-                  voir les coups Joueur et IA se matérialiser simultanément sur l'échiquier comme le ferait
+                  voir les coups Joueur et IA se matérialiser 'simultanément' sur l'échiquier comme le ferait
                   un banal '[Minimax MakeComputerMove]' */
                   [NSTimer scheduledTimerWithTimeInterval:0.02         target:self
                                                  selector:@selector(MakeComputerMove)
@@ -354,6 +387,15 @@ BOOL engineIsBusy = NO;
             [monConnecteur AlertMsgPatMatSide:sideJoueur onBoard:liveBoard];
          }
       }
+      
+      // Initier la surbrillance du aiMove
+      [monConnecteur.maChessView highlightIaSquareStart:aiMove.start dest:aiMove.dest];
+      
+      // Désactiver automatiquement le surlignement après 2 secondes
+      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC),
+                     dispatch_get_main_queue(), ^{
+         [monConnecteur.maChessView clearIaHighlight];
+      });
       
       // Mise à jour de la Vue dans le thread ppal si on n'y est pas déjà le cas
       dispatch_async(dispatch_get_main_queue(), ^{
@@ -562,6 +604,15 @@ BOOL engineIsBusy = NO;
          }
       }
       
+      // Initier la surbrillance du aiMove
+      [monConnecteur.maChessView highlightIaSquareStart:aiMove.start dest:aiMove.dest];
+      
+      // Désactiver automatiquement le surlignement après 2 secondes
+      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC),
+                     dispatch_get_main_queue(), ^{
+         [monConnecteur.maChessView clearIaHighlight];
+      });
+      
       self.needsDisplay = YES; // MàJ affichage board
       
    } // !MakeIAMoveForSide
@@ -672,11 +723,11 @@ BOOL engineIsBusy = NO;
    }
 
    // ==================================================================================================
-   // Méthodes définissant la surbrillanec
+   // Méthodes définissant la surbrillance du Hint
    // Activer la surbrillance
    -(void)highlightHintSquareStart:(Pos *)start dest:(Pos *)dest {
        hintStartSquare = start;
-       hintDestSquare = dest;
+       hintDestSquare  = dest;
        
        // Forcer le redessin de la vue
        [self setNeedsDisplay:YES];
@@ -685,11 +736,39 @@ BOOL engineIsBusy = NO;
    // Désactiver la surbrillance
    -(void)clearHintHighlight {
        hintStartSquare = nil;
-       hintDestSquare = nil;
+       hintDestSquare  = nil;
        [self setNeedsDisplay:YES];
    }
 
 
+   // ==================================================================================================
+   // Méthodes définissant la surbrillance du move IA
+   // Activer la surbrillance
+   -(void)highlightIaSquareStart:(Pos *)start dest:(Pos *)dest {
+      
+      // Si les Noirs sont en bas il faut 'surbriller' les cases opposées
+      if (sideJoueur == sideBlack) {
+         IaStartSquare = [Pos posWithX:7-start.x y:7-start.y];
+         IaDestSquare  = [Pos posWithX:7-dest.x  y:7-dest.y];
+      } else {
+         IaStartSquare = start;
+         IaDestSquare  = dest;
+      }
+      
+      // Forcer le redessin de la vue
+      [self setNeedsDisplay:YES];
+      
+   }
+
+   // Désactiver la surbrillance
+   -(void)clearIaHighlight {
+       IaStartSquare = nil;
+       IaDestSquare  = nil;
+       [self setNeedsDisplay:YES];
+   }
+
+   
+   // ==================================================================================================
    // Méthode helper pour calculer le rectangle d'une case
    -(CGRect)rectForSquareAtX:(int)x Y:(int)y {
       CGFloat tileSize = self.bounds.size.width / 8.0;
