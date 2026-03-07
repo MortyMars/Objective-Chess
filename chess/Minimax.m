@@ -99,6 +99,31 @@ static int nbCallsIsKingCheck = 0;
       
       /* Détermination du jeu de tous les moves possibles pour 'side' */
       NSSet *movesPossibles = [self PossibleMovesForSide:side board:board];
+          
+      // ✅ LOG CRITIQUE RECHERCHE BUG #########################################################
+      NSLog(@"🔍 BestMoveForSide pour %@:", (side == sideWhite) ? @"Blancs" : @"Noirs");
+      NSLog(@"   Coups possibles bruts: %lu", (unsigned long)movesPossibles.count);
+      NSLog(@"   Roi en échec: %d", [self IsKingInCheck:side board:board]);
+
+      if (movesPossibles.count == 0) {
+        NSLog(@"❌ AUCUN COUP LÉGAL détecté !");
+        NSLog(@"   Mais l'interface montre des coups possibles...");
+        NSLog(@"   → BUG dans PossibleMovesForSide !");
+        [monConnecteur AlertMsgPatMatSide:side onBoard:board];
+        return nil;
+      }
+
+      // ✅ Afficher tous les coups trouvés
+      NSLog(@"   Liste des coups:");
+      for (Move *m in movesPossibles) {
+        NSLog(@"     - %@", m);
+      }
+      // FIN LOG RECHERCHE BUG ###################################################################
+      
+      
+      
+      
+      
       
       /* PRÉREQUIS : Tester si side est mat ou pat */
       if (movesPossibles.count == 0) {
@@ -107,7 +132,8 @@ static int nbCallsIsKingCheck = 0;
       }
       
       /* Initialisation des variables de recherche */
-      int bestScore  = -SCORE_INF;
+      //int bestScore  = -SCORE_INF;
+      int bestScore = -10000001;  // ← Plus bas que le score de mat
       Move *bestMove = nil;
       Side otherSide = (side == sideWhite)? sideBlack:sideWhite;
       
@@ -200,8 +226,21 @@ static int nbCallsIsKingCheck = 0;
       
       
       /* ========== ÉVALUATION DE CHAQUE COUP ========== */
+      
       for (Move *moveEnCours in sortedMoves)
       {
+         // ✅ LOG pour debug
+         NSLog(@"🔍 Test coup: %@", moveEnCours);
+         
+         // ✅ Bloquer les répétitions immédiates (undo du dernier coup)
+         if (self.lastIAMove &&
+             moveEnCours.fromSquare == self.lastIAMove.toSquare &&
+             moveEnCours.toSquare == self.lastIAMove.fromSquare) {
+            NSLog(@"   ⏭️  Skip répétition: %@", moveEnCours);
+            continue;  // Skip ce coup
+         }
+         
+         
          // ✅ NOUVEAU : Ajouter la position avant makeMove
          positionHistory[historyCount++] = board->zobristKey;
          
@@ -222,10 +261,17 @@ static int nbCallsIsKingCheck = 0;
          historyCount--;
          
          // score est maintenant positif = bon pour side ✅
-         if (score > bestScore || !bestMove) {
+         //if (score > bestScore || !bestMove) {
+         if (score > bestScore) {
              bestScore = score;
              bestMove = moveEnCours;
          }
+      }
+      
+      // ✅ Si aucun coup n'a été trouvé (tous bloqués par répétition)
+      if (!bestMove && movesPossibles.count > 0) {
+          NSLog(@"⚠️  Tous les coups bloqués par répétition, on prend le premier disponible");
+          bestMove = [movesPossibles anyObject];
       }
       
       /* ========== CALCUL DU TEMPS ÉCOULÉ ========== */
@@ -238,6 +284,9 @@ static int nbCallsIsKingCheck = 0;
       NSLog(@"🎯 Nœuds explorés: %llu", nodes);
       [self.transpositionTable printStats];
       // Fin de stats
+      
+      // ✅ Mémoriser le coup choisi
+      self.lastIAMove = bestMove;
       
       return bestMove;
       
@@ -1251,20 +1300,39 @@ static int nbCallsIsKingCheck = 0;
        NSMutableArray *allMoves = [NSMutableArray array];
        [self GenMovesForSide:side board:board into:allMoves];
        
+       NSLog(@"🔍 PossibleMovesForSide pour %@:", (side == sideWhite) ? @"Blancs" : @"Noirs");
+       NSLog(@"   Coups générés (avant filtre): %lu", (unsigned long)allMoves.count);
+       
        NSMutableSet *legalMoves = [NSMutableSet set];
        
        for (Move *m in allMoves) {
-           // ✅ Copier le board pour tester l'échec
+           // ✅ LOG pour chaque coup testé
+           NSLog(@"   Test coup: %@", m);
+           
+           // ✅ Copier le board
            ChessBoard *testBoard = board.copy;
+           
+           // ✅ Vérifier que la copie contient bien les pièces
+           Piece *movingPiece = testBoard->pieceCase[m.fromSquare % 8][m.fromSquare / 8];
+           if (!movingPiece) {
+               NSLog(@"     ❌ Pas de pièce en (%d,%d) dans testBoard !",
+                     m.fromSquare % 8, m.fromSquare / 8);
+               continue;
+           }
            
            MoveState st = [testBoard makeMove:m];
            
            if (![self IsKingInCheck:side board:testBoard]) {
-               [legalMoves addObject:m];  // ← Move intact !
+               NSLog(@"     ✅ Coup LÉGAL");
+               [legalMoves addObject:m];
+           } else {
+               NSLog(@"     ❌ Coup illégal (roi en échec)");
            }
            
-           // Pas besoin d'unmakeMove sur testBoard (il sera libéré)
+           // Pas besoin d'unmake (testBoard sera libéré)
        }
+       
+       NSLog(@"   → Coups légaux trouvés: %lu", (unsigned long)legalMoves.count);
        
        return legalMoves;
    }

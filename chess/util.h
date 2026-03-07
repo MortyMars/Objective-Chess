@@ -139,6 +139,8 @@ extern const int knightOffsets[8][2];
 
 extern BOOL partieLancee;
 
+extern BOOL modeAuto;
+
 
 
 // ===============================================================================================================

@@ -83,11 +83,17 @@ ce qui permettra notamment de faire des copies d'objets ChessBoard, ...ce dont n
                     board:(ChessBoard *)board;
 
    // Ajout des Méthodes IBAction liées à l'utilisation des menus et boutons
-   -(IBAction)   NewPartieJoueurBlancs:(id)sender;
-   -(IBAction)   NewPartieJoueurNoirs:(id)sender;
-   -(IBAction)   RetournerBoard:(id)sender;
+   // Modes de jeu
+   -(IBAction)NewPartieJoueurBlancs:(id)sender;
+   -(IBAction)NewPartieJoueurNoirs:(id)sender;
+   -(IBAction)RetournerBoard:(id)sender;
 
-   -(IBAction)   onHintButtonClicked:(id)sender;
+   // Proposer un (bon) coup au Joueur
+   -(IBAction)onHintButtonClicked:(id)sender;
 
-   
+   // Activer /Désactiver l'IA
+   -(IBAction)PlayAutoOnOff:(id)sender;
+
+   @property (weak) IBOutlet NSButton *buttonAuto;
+
 @end

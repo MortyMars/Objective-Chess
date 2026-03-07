@@ -52,6 +52,8 @@
 
    @property (nonatomic, strong) TranspositionTable *transpositionTable;
 
+   @property (nonatomic, strong) Move *lastIAMove;  // Dernier coup joué
+
    // Historique des positions pour détection de répétition
    #define MAX_GAME_LENGTH 512
 

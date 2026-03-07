@@ -66,4 +66,9 @@ r1b1k2r/ppp1qppp/8/3Pn3/7B/8/PPP2PPP/RN1QKN1R w - - 0 1                    |  Tr
 Test d'affichage de la prise en passant :                                  |
 -----------------------------------------                                  |
 7k/5Q2/8/8/1p6/1P6/P7/4K3 w - - 0 1                                        |  Trait aux Blancs : Pa2>a4 -> Noirs : Pb4>a3 e.p.
-
+                                                                           |
+Recherche de bug :                                                         |
+------------------                                                         |
+8/1K2p3/P6r/2q5/4nb2/8/1k4pp/7r b - - 0 1                                  |  Noirs jouent qf4>f3+ --> Bug de pseudo Mat détecté
+r7/pp4k1/8/2bn4/5q2/r6P/3p2K1/8 b - - 0 1
+r7/pp4k1/8/2bn4/2q5/r6P/3p4/7K w - - 0 1                                   |  Moves attendus Kh1>h2, qc4>f4+, Kh2>g2, qf4>f3+

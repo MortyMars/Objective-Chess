@@ -451,6 +451,17 @@ CA
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5CO-2g-omR">
+                        <rect key="frame" x="28" y="719" width="60" height="24"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="push" title="AUTO" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Q4Y-iu-30D">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="PlayAutoOnOff:" target="oGd-vg-EmX" id="cFE-yU-0dC"/>
+                        </connections>
+                    </button>
                 </subviews>
                 <constraints>
                     <constraint firstItem="huy-nn-Je9" firstAttribute="top" relation="greaterThanOrEqual" secondItem="372" secondAttribute="top" constant="63" id="UlP-Bi-8wX"/>
@@ -465,7 +476,11 @@ CA
                 <outlet property="window" destination="371" id="0Bu-za-7wt"/>
             </connections>
         </customObject>
-        <customObject id="oGd-vg-EmX" userLabel="monChessBoard" customClass="ChessBoard"/>
+        <customObject id="oGd-vg-EmX" userLabel="monChessBoard" customClass="ChessBoard">
+            <connections>
+                <outlet property="buttonAuto" destination="5CO-2g-omR" id="gKw-oS-we8"/>
+            </connections>
+        </customObject>
         <customObject id="YzN-GE-tMw" userLabel="monConnecteur" customClass="Connecteur">
             <connections>
                 <outlet property="chiffresSideBlancs" destination="huy-nn-Je9" id="at3-EP-BsE"/>

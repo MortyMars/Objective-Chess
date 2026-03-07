@@ -43,6 +43,8 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
          enPassantFile = -1;          // Pas d'EP en début de partie
          zobristKey = 0;              // Sera recalculé après SetupPieces
          
+         _buttonAuto.title = @"AUTO";
+         
       }
       return self;
    }
@@ -68,6 +70,9 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       sideJoueur = sideWhite;
       sideIA     = sideBlack;
       monConnecteur.maChessView.uiFlipped  = NO;
+      
+      // RAZ side Courant car nouvelle partie
+      sideCourant = sideWhite;
       
       // RAZ indicateurs
       nbDemis   = 0;
@@ -151,6 +156,9 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       sideJoueur = sideBlack;
       sideIA     = sideWhite;
       monConnecteur.maChessView.uiFlipped  = YES;
+      
+      // RAZ sideCourant car new partie
+      sideCourant = sideWhite;
       
       // RAZ indicateurs
       nbDemis   = 0;
@@ -395,16 +403,22 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
    {
       ChessBoard *newBoard = [[ChessBoard alloc] init];
       
+      // ✅ LOG pour debug
+      int piecesCopiees = 0;
+      
       // Copie des pièces
       for (int x = 0; x < 8; x++) {
          for (int y = 0; y < 8; y++) {
-            if (pieceCase[x][y]) {
-               newBoard->pieceCase[x][y] = pieceCase[x][y].copy;
+            if (self->pieceCase[x][y]) {
+               newBoard->pieceCase[x][y] = [self->pieceCase[x][y] copy];
+               piecesCopiees++;
             } else {
                newBoard->pieceCase[x][y] = nil;
             }
          }
       }
+      
+      NSLog(@"🔍 copyWithZone: %d pièces copiées", piecesCopiees);
       
       // 🔴 CRITIQUE : Copier TOUS les états !
       newBoard->sideToMove = self->sideToMove;
@@ -449,6 +463,9 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
    // LE TOUT PREMIER COUP DE LA PARTIE REVIENT À L'IA QUAND ELLE A LES BLANCS
    -(void)PremCoupAIBlancs
    {
+      // Si on n'est pas en mode auto on ne fait pas jouer l'IA Blancs
+      if (modeAuto == NO) return;
+      
       /* self fait référence à l'objet ChessBoard qui appelle la méthode PremCoupAIBlancs
        calcul du meilleur 1er coup IA  */
       Move* firstAImove = [maMinimax BestMoveForSide:sideWhite Board:self];
@@ -771,6 +788,40 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
                      dispatch_get_main_queue(), ^{
          [monConnecteur.maChessView clearHintHighlight];
       });
+      
+   } // !onHintButton Clicked
+
+
+   // Activer /Désactiver le mode de jeu Auto
+   - (IBAction) PlayAutoOnOff:(id)sender {
+      
+      
+      
+      if (modeAuto == YES) {
+         modeAuto = NO;
+         _buttonAuto.title = @"MANU";
+         
+         NSMutableAttributedString *attrTitle =
+         [[NSMutableAttributedString alloc] initWithAttributedString:[_buttonAuto attributedTitle]];
+
+         [attrTitle addAttribute:NSForegroundColorAttributeName
+                           value:[NSColor redColor]
+                           range:NSMakeRange(0, attrTitle.length)];
+
+         [attrTitle addAttribute:NSFontAttributeName
+                           value:[NSFont fontWithName:@"Arial Bold" size:13]
+                           range:NSMakeRange(0, attrTitle.length)];
+         
+         [_buttonAuto setAttributedTitle:attrTitle];
+         
+      }
+      else {
+         modeAuto = YES;
+         _buttonAuto.title = @"AUTO";
+         
+         sideIA = sideCourant;
+         [monConnecteur.maChessView MakeIAMoveForSide:sideIA Board:self];
+      }
       
    }
 

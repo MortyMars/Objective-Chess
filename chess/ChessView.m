@@ -252,8 +252,8 @@ BOOL engineIsBusy = NO;
                [maMinimax EvalBoardForSide:sideJoueur board:liveBoard];
                self.needsDisplay = YES;
                
-               /* ON NE CONTINUE QUE SI MAT NON DÉTECTÉ (seule façon trouvée pour stopper le déroult auto du prog) */
-               if (!stopMatOuPat)
+               /* ON NE CONTINUE QUE SI MAT NON DÉTECTÉ ET QUE LE MODE 'AUTO' EST ACTIF */
+               if (!stopMatOuPat && modeAuto == YES)
                {
                   /* NSTimer permet de programmer un appel différé (de 2/100 de seconde ici) à
                   'MakeComputerMove' tout en permettant la poursuite du programme.
@@ -305,11 +305,52 @@ BOOL engineIsBusy = NO;
       });
       
       // Début effectif de réalisation du move AI
-      Move *aiMove = [maMinimax BestMoveForSide:sideIA Board:liveBoard];   // Version MCN
+      Move *aiMove = [maMinimax BestMoveForSide:sideIA Board:liveBoard];
+      
+      // Recherche bug #################################################################################
+      // ✅ LOG DÉTAILLÉ
+      NSLog(@"🔍 Move retourné par BestMoveForSide:");
+      NSLog(@"   Move: %@", aiMove);
+      NSLog(@"   fromSquare: %d (%d,%d)", aiMove.fromSquare,
+            aiMove.fromSquare % 8, aiMove.fromSquare / 8);
+      NSLog(@"   toSquare: %d (%d,%d)", aiMove.toSquare,
+            aiMove.toSquare % 8, aiMove.toSquare / 8);
+      NSLog(@"   Pièce sur case départ: %@",
+            liveBoard->pieceCase[aiMove.fromSquare % 8][aiMove.fromSquare / 8]);
+
+      if (!aiMove) {
+          NSLog(@"❌ aiMove est nil !");
+          return;
+      }
+
+      Piece *testPiece = liveBoard->pieceCase[aiMove.fromSquare % 8][aiMove.fromSquare / 8];
+      if (!testPiece) {
+          NSLog(@"❌ Pas de pièce en (%d,%d) !",
+                aiMove.fromSquare % 8, aiMove.fromSquare / 8);
+          NSLog(@"📋 État du board:");
+          for (int y = 7; y >= 0; y--) {
+              NSMutableString *line = [NSMutableString stringWithFormat:@"   y=%d: ", y];
+              for (int x = 0; x < 8; x++) {
+                  Piece *p = liveBoard->pieceCase[x][y];
+                  if (p) {
+                      [line appendFormat:@"%@%c ",
+                           (p.side == sideWhite ? @"W" : @"B"),
+                           "?PNBRQK"[p.type]];
+                  } else {
+                      [line appendString:@".. "];
+                  }
+              }
+              NSLog(@"%@", line);
+          }
+          return;  // ✅ Ne pas faire makeMove !
+      }
+      // Fin recherche bug #############################################################################
       
       ChessBoard* savedBoard = liveBoard.copy; // Sauvegardé pour ConvertEnStringMove avant PerformMove
       
       // Réalisation du move
+      // ✅ Seulement si aiMove existe
+      NSLog(@"✅ Coup IA choisi : %@", aiMove);
       MoveState st = [liveBoard makeMove:aiMove];
       
       // Gestion des indicateurs d'affichage du Roque dans la liste des coups joués
@@ -388,10 +429,10 @@ BOOL engineIsBusy = NO;
          }
       }
       
-      // Initier la surbrillance du aiMove
+      // Activer la surbrillance du aiMove
       [monConnecteur.maChessView highlightIaSquareStart:aiMove.start dest:aiMove.dest];
       
-      // Désactiver automatiquement le surlignement après 2 secondes
+      // Désactiver automatiquement la surbrillance après 2 secondes
       dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC),
                      dispatch_get_main_queue(), ^{
          [monConnecteur.maChessView clearIaHighlight];
@@ -604,10 +645,10 @@ BOOL engineIsBusy = NO;
          }
       }
       
-      // Initier la surbrillance du aiMove
+      // Activer la surbrillance du aiMove
       [monConnecteur.maChessView highlightIaSquareStart:aiMove.start dest:aiMove.dest];
       
-      // Désactiver automatiquement le surlignement après 2 secondes
+      // Désactiver automatiquement la surbrillance après 2 secondes
       dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC),
                      dispatch_get_main_queue(), ^{
          [monConnecteur.maChessView clearIaHighlight];
@@ -723,7 +764,7 @@ BOOL engineIsBusy = NO;
    }
 
    // ==================================================================================================
-   // Méthodes définissant la surbrillance du Hint
+   // Méthodes UI définissant la surbrillance du Hint
    // Activer la surbrillance
    -(void)highlightHintSquareStart:(Pos *)start dest:(Pos *)dest {
        hintStartSquare = start;
@@ -742,11 +783,12 @@ BOOL engineIsBusy = NO;
 
 
    // ==================================================================================================
-   // Méthodes définissant la surbrillance du move IA
+   // Méthodes UI définissant la surbrillance du move IA
    // Activer la surbrillance
    -(void)highlightIaSquareStart:(Pos *)start dest:(Pos *)dest {
       
-      // Si les Noirs sont en bas il faut 'surbriller' les cases opposées
+      // Si les Noirs sont en bas il faut 'allumer' les cases opposées à start et dest
+      // car l'opposition des coordonnées moteur/UI n'est pas géré ailleurs
       if (sideJoueur == sideBlack) {
          IaStartSquare = [Pos posWithX:7-start.x y:7-start.y];
          IaDestSquare  = [Pos posWithX:7-dest.x  y:7-dest.y];
