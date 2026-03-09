@@ -11,6 +11,7 @@
 //Rappel au compilateur que Connecteur est une classe, définie ailleurs
 @class Connecteur;
 
+
 // Déclaration de la classe AppDelegate, ...qui adopte le Protocol <NSApplicationDelegate>
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 

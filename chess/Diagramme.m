@@ -300,7 +300,9 @@ NSString *strPieces;
       Il est à observer que compte tenu de la construction des boucles for x et y à 8 indices chacunes,
       la lecture s'arrêtera lorsque les 64 cases de l'échiquier auront été balayées.
       Ainsi le "case ' '" (laissé pour mémoire) ne sera jamais exécuté puisqu'il ne peut se produire
-      (dans une chaine valide) avant que la dernière case de l'échiquier ait été balayée...*/
+      (dans une chaine valide) avant que la dernière case de l'échiquier ait été balayée...
+      Noter également qu'un code FEN décrit un board (blancs en bas) de la case en haut à gauche
+      à la case en bas à droite ; les y vont donc décroissants, alors que les x vont croissants */
       for (int y=7; y>-1; y--) {
          for (int x=0; x<8; x++) {
             if (i > stringFEN.length-1) break;
@@ -335,12 +337,12 @@ NSString *strPieces;
          } // for x suivant jusqu'à 7
       } // for y suivant jusqu'à 0
       
-      /* Il faut réautoriser les pions n'ayant pas bougé à avancer de 2 cases s'ils le 'souhaitent', puisque
-       par défaut on les avait tous pénalisé (cf. plus haut traitement des pions dans le 'switch'         */
+      /* Il faut redonner aux pions qui n'ont pas encore été déplacés, la capacité d'avancer de 2 cases, puisque
+      par défaut on les avait tous pénalisés (cf. plus haut traitement des pions dans le 'switch'             */
       [self OkDeuxCasesPionsBoard:fenBoard];
       
       /* Récupération de la chaine indiquant à qui est le Trait, et comment sont positionnés les indicateurs de Roque
-      TODO : implémenter l'exploitation de cette chaine pour renseigner le board en conséquence...*/
+      TODO : implémenter l'exploitation de cette chaine pour renseigner le board en conséquence...                 */
       strTraitEtRoque = [stringFEN substringWithRange:NSMakeRange(i+1,stringFEN.length-(i+1))];
       // Suppression des caractères vides en fin de chaine 'strTraitEtRoque' tant qu'il y en a
       while ([strTraitEtRoque characterAtIndex:(strTraitEtRoque.length-1)] == ' ')  {

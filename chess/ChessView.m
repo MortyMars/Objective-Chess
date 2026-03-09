@@ -307,6 +307,7 @@ BOOL engineIsBusy = NO;
       // Début effectif de réalisation du move AI
       Move *aiMove = [maMinimax BestMoveForSide:sideIA Board:liveBoard];
       
+      /*
       // Recherche bug #################################################################################
       // ✅ LOG DÉTAILLÉ
       NSLog(@"🔍 Move retourné par BestMoveForSide:");
@@ -345,6 +346,7 @@ BOOL engineIsBusy = NO;
           return;  // ✅ Ne pas faire makeMove !
       }
       // Fin recherche bug #############################################################################
+      */
       
       ChessBoard* savedBoard = liveBoard.copy; // Sauvegardé pour ConvertEnStringMove avant PerformMove
       

@@ -24,12 +24,12 @@
                                 dy:(int)dy
                              board:(ChessBoard *)board;
 
-   // Méthodes de Classe MCN
-   +(NSSet *) PosLegalesForPieceSAR:(Piece *)piece       // Méthode SAR (Sans appel récursif)
+   // Méthodes de Classe SAR (Sans appel récursif)
+   +(NSSet *) PosLegalesForPieceSAR:(Piece *)piece       // Version SAR de 'PosLegales...'
                               atPos:(Pos *)pos
                             inBoard:(ChessBoard *)board;
 
-   +(BOOL)    TestEchecRoiSideSAR:(Side)side             // Méthode SAR (Sans appel récursif)
+   +(BOOL)    TestEchecRoiSideSAR:(Side)side             // Version SAR de 'TestEchecRoi...'
                           inBoard:(ChessBoard *)board;
 
 @end

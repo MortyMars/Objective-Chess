@@ -17,18 +17,18 @@ NB : c'est également le cas des très respectables classes 'Minimax' et 'RuleBo
    // No variable d'instance :
    {
       
-   
+
    }
 
-    // DÉCLARATION DES MÉTHODES
+   // DÉCLARATION DES MÉTHODES
 
-    // Méthode générant une chaine décrivant un Move
-    +(NSMutableString *)ConvertEnStringMove:(Move *) move
-                                   PromPion:(NSString *) promPion
-                                   StrEchec:(NSString *) strEchec
-                                      Board:(ChessBoard *) board;
+   // Méthode générant une chaine décrivant un Move
+   +(NSMutableString *)ConvertEnStringMove:(Move *) move
+                                  PromPion:(NSString *) promPion
+                                  StrEchec:(NSString *) strEchec
+                                     Board:(ChessBoard *) board;
 
-   
+
    // Méthode mettant en forme ordonnée la chaine ci-dessus
    +(void)MettreEnFormeChaine:(NSString *) moveToStr
                  Protagoniste:(NSString *) strJ_IA;

@@ -21,6 +21,7 @@
       return self;
    }
 
+   
    // ==================================================================================================
    // Méthode exigée par le Protocol NSCopying dont hérite la classe Piece
    // Elle n'est pas formellement appelée dans le code, mais s'active dès l'envoi d'un msg copy sur un objet

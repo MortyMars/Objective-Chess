@@ -12,7 +12,7 @@
 #import "Util.h"
 
 
-#define SCORE_INF 10000000
+#define SCORE_INF 10000000 // Définit à 10 000 000 le plus bas des scores (affecté d'un signe -)
 
 
 
@@ -48,7 +48,7 @@ static int nbCallsIsKingCheck = 0;
 
 
    // ================================================================================================
-   // MÉTHODE 1 : BestMoveForSide - Point d'entrée du moteur IA
+   // MÉTHODE BestMoveForSide - Point d'entrée du moteur IA
    // Cette méthode trouve le meilleur coup pour l'IA en explorant l'arbre des possibilités
    -(Move *)BestMoveForSide:(Side)side
                       Board:(ChessBoard *)board
@@ -100,6 +100,7 @@ static int nbCallsIsKingCheck = 0;
       /* Détermination du jeu de tous les moves possibles pour 'side' */
       NSSet *movesPossibles = [self PossibleMovesForSide:side board:board];
           
+      /*
       // ✅ LOG CRITIQUE RECHERCHE BUG #########################################################
       NSLog(@"🔍 BestMoveForSide pour %@:", (side == sideWhite) ? @"Blancs" : @"Noirs");
       NSLog(@"   Coups possibles bruts: %lu", (unsigned long)movesPossibles.count);
@@ -119,11 +120,7 @@ static int nbCallsIsKingCheck = 0;
         NSLog(@"     - %@", m);
       }
       // FIN LOG RECHERCHE BUG ###################################################################
-      
-      
-      
-      
-      
+      */
       
       /* PRÉREQUIS : Tester si side est mat ou pat */
       if (movesPossibles.count == 0) {
@@ -131,9 +128,15 @@ static int nbCallsIsKingCheck = 0;
          return nil;
       }
       
-      /* Initialisation des variables de recherche */
-      //int bestScore  = -SCORE_INF;
-      int bestScore = -10000001;  // ← Plus bas que le score de mat
+      // INITIALISATION DES VARIABLES DE RECHERCHE
+      /* 'bestScore' est initialisée à -10 000 001, c'est à dire 1 plus bas que le score de mat (10M)
+      pour que le move vers un mat soit considéré par le moteur comme un coup acceptable et jouable,
+      ce qui est le cas puisque c'est bien un coup légal.
+      Si cette précaution n'est pas prise, l'éventualité que ce coup légal soit refusé par le moteur existe,
+      ce qui laissera le board dans un état instable déjà rencontré lors du bug où l'IA refuse de poursuivre
+      la partie (bestMove = nil) avant d'avoir atteint le mat ou le pat.                                  */
+      int bestScore  = -SCORE_INF-1; // càd -10 000 001
+      
       Move *bestMove = nil;
       Side otherSide = (side == sideWhite)? sideBlack:sideWhite;
       
@@ -163,34 +166,35 @@ static int nbCallsIsKingCheck = 0;
          // Vérifier seulement pour les pièces chères
          if (movingValue >= 300) {
             
-               #ifdef DEBUG_ZOBRIST
-                  uint64_t hashAvantCopy = board->zobristKey;
-                  NSLog(@"🔵 AVANT board.copy: hash=%llx", hashAvantCopy);
-               #endif
-                           
-               ChessBoard *testBoard = board.copy;
-                           
-               #ifdef DEBUG_ZOBRIST
-                  uint64_t hashApresCopy = board->zobristKey;
-                  NSLog(@"🔵 APRÈS board.copy: hash original=%llx, hash copie=%llx",
-                        hashApresCopy, testBoard->zobristKey);
-                  if (hashApresCopy != hashAvantCopy) {
-                     NSLog(@"💥💥💥 board.copy A CORROMPU LE BOARD ORIGINAL !");
-                  }
-               #endif
-                           
-               MoveState st = [testBoard makeMove:move];
-                           
-               #ifdef DEBUG_ZOBRIST
-                  uint64_t hashApresPerform = board->zobristKey;
-                  NSLog(@"🔵 APRÈS PerformMove: hash original=%llx", hashApresPerform);
-                  if (hashApresPerform != hashAvantCopy) {
-                     NSLog(@"💥💥💥 PerformMove A CORROMPU LE BOARD ORIGINAL !");
-                  }
-               #endif
+            #ifdef DEBUG_ZOBRIST
+               uint64_t hashAvantCopy = board->zobristKey;
+               NSLog(@"🔵 AVANT board.copy: hash=%llx", hashAvantCopy);
+            #endif
+                        
+            ChessBoard *testBoard = board.copy;
+                        
+            #ifdef DEBUG_ZOBRIST
+               uint64_t hashApresCopy = board->zobristKey;
+               NSLog(@"🔵 APRÈS board.copy: hash original=%llx, hash copie=%llx",
+                     hashApresCopy, testBoard->zobristKey);
+               if (hashApresCopy != hashAvantCopy) {
+                  NSLog(@"💥💥💥 board.copy A CORROMPU LE BOARD ORIGINAL !");
+               }
+            #endif
+                        
+            MoveState st = [testBoard makeMove:move];
+                        
+            #ifdef DEBUG_ZOBRIST
+               uint64_t hashApresPerform = board->zobristKey;
+               NSLog(@"🔵 APRÈS PerformMove: hash original=%llx", hashApresPerform);
+               if (hashApresPerform != hashAvantCopy) {
+                  NSLog(@"💥💥💥 PerformMove A CORROMPU LE BOARD ORIGINAL !");
+               }
+            #endif
             
             Side enemySide = (movingPiece.side == sideWhite) ? sideBlack : sideWhite;
             
+            /* Bloc obsolète
             // Utiliser le helper
             int cheapestAttacker = [self CheapestAttackValue:move.dest
                                                       bySide:enemySide
@@ -199,6 +203,7 @@ static int nbCallsIsKingCheck = 0;
             if (cheapestAttacker > 0) {  // Case attaquée
                int netGain = capturedValue - movingValue;
             }
+            */
          }
          
          if (!isDangerous) [safeMovesOnly addObject:move];
@@ -229,9 +234,6 @@ static int nbCallsIsKingCheck = 0;
       
       for (Move *moveEnCours in sortedMoves)
       {
-         // ✅ LOG pour debug
-         NSLog(@"🔍 Test coup: %@", moveEnCours);
-         
          // ✅ Bloquer les répétitions immédiates (undo du dernier coup)
          if (self.lastIAMove &&
              moveEnCours.fromSquare == self.lastIAMove.toSquare &&
@@ -294,7 +296,7 @@ static int nbCallsIsKingCheck = 0;
 
 
    // ================================================================================================
-   // MÉTHODE 2 : NegamaxForSide avec Tables de Transposition
+   // MÉTHODE NegamaxForSide avec Tables de Transposition
    // Moteur récursif du jeu, explorant l'arbre des possibilités de coups réalisables
    -(int)NegamaxForSide:(Side)side
                   board:(ChessBoard *)board
@@ -316,7 +318,7 @@ static int nbCallsIsKingCheck = 0;
       }
       
       
-      // ========================================================================
+      // ----------------------------------------------------------------------
       // 🔍 PROBE TT : Consulter la table de transposition
       Move *ttMove = nil;
       TTEntry *ttEntry = [self.transpositionTable probe:board->zobristKey
@@ -352,7 +354,7 @@ static int nbCallsIsKingCheck = 0;
          }
       }
       
-      // ========================================================================
+      // ----------------------------------------------------------------------
       // Quiescence Search à profondeur 0
       if (depth <= 0) {
          return [self QuiescenceForSide:side
@@ -362,13 +364,13 @@ static int nbCallsIsKingCheck = 0;
                                 qsDepth:0];
       }
       
-      // ========================================================================
+      // ----------------------------------------------------------------------
       // Génération et tri des coups
       NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:64];
       [self GenMovesForSide:side board:board into:moves];
       
       // Move Ordering avec bonus TT
-      NSLog(@"🔵 AVANT ScoreMovesList, enPassantFile=%d", board->enPassantFile);
+      // NSLog(@"🔵 AVANT ScoreMovesList, enPassantFile=%d", board->enPassantFile);
       [self ScoreMovesList:moves board:board side:side];
       
       // ✨ Bonus énorme pour le coup TT (essayer en premier)
@@ -386,7 +388,7 @@ static int nbCallsIsKingCheck = 0;
          return (b.orderingScore - a.orderingScore);  // ⚠️ Ordre décroissant !
       }];
       
-      // ========================================================================
+      // ----------------------------------------------------------------------
       // Traiter le cas Mat/Pat
       if (moves.count == 0) {
          
@@ -413,7 +415,7 @@ static int nbCallsIsKingCheck = 0;
          return score;
       }
       
-      // ========================================================================
+      // ----------------------------------------------------------------------
       // Recherche principale
       Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
       Move *bestMove = nil;  // ✨ Tracker le meilleur coup pour TT
@@ -485,7 +487,7 @@ static int nbCallsIsKingCheck = 0;
                   @"Zobrist corrompu : sortie Negamax normale");
       #endif
       
-      // ========================================================================
+      // ----------------------------------------------------------------------
       // 💾 STORE TT : Stocker le résultat dans la table
       TTNodeType nodeType;
       if (alpha <= alphaOrig) {
@@ -511,8 +513,9 @@ static int nbCallsIsKingCheck = 0;
       
    } // !NegamaxForSide
 
+   
    // ================================================================================================
-   // Méthode de Quiescence
+   // MÉTHODE QuiescenceForSide
    // La quiescence est utilisée pour étendre la recherche sur les nœuds instables dans les arbres Minimax.
    // Elle permet de reporter l'évaluation jusqu'à ce que la position soit suffisamment stable pour être
    // évaluée statiquement, c'est-à-dire sans tenir compte de l'historique de la position ou des futurs moves.
@@ -553,13 +556,12 @@ static int nbCallsIsKingCheck = 0;
       
       // 2️⃣ Limite QS (mais jamais en échec)
       if (qsDepth >= QS_MAX_DEPTH && !inCheck) {
-         
-               #ifdef DEBUG_ZOBRIST
-               NSAssert(board->zobristKey == keyEntry,
-                        @"Zobrist corrompu : QS stand-pat cutoff");
-               #endif
-         
-         return alpha;}
+         #ifdef DEBUG_ZOBRIST
+                  NSAssert(board->zobristKey == keyEntry,
+                           @"Zobrist corrompu : QS stand-pat cutoff");
+         #endif
+         return alpha;
+      }
       
       // 3️⃣ Génération des coups
       NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:32];
@@ -633,23 +635,21 @@ static int nbCallsIsKingCheck = 0;
             
             [board unmakeMove:m state:st];
             
-               #ifdef DEBUG_ZOBRIST
-               // COMPARAISON CLÉ ZOBRIST APRÈS UNMAKEMOVE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-               NSAssert(board->zobristKey == keyBefore, @"❌ Quiescence Zobrist make/unmake incohérent");
-               #endif
-               
-               #ifdef DEBUG_ZOBRIST
-               NSAssert(board->zobristKey == keyEntry,
-                        @"Zobrist corrompu : QS stand-pat cutoff");
-               #endif
+            #ifdef DEBUG_ZOBRIST
+            // COMPARAISON CLÉ ZOBRIST APRÈS UNMAKEMOVE
+            NSAssert(board->zobristKey == keyBefore, @"❌ Quiescence Zobrist make/unmake incohérent");
+            #endif
+
+            #ifdef DEBUG_ZOBRIST
+            NSAssert(board->zobristKey == keyEntry,
+                     @"Zobrist corrompu : QS stand-pat cutoff");
+            #endif
             
             if (score >= beta) {
-               
-                  #ifdef DEBUG_ZOBRIST
+               #ifdef DEBUG_ZOBRIST
                   NSAssert(board->zobristKey == keyEntry,
                            @"Zobrist corrompu : QS stand-pat cutoff");
                   #endif
-               
                return beta;
             }
             
@@ -661,10 +661,10 @@ static int nbCallsIsKingCheck = 0;
          
       } // !for move
       
-               #ifdef DEBUG_ZOBRIST
-               NSAssert(board->zobristKey == keyEntry,
-                        @"Zobrist corrompu : QS return final");
-               #endif
+      #ifdef DEBUG_ZOBRIST
+      NSAssert(board->zobristKey == keyEntry,
+               @"Zobrist corrompu : QS return final");
+      #endif
       
       return alpha;
       
@@ -672,7 +672,7 @@ static int nbCallsIsKingCheck = 0;
 
 
    // ================================================================================================
-   // MÉTHODE 3 : SortMovesByPriority
+   // MÉTHODE SortMovesByPriority
    // TRI DES COUPS PAR PRIORITÉ pour améliorer l'efficacité de l'élagage alpha-beta
    // Principe : Les meilleurs coups sont examinés en premier, ce qui provoque plus de cutoffs
    // et réduit donc le nombre de branches à explorer
@@ -696,7 +696,7 @@ static int nbCallsIsKingCheck = 0;
 
 
    // ================================================================================================
-   // MÉTHODE 4 : ScoreMove - ÉVALUATION D'UN COUP (Ne pas confondre avec 'ScoreMovesList'
+   // MÉTHODE ScoreMove - ÉVALUATION D'UN COUP (Ne pas confondre avec 'ScoreMovesList'
    // Attribution d'un score heuristique rapide basé sur :
    // - La valeur de la pièce capturée (si capture)
    // - D'autres critères possibles (coups centraux, développement, etc.)
@@ -718,8 +718,8 @@ static int nbCallsIsKingCheck = 0;
          
          switch (captured.type) {
             case Pion: victimValue = 100; break;
-            case Cava:
-            case Fou:  victimValue = 300; break;
+            case Cava: victimValue = 300; break;
+            case Fou:  victimValue = 310; break;
             case Tour: victimValue = 500; break;
             case Dame: victimValue = 900; break;
             case Roi:  victimValue = 100000; break;
@@ -728,8 +728,8 @@ static int nbCallsIsKingCheck = 0;
          
          switch (movingPiece.type) {
             case Pion: attackerValue = 100; break;
-            case Cava:
-            case Fou:  attackerValue = 300; break;
+            case Cava: attackerValue = 300; break;
+            case Fou:  attackerValue = 310; break;
             case Tour: attackerValue = 500; break;
             case Dame: attackerValue = 900; break;
             case Roi:  attackerValue = 100000; break;
@@ -768,7 +768,7 @@ static int nbCallsIsKingCheck = 0;
 
 
    // ================================================================================================
-   // MÉTHODE 4bis : ScoreMovesList - ÉVALUATION D'UNE LISTE DE COUPS (Ne pas confondre avec ScoreMove)
+   // MÉTHODE ScoreMovesList - ÉVALUATION D'UNE LISTE DE COUPS (Ne pas confondre avec ScoreMove)
    - (void)ScoreMovesList:(NSArray<Move *> *)moves
                     board:(ChessBoard *)board
                      side:(Side)side
@@ -811,7 +811,7 @@ static int nbCallsIsKingCheck = 0;
 
 
    // ================================================================================================
-   // MÉTHODE 5 : FilterCaptures - FILTRAGE DES CAPTURES POUR QUIESCENCE SEARCH
+   // MÉTHODE FilterCaptures - FILTRAGE DES CAPTURES POUR QUIESCENCE SEARCH
    // NOUVELLE MÉTHODE pour optimiser le QS
    // Ne conserve que les coups qui sont des captures, car ce sont les coups "tactiques"
    // qui peuvent changer drastiquement l'évaluation d'une position
@@ -833,7 +833,7 @@ static int nbCallsIsKingCheck = 0;
 
 
    // ================================================================================================
-   // MÉTHODE : EvalBoardForSide - VERSION AMÉLIORÉE AVEC ÉVALUATION POSITIONNELLE
+   // MÉTHODE EvalBoardForSide - VERSION AMÉLIORÉE AVEC ÉVALUATION POSITIONNELLE
    // Cette méthode évalue la qualité d'une position d'échecs pour un camp donné
    // PHILOSOPHIE D'ÉVALUATION :
    // - Matériel : Valeur brute des pièces (base)
@@ -971,7 +971,7 @@ static int nbCallsIsKingCheck = 0;
               switch (p.type) {
                   case Pion:  totalMaterial += 100; break;
                   case Cava:  totalMaterial += 300; break;
-                  case Fou:   totalMaterial += 300; break;
+                  case Fou:   totalMaterial += 310; break;
                   case Tour:  totalMaterial += 500; break;
                   case Dame:  totalMaterial += 900; break;
                   default: break;
@@ -1010,7 +1010,7 @@ static int nbCallsIsKingCheck = 0;
                   break;
                   
                case Fou:
-                  materialValue = 300;
+                  materialValue = 310;
                   positionBonus = bishopTable[y][x];
                   /* BONUS DÉVELOPPEMENT : Fou sorti de sa case de départ */
                   if (piece.side == sideWhite && y > 0) developmentWhite += 5;
@@ -1264,7 +1264,7 @@ static int nbCallsIsKingCheck = 0;
 
    /* ANCIEN CODE
    // ================================================================================================
-   // MÉTHODE 7 : PossibleMovesForSide - GÉNÉRATION DES COUPS LÉGAUX
+   // MÉTHODE PossibleMovesForSide - GÉNÉRATION DES COUPS LÉGAUX
    -(NSSet *)PossibleMovesForSide:(Side)side
                             board:(ChessBoard *)board
    {
@@ -1294,52 +1294,55 @@ static int nbCallsIsKingCheck = 0;
    } */
 
    // ================================================================================================
-   // MÉTHODE 7 : PossibleMovesForSide - GÉNÉRATION DES COUPS LÉGAUX
+   // MÉTHODE PossibleMovesForSide - GÉNÉRATION DES COUPS LÉGAUX
    -(NSSet *)PossibleMovesForSide:(Side)side board:(ChessBoard *)board
    {
        NSMutableArray *allMoves = [NSMutableArray array];
        [self GenMovesForSide:side board:board into:allMoves];
        
-       NSLog(@"🔍 PossibleMovesForSide pour %@:", (side == sideWhite) ? @"Blancs" : @"Noirs");
-       NSLog(@"   Coups générés (avant filtre): %lu", (unsigned long)allMoves.count);
+       //NSLog(@"🔍 PossibleMovesForSide pour %@:", (side == sideWhite) ? @"Blancs" : @"Noirs");
+       //NSLog(@"   Coups générés (avant filtre): %lu", (unsigned long)allMoves.count);
        
        NSMutableSet *legalMoves = [NSMutableSet set];
        
        for (Move *m in allMoves) {
            // ✅ LOG pour chaque coup testé
-           NSLog(@"   Test coup: %@", m);
+           //NSLog(@"   Test coup: %@", m);
            
            // ✅ Copier le board
            ChessBoard *testBoard = board.copy;
            
-           // ✅ Vérifier que la copie contient bien les pièces
+          /*
+          // ✅ Vérifier que la copie contient bien les pièces
            Piece *movingPiece = testBoard->pieceCase[m.fromSquare % 8][m.fromSquare / 8];
            if (!movingPiece) {
                NSLog(@"     ❌ Pas de pièce en (%d,%d) dans testBoard !",
                      m.fromSquare % 8, m.fromSquare / 8);
                continue;
            }
+           */
            
            MoveState st = [testBoard makeMove:m];
            
            if (![self IsKingInCheck:side board:testBoard]) {
-               NSLog(@"     ✅ Coup LÉGAL");
+               //NSLog(@"     ✅ Coup LÉGAL");
                [legalMoves addObject:m];
-           } else {
-               NSLog(@"     ❌ Coup illégal (roi en échec)");
            }
+           //else {
+           //    NSLog(@"     ❌ Coup illégal (roi en échec)");
+           //}
            
            // Pas besoin d'unmake (testBoard sera libéré)
        }
        
-       NSLog(@"   → Coups légaux trouvés: %lu", (unsigned long)legalMoves.count);
+       //NSLog(@"   → Coups légaux trouvés: %lu", (unsigned long)legalMoves.count);
        
        return legalMoves;
    }
 
 
    // ================================================================================================
-   // MÉTHODE 8 : TestEchecFavSide - DÉTECTION ÉCHEC EN FAVEUR DE SIDE
+   // MÉTHODE TestEchecFavSide - DÉTECTION ÉCHEC EN FAVEUR DE SIDE
    -(NSString *)TestEchecFavSide:(Side)side Board:(ChessBoard *)board
    {
        Side enemySide = (side == sideWhite) ? sideBlack : sideWhite;
@@ -1388,8 +1391,9 @@ static int nbCallsIsKingCheck = 0;
        return @"Echec";
    } // !TestEchecFavSide
 
+   
    // ================================================================================================
-   // MÉTHODE 9 : TestEchecRoiSide - VERSION RAPIDE DE LA DÉTECTION D'ÉCHEC
+   // MÉTHODE TestEchecRoiSide - VERSION RAPIDE DE LA DÉTECTION D'ÉCHEC
    -(BOOL)TestEchecRoiSide:(Side)side inBoard:(ChessBoard *)board
    {
       Side otherSide = (side == sideWhite)? sideBlack:sideWhite;
@@ -1414,7 +1418,6 @@ static int nbCallsIsKingCheck = 0;
       
       return NO;
    }
-
 
 
    // ================================================================================================
@@ -1517,25 +1520,7 @@ static int nbCallsIsKingCheck = 0;
       return isAttacked ? cheapestValue : 0;
    }
 
-   /* Méthode obsolète
-   // ================================================================================================
-   // Nouvelle méthode pour générer une clé de hachage
-   -(NSString *)BoardHashKey:(ChessBoard *)board forSide:(Side)side
-   {
-      NSMutableString *hash = [NSMutableString stringWithCapacity:128];
-      
-      for (int y = 0; y < 8; y++) {
-         for (int x = 0; x < 8; x++) {
-            Piece *p = [board piece_colX:x rangY:y];
-            if (p && p.type != Invalide) [hash appendFormat:@"%d%d%d", p.type, p.side, y*8+x];
-         }
-      }
-      [hash appendFormat:@"_%d", side];
-      return hash;
-   }
-    */
-
-
+   
    // ================================================================================================
    // Méthode SEE Static Exchange Evaluation
    - (int)SEEForMove:(Move *)move board:(ChessBoard *)board
@@ -1703,6 +1688,8 @@ static int nbCallsIsKingCheck = 0;
    } // !IsKingInCheck
 
 
+   
+   // ================================================================================================
    // Détecte si une position a déjà été vue (répétition = nulle)
    -(BOOL)isRepetition:(uint64_t)zobristKey
    {
@@ -1790,12 +1777,11 @@ static int nbCallsIsKingCheck = 0;
    }
    
 
-
 @end
 
 
 #ifdef DEBUG_ZOBRIST
-   // Fonction recalculant la clé Zobrist
+   // FONCTION recalculant la clé Zobrist
    uint64_t recomputeZobrist(ChessBoard *board)
    {
        uint64_t key = 0;

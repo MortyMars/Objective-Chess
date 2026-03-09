@@ -95,12 +95,13 @@
          pieceCase[cx][cy] = nil;
          
          
-         // Mode verbeux Prise EP ---------------------------------------*
+         /* // Mode verbeux Prise EP ---------------------------------------*
          LOG_EP(@"%@ pawn from (%d,%d) captures pawn at (%d,%d)",
                 (moving.side == sideWhite ? @"White" : @"Black"),
                 m.start.x, m.start.y,
                 cx, cy);
-         // Fin de mode verbeux -----------------------------------------*
+         // Fin de mode verbeux -----------------------------------------* */
+         
       } else {
          st.captured = pieceCase[tx][ty];
          if (st.captured) {
@@ -171,11 +172,11 @@
          
          rook.numMoves++;  // ✅ Enregistrer le déplacement de la Tour !
          
-         LOG_CASTLE(@"%@ castles %@ side (king %d,%d → %d,%d)",
+         /* LOG_CASTLE(@"%@ castles %@ side (king %d,%d → %d,%d)",
                     (moving.side == sideWhite ? @"White" : @"Black"),
                     kingSide ? @"KING" : @"QUEEN",
                     m.start.x, m.start.y,
-                    m.dest.x, m.dest.y);
+                    m.dest.x, m.dest.y); */
       }
       
       /*----------------------- PROMOTION -----------------------------------------*/
@@ -190,9 +191,9 @@
          moving.type = m.promotionType; // ✅ Utiliser m.promotionType
          zobristKey ^= zobristPiece[moving.side][Dame][toSq];
          
-         LOG_PROMO(@"%@ pawn promotes at (%d,%d)",
+         /* LOG_PROMO(@"%@ pawn promotes at (%d,%d)",
                    (moving.side == sideWhite ? @"White" : @"Black"),
-                   m.dest.x, m.dest.y);
+                   m.dest.x, m.dest.y); */
       }
       
       /*----------------------- DROITS DE ROQUE -----------------------------------*/
@@ -283,8 +284,8 @@
          moving.type = st.oldType;
          zobristKey ^= zobristPiece[moving.side][Pion][toSq];
          
-         LOG_PROMO(@"UNMAKE promotion at (%d,%d) restoring pawn",
-                   m.dest.x, m.dest.y);
+         /* LOG_PROMO(@"UNMAKE promotion at (%d,%d) restoring pawn",
+                   m.dest.x, m.dest.y); */
       }
       
       /*----------------------- ROQUE (tour) --------------------------------------*/
@@ -312,9 +313,9 @@
          
          rook.numMoves--;  // ✅ Restaurer numMoves de la tour
          
-         LOG_CASTLE(@"UNMAKE roque %@ side for %@",
+         /* LOG_CASTLE(@"UNMAKE roque %@ side for %@",
                     kingSide ? @"KING" : @"QUEEN",
-                    (moving.side == sideWhite ? @"White" : @"Black"));
+                    (moving.side == sideWhite ? @"White" : @"Black")); */
       }
       
       /*----------------------- ZOBRIST — retirer pièce de toSq -------------------*/
@@ -335,8 +336,8 @@
          int capSq = st.enPassantY * 8 + st.enPassantX;
          zobristKey ^= zobristPiece[st.captured.side][st.captured.type][capSq];
          
-         LOG_EP(@"UNMAKE EP: restoring pawn at (%d,%d)",
-                st.enPassantX, st.enPassantY);
+         /* LOG_EP(@"UNMAKE EP: restoring pawn at (%d,%d)",
+                st.enPassantX, st.enPassantY); */
       }
       else {
          pieceCase[tx][ty] = st.captured;

@@ -418,7 +418,7 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
          }
       }
       
-      NSLog(@"🔍 copyWithZone: %d pièces copiées", piecesCopiees);
+      //NSLog(@"🔍 copyWithZone: %d pièces copiées", piecesCopiees);
       
       // 🔴 CRITIQUE : Copier TOUS les états !
       newBoard->sideToMove = self->sideToMove;

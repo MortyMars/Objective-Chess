@@ -210,7 +210,7 @@
       ep.fromSquare    = SQ(x,y);
       ep.toSquare      = SQ(epX,epY);
       
-      NSLog(@"   ✅ Coup EP créé: %@ (isEnPassant=%d)", ep, ep.isEnPassant);
+      // NSLog(@"   ✅ Coup EP créé: %@ (isEnPassant=%d)", ep, ep.isEnPassant);
       
       [moves addObject:ep];
       

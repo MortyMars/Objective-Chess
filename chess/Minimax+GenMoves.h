@@ -36,7 +36,7 @@
                        into:(NSMutableArray *)moves;
 
    
-// MÉTHODES DE CAPTURES
+   // MÉTHODES DE CAPTURES
    -(void)GenCapturForSide:(Side)side
                      board:(ChessBoard *)board
                       into:(NSMutableArray<Move *> *)moves;

@@ -18,9 +18,9 @@
 @implementation RuleBook
 
    // ==================================================================================================
-   // Méthode de Classe - DÉFINITION DU JEU DES DÉPLACEMENTS ADMIS POUR CHAQUE TYPE DE PIÈCE
+   // MÉTHODE DÉFINISSANT LE JEU DES DÉPLACEMENTS ADMIS POUR CHAQUE TYPE DE PIÈCE
    // Le principe de la méthode est de créer un objet NSSet et de le "remplir", si nécessaire en plusieurs
-   // étapes, avec les déplacements autorisés pour la pièce concernée
+   // étapes, avec les déplacements autorisés pour la pièce concernée.
    // Contrairement à son quasi clone 'PosLegalesForPieceSAR' cette méthode intègre la suppression des
    // positions générant la mise en échec de son Roi
    +(NSSet<Pos *> *)PosLegalesForPiece:(Piece *)piece
