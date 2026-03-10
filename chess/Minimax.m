@@ -65,6 +65,8 @@ static int nbCallsIsKingCheck = 0;
       evalTotalTime = 0;
       moveGenTotalTime = 0;
       memset(historyTable, 0, sizeof(historyTable));
+      isInNullMove = NO;
+      
       
       
       // Réinitialisation Heuristic History
@@ -192,9 +194,9 @@ static int nbCallsIsKingCheck = 0;
                }
             #endif
             
-            Side enemySide = (movingPiece.side == sideWhite) ? sideBlack : sideWhite;
             
             /* Bloc obsolète
+            Side enemySide = (movingPiece.side == sideWhite) ? sideBlack : sideWhite;
             // Utiliser le helper
             int cheapestAttacker = [self CheapestAttackValue:move.dest
                                                       bySide:enemySide
@@ -203,7 +205,7 @@ static int nbCallsIsKingCheck = 0;
             if (cheapestAttacker > 0) {  // Case attaquée
                int netGain = capturedValue - movingValue;
             }
-            */
+            Fin de bloc obsolète */
          }
          
          if (!isDangerous) [safeMovesOnly addObject:move];
@@ -312,7 +314,7 @@ static int nbCallsIsKingCheck = 0;
          uint64_t keyEntry = board->zobristKey;
       #endif
       
-      // ✅ NOUVEAU : Détection de répétition AVANT probe TT
+      // ✅ Détection de répétition AVANT probe TT
       if ([self isRepetition:board->zobristKey]) {
         return 0;  // Position répétée = nulle (draw)
       }
@@ -362,6 +364,50 @@ static int nbCallsIsKingCheck = 0;
                                   alpha:alpha
                                    beta:beta
                                 qsDepth:0];
+      }
+      
+      // ----------------------------------------------------------------------
+      // ✅ NULL MOVE PRUNING
+
+      BOOL inCheck = [self IsKingInCheck:side board:board];
+
+      // Conditions pour NMP :
+      // 1. Profondeur suffisante (≥ 3)
+      // 2. Pas en échec (null move serait illégal)
+      // 3. Pas déjà dans un null move (éviter récursion infinie)
+      // 4. Pas dans une position de mat proche (optionnel)
+
+      if (depth >= 3 && !inCheck && !isInNullMove) {
+        
+        // Activer le flag
+        isInNullMove = YES;
+        
+        // L'adversaire joue (sans coup réel)
+        Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
+        
+        // Réduction de profondeur (R = 2)
+        int R = 2;
+        
+        // Recherche avec fenêtre nulle
+        int nullScore = -[self NegamaxForSide:otherSide
+                                        board:board
+                                        depth:depth - 1 - R
+                                        alpha:-beta
+                                         beta:-beta + 1];
+        
+        // Désactiver le flag
+        isInNullMove = NO;
+         
+        // ✅ LOG pour debug
+        NSLog(@"🔍 NMP depth=%d, nullScore=%d, beta=%d, cutoff=%d",
+                depth, nullScore, beta, (nullScore >= beta));
+        
+        // Si même avec le handicap, on est au-dessus de beta
+        if (nullScore >= beta) {
+            // Coupure beta ! Pas besoin de chercher plus
+            // Note : on ne stocke PAS dans la TT (résultat approximatif)
+            return beta;  // Fail-soft
+        }
       }
       
       // ----------------------------------------------------------------------
@@ -427,7 +473,7 @@ static int nbCallsIsKingCheck = 0;
                NSLog(@"➡️ AVANT makeMove %@ : hash=%llx", m, keyBefore);
          #endif
          
-         // ✅ NOUVEAU : Ajouter la position à l'historique AVANT makeMove
+         // ✅ Ajouter la position à l'historique AVANT makeMove
          positionHistory[historyCount++] = board->zobristKey;
          
          MoveState st = [board makeMove:m];
@@ -453,6 +499,11 @@ static int nbCallsIsKingCheck = 0;
                                         alpha:-beta
                                          beta:-alpha];
             
+            // ✅ LOG pour les coups suspects
+            if (depth == NUMBER_MOVES_AHEAD) {  // Seulement au niveau racine
+                NSLog(@"🎯 Coup %@ → score=%d", m, score);
+            }
+            
             if (score > alpha) {
                alpha = score;
                bestMove = m;  // ✨ Nouveau meilleur coup
@@ -461,7 +512,7 @@ static int nbCallsIsKingCheck = 0;
          
          [board unmakeMove:m state:st];
          
-         // ✅ NOUVEAU : Retirer la position de l'historique APRÈS unmakeMove
+         // ✅ Retirer la position de l'historique APRÈS unmakeMove
          historyCount--;
          
          #ifdef DEBUG_ZOBRIST
@@ -849,17 +900,6 @@ static int nbCallsIsKingCheck = 0;
    -(int)EvalBoardForSide:(Side)side
                     board:(ChessBoard *)board
    {
-      /* A DÉSACTIVER CAR DOUBLE EMPLOI AVEC TT
-      // Générer une clé unique pour cette position
-      NSString *key = [self BoardHashKey:board forSide:side];
-      NSNumber *cached = evalCache[key];
-      if (cached) {
-         cacheHits++;
-         return [cached intValue];
-      }
-      cacheMisses++;
-      FIN DE DÉSACTIVATION */
-      
       evalWhitePOV = 0;  /* Évaluation du point de vue des Blancs (convention Negamax) */
       
       /* Variables pour statistiques intermédiaires */
@@ -1063,10 +1103,8 @@ static int nbCallsIsKingCheck = 0;
          } // fin de for 'y'
       } // fin de for 'x' et fin de parcours de l'échiquier
       
-      // PARTIE 2 désactivée
-      
       // ===========================================
-      // PARTIE 3 : ÉVAL. DE LA STRUCTURE DE PIONS
+      // PARTIE 2 : ÉVAL. DE LA STRUCTURE DE PIONS
       /* Détection des pions doublés (malus) et pions passés (bonus) */
       for (int x = 0; x < 8; x++) {
          int whitePawnsInColumn = 0;
@@ -1137,11 +1175,18 @@ static int nbCallsIsKingCheck = 0;
       }
       
       // ===========================================
-      // PARTIE 4 : BONUS DÉVELOPPEMENT
+      // PARTIE 3 : BONUS DÉVELOPPEMENT
       /* Les pièces (cavaliers/fous) sorties de leur position de départ reçoivent un bonus
        Ceci a déjà  été calculé dans la boucle principale ci-dessus */
       int developmentDiff = developmentWhite - developmentBlack;
       evalWhitePOV += developmentDiff;  // Toujours du point de vue des Blancs
+      
+      // ===========================================
+      // ✅ PARTIE 4 : BONUS MOBILITÉ
+      /* Comptage des coups pseudo-légaux disponibles pour chaque camp
+      Plus on a d'options, mieux c'est ! */
+      int mobilityBonus = [self EvaluateMobility:board];
+      evalWhitePOV += mobilityBonus;
       
       // ===========================================
       // PARTIE 5 : SÉCURITÉ DU ROI
@@ -1219,10 +1264,8 @@ static int nbCallsIsKingCheck = 0;
          }
       }
       
-      // PARTIE 6 désactivée
-      
       // ===========================================
-      // PARTIE 7 : PIONS EN AVANT-DERNIÈRE RANGÉE
+      // PARTIE 6 : PIONS EN AVANT-DERNIÈRE RANGÉE
       // ✅ APRÈS — symétrique et indépendant
       /* Bonus important pour pions sur le point d'être promus */
       // Ce bonus s'applique toujours, peu importe qui joue
@@ -1328,9 +1371,7 @@ static int nbCallsIsKingCheck = 0;
                //NSLog(@"     ✅ Coup LÉGAL");
                [legalMoves addObject:m];
            }
-           //else {
-           //    NSLog(@"     ❌ Coup illégal (roi en échec)");
-           //}
+           //else NSLog(@"     ❌ Coup illégal (roi en échec)");
            
            // Pas besoin d'unmake (testBoard sera libéré)
        }
@@ -1775,8 +1816,39 @@ static int nbCallsIsKingCheck = 0;
        
        return YES;
    }
-   
 
+
+   // ================================================================================================
+   // MÉTHODE D'ÉVALUATION D'UN BONUS DE MOBILITÉ, PRIS EN COMPTE DANS 'EVALBOARDFORSIDE'
+   -(int)EvaluateMobility:(ChessBoard *)board
+   {
+      int whiteMobility = [self CountPseudoLegalMovesForSide:sideWhite board:board];
+      int blackMobility = [self CountPseudoLegalMovesForSide:sideBlack board:board];
+
+      /* Coefficient : ajuster sa valeur après tests en situation :
+       - 2 peut être considéré commen subtil (priorité au matériel et aux positions),
+       - 5 comme modéré (valeur conseillée pour débuter),
+       - 10 comme agressif (favorise les positions ouvertes) */
+      int mobilityBonus = (whiteMobility - blackMobility) * 2;
+
+      // ✅ LOG temporaire pour observer
+      // NSLog(@"📊 Mobilité: W=%d, B=%d, bonus=%+d", whiteMobility, blackMobility, mobilityBonus);
+
+      return mobilityBonus;
+   }
+
+   // ================================================================================================
+   // MÉTHODE UTILISÉE DANS L'ÉVALUATION DE LA MOBILITÉ
+   // COMPTAGE RAPIDE DES COUPS PSEUDO-LÉGAUX (sans vérifier l'échec au roi)
+   -(int)CountPseudoLegalMovesForSide:(Side)side board:(ChessBoard *)board
+   {
+      NSMutableArray *moves = [NSMutableArray array];
+      [self GenMovesForSide:side board:board into:moves];
+      return (int)moves.count;
+   }
+
+   
+   
 @end
 
 

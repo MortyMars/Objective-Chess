@@ -45,6 +45,9 @@
       
       // Compteur de profondeur de pile make/unmake
       //int depthCounter;
+      
+      // Drapeau utilisé par le Null Move Pruning
+      @public BOOL isInNullMove;  // initialisé dans BMFS
 
    }
 
@@ -111,7 +114,11 @@
    -(BOOL)isPathClearFromX:(int)fx Y:(int)fy
                        toX:(int)tx Y:(int)ty
                      board:(ChessBoard *)board;
-   
+
+   // Méthodes ajoutant la 'Mobilité' dans EvalBoardForSide
+   -(int)EvaluateMobility:(ChessBoard *)board;
+   -(int)CountPseudoLegalMovesForSide:(Side)side board:(ChessBoard *)board;
+
 
    
 @end
