@@ -48,6 +48,10 @@
       
       // Drapeau utilisé par le Null Move Pruning
       @public BOOL isInNullMove;  // initialisé dans BMFS
+      
+      // Variables stockant le meilleur coup entre itérations d'Iterative Deepening
+      Move *_idBestMove;
+      int   _idBestScore;
 
    }
 

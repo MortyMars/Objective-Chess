@@ -50,251 +50,115 @@ static int nbCallsIsKingCheck = 0;
    // ================================================================================================
    // MÉTHODE BestMoveForSide - Point d'entrée du moteur IA
    // Cette méthode trouve le meilleur coup pour l'IA en explorant l'arbre des possibilités
-   -(Move *)BestMoveForSide:(Side)side
-                      Board:(ChessBoard *)board
+   -(Move *)BestMoveForSide:(Side)side Board:(ChessBoard *)board
    {
-      maMinimax.depthCounter = 0;   // 🔴 OBLIGATOIRE
-      
-      // Init des iVars
-      nbLoop = 0;
-      nbElag = 0;
-      nodeCount = 0;
-      evalCount = 0;
-      moveGenCount = 0;
-      copyBoardCount = 0;
-      evalTotalTime = 0;
-      moveGenTotalTime = 0;
-      memset(historyTable, 0, sizeof(historyTable));
-      isInNullMove = NO;
-      
-      
-      
-      // Réinitialisation Heuristic History
-      memset(historyTable, 0, sizeof(historyTable));
-      
-      /* ========== DÉMARRAGE DU TIMER ========== */
-      NSDate *startTime = [NSDate date];
-      nodeCount = 0;
-      nbElag = 0;  // ✅ FIX : Réinitialiser nbElag pour avoir des stats correctes
-      
-      /* ✅ RÉINITIALISER LES COMPTEURS DU PROFILLING */
-      evalCount = 0;
-      moveGenCount = 0;
-      copyBoardCount = 0;
-      evalTotalTime = 0;
-      moveGenTotalTime = 0;
-      
-      /* // Réinit valeurs cache
-      evalCache = [[NSMutableDictionary alloc] initWithCapacity:100000];
-      cacheHits = 0;
-      cacheMisses = 0; */
-      
-      // ✅ NOUVEAU : Réinitialiser l'historique de positions
-      historyCount = 0;
-      memset(positionHistory, 0, sizeof(positionHistory));
-      
-      /* Stats efficacité TT */
-      // ✅ APRÈS — reset propre AVANT la recherche
-      nodes = 0;  // Reset au lieu de sauvegarder
-      [self.transpositionTable newGeneration];
-      /* Fin Stats*/
-      
-      /* Détermination du jeu de tous les moves possibles pour 'side' */
-      NSSet *movesPossibles = [self PossibleMovesForSide:side board:board];
-          
-      /*
-      // ✅ LOG CRITIQUE RECHERCHE BUG #########################################################
-      NSLog(@"🔍 BestMoveForSide pour %@:", (side == sideWhite) ? @"Blancs" : @"Noirs");
-      NSLog(@"   Coups possibles bruts: %lu", (unsigned long)movesPossibles.count);
-      NSLog(@"   Roi en échec: %d", [self IsKingInCheck:side board:board]);
+       // --- Initialisation des iVars et variables -----------------
+       nbLoop = 0; nbElag = 0; nodeCount = 0;
+       evalCount = 0; moveGenCount = 0; copyBoardCount = 0;
+       evalTotalTime = 0; moveGenTotalTime = 0;
+       memset(historyTable, 0, sizeof(historyTable));
+       isInNullMove = NO;
+       historyCount = 0;
+       memset(positionHistory, 0, sizeof(positionHistory));
+       nodes = 0;
+       _idBestMove  = nil;
+       _idBestScore = -SCORE_INF - 1;
+       [self.transpositionTable newGeneration];
 
-      if (movesPossibles.count == 0) {
-        NSLog(@"❌ AUCUN COUP LÉGAL détecté !");
-        NSLog(@"   Mais l'interface montre des coups possibles...");
-        NSLog(@"   → BUG dans PossibleMovesForSide !");
-        [monConnecteur AlertMsgPatMatSide:side onBoard:board];
-        return nil;
-      }
+       NSDate *startTime = [NSDate date];
 
-      // ✅ Afficher tous les coups trouvés
-      NSLog(@"   Liste des coups:");
-      for (Move *m in movesPossibles) {
-        NSLog(@"     - %@", m);
-      }
-      // FIN LOG RECHERCHE BUG ###################################################################
-      */
-      
-      /* PRÉREQUIS : Tester si side est mat ou pat */
-      if (movesPossibles.count == 0) {
-         [monConnecteur AlertMsgPatMatSide:side onBoard:board];
-         return nil;
-      }
-      
-      // INITIALISATION DES VARIABLES DE RECHERCHE
-      /* 'bestScore' est initialisée à -10 000 001, c'est à dire 1 plus bas que le score de mat (10M)
-      pour que le move vers un mat soit considéré par le moteur comme un coup acceptable et jouable,
-      ce qui est le cas puisque c'est bien un coup légal.
-      Si cette précaution n'est pas prise, l'éventualité que ce coup légal soit refusé par le moteur existe,
-      ce qui laissera le board dans un état instable déjà rencontré lors du bug où l'IA refuse de poursuivre
-      la partie (bestMove = nil) avant d'avoir atteint le mat ou le pat.                                  */
-      int bestScore  = -SCORE_INF-1; // càd -10 000 001
-      
-      Move *bestMove = nil;
-      Side otherSide = (side == sideWhite)? sideBlack:sideWhite;
-      
-      // ========== FILTRAGE SÉCURITÉ ========== //
-      NSMutableSet *safeMovesOnly = [[NSMutableSet alloc] init];             // ⚠️ Version Filtrage de sécu
-      //NSMutableSet *safeMovesOnly = [NSMutableSet setWithSet:movesPossibles];  // ⚠️ Copie directe sans filtrage
+       // --- Vérification légalité des coups -----------------------
+       NSSet *movesPossibles = [self PossibleMovesForSide:side board:board];
+       if (movesPossibles.count == 0) {
+           [monConnecteur AlertMsgPatMatSide:side onBoard:board];
+           return nil;
+       }
+
+       // -----------------------------------------------------------
+       // 🔁 ITERATIVE DEEPENING : de depth 1 → NUMBER_MOVES_AHEAD
        
-      int dangerousMovesFiltered = 0;
-      
-      for (Move *move in movesPossibles) {
-         Piece *movingPiece = [board pieceAtPos:move.start];
-         Piece *capturedPiece = [board pieceAtPos:move.dest];
-         
-         if (!movingPiece) continue;
-         
-         BOOL isDangerous = NO;
-         
-         // Valeur de la pièce qui bouge
-         int movingValue = [self ValueOfPiece:movingPiece.type];
-         
-         // Valeur capturée
-         int capturedValue = 0;
-         if (capturedPiece && capturedPiece.type != Invalide) {
-            capturedValue = [self ValueOfPiece:capturedPiece.type];
-         }
-         
-         // Vérifier seulement pour les pièces chères
-         if (movingValue >= 300) {
-            
-            #ifdef DEBUG_ZOBRIST
-               uint64_t hashAvantCopy = board->zobristKey;
-               NSLog(@"🔵 AVANT board.copy: hash=%llx", hashAvantCopy);
-            #endif
-                        
-            ChessBoard *testBoard = board.copy;
-                        
-            #ifdef DEBUG_ZOBRIST
-               uint64_t hashApresCopy = board->zobristKey;
-               NSLog(@"🔵 APRÈS board.copy: hash original=%llx, hash copie=%llx",
-                     hashApresCopy, testBoard->zobristKey);
-               if (hashApresCopy != hashAvantCopy) {
-                  NSLog(@"💥💥💥 board.copy A CORROMPU LE BOARD ORIGINAL !");
-               }
-            #endif
-                        
-            MoveState st = [testBoard makeMove:move];
-                        
-            #ifdef DEBUG_ZOBRIST
-               uint64_t hashApresPerform = board->zobristKey;
-               NSLog(@"🔵 APRÈS PerformMove: hash original=%llx", hashApresPerform);
-               if (hashApresPerform != hashAvantCopy) {
-                  NSLog(@"💥💥💥 PerformMove A CORROMPU LE BOARD ORIGINAL !");
-               }
-            #endif
-            
-            
-            /* Bloc obsolète
-            Side enemySide = (movingPiece.side == sideWhite) ? sideBlack : sideWhite;
-            // Utiliser le helper
-            int cheapestAttacker = [self CheapestAttackValue:move.dest
-                                                      bySide:enemySide
-                                                     inBoard:testBoard];
-            
-            if (cheapestAttacker > 0) {  // Case attaquée
-               int netGain = capturedValue - movingValue;
-            }
-            Fin de bloc obsolète */
-         }
-         
-         if (!isDangerous) [safeMovesOnly addObject:move];
-      }
-      
-      if (safeMovesOnly.count == 0) {
-         safeMovesOnly = [NSMutableSet setWithArray:[movesPossibles allObjects]];
-      } else if (dangerousMovesFiltered > 0) {
-         NSLog(@"🛡️ BMFS - Filtrage : %d coups dangereux bloqués, %lu gardés",
-               dangerousMovesFiltered, (unsigned long)safeMovesOnly.count);
-      }
-      
-      // ======= FIN DE FILTRAGE SÉCURITÉ ======= //
-      
-      
-      // TRI DES COUPS
-      NSArray *sortedMoves = [self SortMovesByPriority:safeMovesOnly
-                                                 board:board
-                                                  side:side // c'est side qui joue
-                                                 depth:NUMBER_MOVES_AHEAD];
-      
-      NSLog(@"=== IA (%@) analyse %lu coups ===",
-            (side == sideWhite) ? @"Blancs" : @"Noirs",
-            (unsigned long)sortedMoves.count);
-      
-      
-      /* ========== ÉVALUATION DE CHAQUE COUP ========== */
-      
-      for (Move *moveEnCours in sortedMoves)
-      {
-         // ✅ Bloquer les répétitions immédiates (undo du dernier coup)
-         if (self.lastIAMove &&
-             moveEnCours.fromSquare == self.lastIAMove.toSquare &&
-             moveEnCours.toSquare == self.lastIAMove.fromSquare) {
-            NSLog(@"   ⏭️  Skip répétition: %@", moveEnCours);
-            continue;  // Skip ce coup
-         }
-         
-         
-         // ✅ NOUVEAU : Ajouter la position avant makeMove
-         positionHistory[historyCount++] = board->zobristKey;
-         
-         // ✅ CORRECT — makeMove/unmakeMove sur le board original
-         MoveState st = [board makeMove:moveEnCours];
-         
-         // Negamax retourne le score du point de vue d'otherSide
-         // On le négative UNE SEULE FOIS pour obtenir le score pour side
-         int score = -[self NegamaxForSide:otherSide
-                                     board:board
-                                     depth:NUMBER_MOVES_AHEAD - 1
-                                     alpha:-SCORE_INF
-                                      beta:SCORE_INF];
+       for (int depth = 1; depth <= NUMBER_MOVES_AHEAD; depth++) {
 
-         [board unmakeMove:moveEnCours state:st];
-         
-         // ✅ NOUVEAU : Retirer la position après unmakeMove
-         historyCount--;
-         
-         // score est maintenant positif = bon pour side ✅
-         //if (score > bestScore || !bestMove) {
-         if (score > bestScore) {
-             bestScore = score;
-             bestMove = moveEnCours;
-         }
-      }
+           // Réinitialiser alpha/beta à chaque itération
+           int alpha = -SCORE_INF;
+           int beta  =  SCORE_INF;
+
+           Move *iterBestMove  = nil;
+           int   iterBestScore = -SCORE_INF - 1;
+
+           // Tri des coups — le hash move de la TT sera promu automatiquement
+           NSMutableArray *moves = [NSMutableArray arrayWithArray:
+                                       [movesPossibles allObjects]];
+           [self ScoreMovesList:moves board:board side:side];
+
+           // ✨ Promouvoir le meilleur coup de l'itération précédente
+           if (_idBestMove) {
+               for (Move *m in moves) {
+                   if (m.fromSquare == _idBestMove.fromSquare &&
+                       m.toSquare   == _idBestMove.toSquare) {
+                       m.orderingScore += 2000000; // Priorité maximale
+                       break;
+                   }
+               }
+           }
+
+           [moves sortUsingComparator:^NSComparisonResult(Move *a, Move *b) {
+               return (b.orderingScore - a.orderingScore);
+           }];
+
+           // --- Boucle racine ---
+           for (Move *move in moves) {
+
+               // Skip répétition immédiate
+               if (self.lastIAMove &&
+                   move.fromSquare == self.lastIAMove.toSquare &&
+                   move.toSquare   == self.lastIAMove.fromSquare) {
+                   continue;
+               }
+
+               positionHistory[historyCount++] = board->zobristKey;
+               MoveState st = [board makeMove:move];
+
+               int score = -[self NegamaxForSide:(side == sideWhite ? sideBlack : sideWhite)
+                                           board:board
+                                           depth:depth - 1
+                                           alpha:-beta
+                                            beta:-alpha];
+
+               [board unmakeMove:move state:st];
+               historyCount--;
+
+               if (score > iterBestScore) {
+                   iterBestScore = score;
+                   iterBestMove  = move;
+               }
+               if (score > alpha) alpha = score;
+               if (alpha >= beta) break; // Beta cutoff racine
+           }
+
+           // --- Valider l'itération ---
+           if (iterBestMove) {
+               _idBestMove  = iterBestMove;
+               _idBestScore = iterBestScore;
+           }
+
+           NSTimeInterval elapsed = [[NSDate date] timeIntervalSinceDate:startTime];
+           NSLog(@"🔁 depth=%d → coup=%@ score=%d (%.2fs, %llu nœuds)",
+                 depth, _idBestMove, _idBestScore, elapsed, nodes);
+
+       } // fin iterative deepening
+
+       // --- Stats finales ---
+       NSTimeInterval elapsed = [[NSDate date] timeIntervalSinceDate:startTime];
+       NSLog(@"✅ Coup choisi : %@ (score=%d, %.1fs, %llu nœuds, %.0f n/s)",
+             _idBestMove, _idBestScore, elapsed, nodes,
+             (elapsed > 0) ? nodes/elapsed : 0);
+       [self.transpositionTable printStats];
+
+       self.lastIAMove = _idBestMove;
+       return _idBestMove;
       
-      // ✅ Si aucun coup n'a été trouvé (tous bloqués par répétition)
-      if (!bestMove && movesPossibles.count > 0) {
-          NSLog(@"⚠️  Tous les coups bloqués par répétition, on prend le premier disponible");
-          bestMove = [movesPossibles anyObject];
-      }
-      
-      /* ========== CALCUL DU TEMPS ÉCOULÉ ========== */
-      NSTimeInterval elapsed = [[NSDate date] timeIntervalSinceDate:startTime];
-      
-      NSLog(@"✅ Coup choisi : %@ (score=%d, %.1fs, %d nœuds, %.0f n/s)\n",
-            bestMove, bestScore, elapsed, nodeCount, nodeCount/elapsed);
-      
-      // Stats efficacité Après la recherche
-      NSLog(@"🎯 Nœuds explorés: %llu", nodes);
-      [self.transpositionTable printStats];
-      // Fin de stats
-      
-      // ✅ Mémoriser le coup choisi
-      self.lastIAMove = bestMove;
-      
-      return bestMove;
-      
-   } // !BestMoveForSide
+   } // !BMFS
 
 
    // ================================================================================================
@@ -399,8 +263,8 @@ static int nbCallsIsKingCheck = 0;
         isInNullMove = NO;
          
         // ✅ LOG pour debug
-        NSLog(@"🔍 NMP depth=%d, nullScore=%d, beta=%d, cutoff=%d",
-                depth, nullScore, beta, (nullScore >= beta));
+        //NSLog(@"🔍 NMP depth=%d, nullScore=%d, beta=%d, cutoff=%d",
+        //        depth, nullScore, beta, (nullScore >= beta));
         
         // Si même avec le handicap, on est au-dessus de beta
         if (nullScore >= beta) {
@@ -721,7 +585,7 @@ static int nbCallsIsKingCheck = 0;
       
    } // !QuiescenceForSide
 
-
+   /* Méthode obsolète
    // ================================================================================================
    // MÉTHODE SortMovesByPriority
    // TRI DES COUPS PAR PRIORITÉ pour améliorer l'efficacité de l'élagage alpha-beta
@@ -743,7 +607,8 @@ static int nbCallsIsKingCheck = 0;
          if (score2 < score1) return NSOrderedDescending;
          return NSOrderedSame;
       }];
-   }
+   }   */
+
 
 
    // ================================================================================================
@@ -893,10 +758,6 @@ static int nbCallsIsKingCheck = 0;
    // - Structure : Les pions sont-ils bien organisés ?
    // - Mobilité : Combien de coups possibles ?
    // - Développement : Les pièces sont-elles actives ?
-   // CONVENTION NEGAMAX STANDARD :
-   // - L'évaluation est TOUJOURS du Point Of View des BLANCS (White POV)
-   // - Valeur positive = avantage Blancs, négative = avantage Noirs
-   // - Negamax inversera le signe selon le camp qui joue
    -(int)EvalBoardForSide:(Side)side
                     board:(ChessBoard *)board
    {
@@ -904,15 +765,14 @@ static int nbCallsIsKingCheck = 0;
       
       /* Variables pour statistiques intermédiaires */
       int materialWhite = 0, materialBlack = 0;
-      // int mobilityWhite = 0, mobilityBlack = 0;
       int developmentWhite = 0, developmentBlack = 0;
       int totalMaterial = 0;  /* Pour détecter la fin de partie */
       
-      // ===========================================
-      // PARTIE 1 : ÉVAL. MATÉRIELLE + POSITIONNELLE
-      /* Tables de valeurs positionnelles pour chaque type de pièce
-       Ces tables donnent un bonus/malus selon la position de la pièce sur l'échiquier
-       Convention : les tableaux sont vus du point de vue des Blancs (rangée 0 = fond Blancs) */
+      /* -------------------------------------------
+      PARTIE 1 : ÉVAL. MATÉRIELLE + POSITIONNELLE
+      Tables de valeurs positionnelles pour chaque type de pièce
+      Ces tables donnent un bonus/malus selon la position de la pièce sur l'échiquier
+      Convention : les tableaux sont vus du point de vue des Blancs (rangée 0 = fond Blancs) */
       
       /* TABLE PIONS : Encourage l'avancée et le contrôle du centre */
       static const int pawnTable[8][8] = {
@@ -998,9 +858,8 @@ static int nbCallsIsKingCheck = 0;
          { -8, -6, -4, -2, -2, -4, -6, -8 }
       };
       
-      /* ========== PARCOURS DE L'ÉCHIQUIER ========== */
-      /* Comptage du matériel total pour déterminer si on est en fin de partie */
-      // ✅ FIX : pré-calculer totalMaterial AVANT la boucle principale
+      /* Comptage du matériel total pour déterminer si on est en fin de partie
+      ✅ Pré-calculer totalMaterial AVANT la boucle principale              */
 
       // Passe 1 : calcul du matériel total (sans le Roi)
       totalMaterial = 0;
@@ -1087,8 +946,8 @@ static int nbCallsIsKingCheck = 0;
                   break;
             } // Fin de switch
             
-            /* Accumulation du matériel total (pour détecter fin de partie) */
-            if (piece.type != Roi) totalMaterial += materialValue;
+            /* DÉSACTIVER Accumulation du matériel total (pour détecter fin de partie) */
+            //if (piece.type != Roi) totalMaterial += materialValue;
             
             /* Ajout de la valeur + bonus positionnel selon la couleur */
             int pieceValue = materialValue + positionBonus;
@@ -1100,12 +959,12 @@ static int nbCallsIsKingCheck = 0;
                materialBlack += pieceValue;
                evalWhitePOV  -= pieceValue;   // Noirs = négatif
             }
-         } // fin de for 'y'
-      } // fin de for 'x' et fin de parcours de l'échiquier
+         } // !for 'y'
+      } // !for 'x' et fin de parcours de l'échiquier
       
-      // ===========================================
-      // PARTIE 2 : ÉVAL. DE LA STRUCTURE DE PIONS
-      /* Détection des pions doublés (malus) et pions passés (bonus) */
+      /* -------------------------------------------
+      PARTIE 2 : ÉVAL. DE LA STRUCTURE DE PIONS
+      Détection des pions doublés (malus) et pions passés (bonus) */
       for (int x = 0; x < 8; x++) {
          int whitePawnsInColumn = 0;
          int blackPawnsInColumn = 0;
@@ -1137,7 +996,7 @@ static int nbCallsIsKingCheck = 0;
          }
          
          /* BONUS PION PASSÉ : +15 si aucun pion adverse ne peut l'arrêter
-          Vérification simplifiée : pas de pion adverse dans cette colonne ni colonnes adjacentes */
+         Vérification simplifiée : pas de pion adverse dans cette colonne ni colonnes adjacentes */
          if (whitePawnsInColumn == 1 && whiteMostAdvanced >= 4) {
             BOOL isPassed = YES;
             // Vérifier colonnes adjacentes
@@ -1174,23 +1033,23 @@ static int nbCallsIsKingCheck = 0;
          }
       }
       
-      // ===========================================
-      // PARTIE 3 : BONUS DÉVELOPPEMENT
-      /* Les pièces (cavaliers/fous) sorties de leur position de départ reçoivent un bonus
-       Ceci a déjà  été calculé dans la boucle principale ci-dessus */
+      /* -------------------------------------------
+      PARTIE 3 : BONUS DÉVELOPPEMENT
+      Les pièces (cavaliers/fous) sorties de leur position de départ reçoivent un bonus
+      Ceci a déjà  été calculé dans la boucle principale ci-dessus                   */
       int developmentDiff = developmentWhite - developmentBlack;
       evalWhitePOV += developmentDiff;  // Toujours du point de vue des Blancs
       
-      // ===========================================
-      // ✅ PARTIE 4 : BONUS MOBILITÉ
-      /* Comptage des coups pseudo-légaux disponibles pour chaque camp
-      Plus on a d'options, mieux c'est ! */
+      /* -------------------------------------------
+      PARTIE 4 : BONUS MOBILITÉ
+      Comptage des coups pseudo-légaux disponibles pour chaque camp
+      Plus on a d'options, mieux c'est !                         */
       int mobilityBonus = [self EvaluateMobility:board];
       evalWhitePOV += mobilityBonus;
       
-      // ===========================================
-      // PARTIE 5 : SÉCURITÉ DU ROI
-      // Détecter si le Roi est dangereusement exposé
+      /* -------------------------------------------
+      PARTIE 5 : SÉCURITÉ DU ROI
+      Détecter si le Roi est dangereusement exposé */
       for (int x = 0; x < 8; x++) {
          for (int y = 0; y < 8; y++) {
             Piece *piece = [board piece_colX:x rangY:y];
@@ -1264,77 +1123,40 @@ static int nbCallsIsKingCheck = 0;
          }
       }
       
-      // ===========================================
-      // PARTIE 6 : PIONS EN AVANT-DERNIÈRE RANGÉE
-      // ✅ APRÈS — symétrique et indépendant
-      /* Bonus important pour pions sur le point d'être promus */
-      // Ce bonus s'applique toujours, peu importe qui joue
+      /* -------------------------------------------
+      PARTIE 6 : PIONS EN AVANT-DERNIÈRE RANGÉE   */
       for (int x = 0; x < 8; x++) {
-          // Pion blanc en y=6 (avant-dernière rangée côté blanc)
           Piece *pionB = board->pieceCase[x][6];
           if (pionB && pionB.type == Pion && pionB.side == sideWhite) {
               evalWhitePOV += 900;
+              NSLog(@"🔵 Pion blanc promo x=%d, evalWhitePOV=%d", x, evalWhitePOV);
           }
-          // Pion noir en y=1 (avant-dernière rangée côté noir)
           Piece *pionN = board->pieceCase[x][1];
           if (pionN && pionN.type == Pion && pionN.side == sideBlack) {
               evalWhitePOV -= 900;
+              NSLog(@"🔵 Pion noir promo x=%d, evalWhitePOV=%d", x, evalWhitePOV);
           }
       }
+      // -------------------------------------------
       
-      // ===========================================
+      /* La mise à jour de l'interface est déplacée dans 'MakeIAMoveForSide' et sa variante 'Silent'
+      pour limiter le nombre de mise à jour de l'interface pendant que l'IA décide de son coup    */
       
-      /* La mise à jour de l'interface est déplacée dans 'MakeIAMoveForSide' et sa variante 'Silent......'
-       pour limiter le nombre de mise à jour de l'interface pendant que l'IA décide de son coup */
-      
-      // Stocker dans le cache
-      // evalCache[key] = @(evalWhitePOV);
-      // Limiter la taille du cache
-      // if (evalCache.count > 200000) [evalCache removeAllObjects];
+      // Assertion pour debug
+      NSAssert(abs(evalWhitePOV) < 50000,
+          @"⚠️ Score suspect : %d", evalWhitePOV);
       
       /* CONVERSION FINALE POUR NEGAMAX :
        - Si 'side' = Blancs : retourner evalWhitePOV tel quel (positif = bon pour Blancs)
        - Si 'side' = Noirs  : retourner -evalWhitePOV (négatif devient positif)
-       Ainsi Negamax reçoit toujours une évaluation positive = bon pour le camp qui joue */
+      Ainsi Negamax reçoit toujours une évaluation positive = bon pour le camp qui joue */
       return (side == sideWhite) ? evalWhitePOV : -evalWhitePOV;
-      //return evalWhitePOV;
       /* Pour l'évaluation du board par contre, sachant que la convention -qui veut qu'une éval
-       positive indique un avantage aux Blancs et une éval négative l'inverse- se suffit à elle
-       même et n'a pas à être inversée pour sa version affichée en barre d'état. */
+      positive indique un avantage aux Blancs et une éval négative l'inverse- se suffit à elle
+      même et n'a pas à être inversée pour sa version affichée en barre d'état.              */
       
    } // !EvalBoardForSide
 
-
-   /* ANCIEN CODE
-   // ================================================================================================
-   // MÉTHODE PossibleMovesForSide - GÉNÉRATION DES COUPS LÉGAUX
-   -(NSSet *)PossibleMovesForSide:(Side)side
-                            board:(ChessBoard *)board
-   {
-      NSMutableSet *moves = [[NSMutableSet alloc] init];
-      
-      for (int x = 0; x < 8; x++) {
-         for (int y = 0; y < 8; y++) {
-            Pos *pos = [Pos posWithX:x y:y];
-            Piece *piece = [board piece_colX:x rangY:y];
-            
-            if (piece && piece.side == side) {
-               NSSet *PosAcceptees = [RuleBook PosLegalesForPiece:piece atPos:pos inBoard:board];
-               
-               for (Pos *possibleDest in PosAcceptees) {
-                  Move *move = [[Move alloc] initWithStart:pos Dest:possibleDest];
-                  
-                  // Vérification que le coup ne met pas son propre roi en échec
-                  ChessBoard *newBoard = board.copy;
-                  MoveState st = [newBoard makeMove:move];
-                  [moves addObject:move];
-               }
-            }
-         }
-      }
-      
-      return moves;
-   } */
 
    // ================================================================================================
    // MÉTHODE PossibleMovesForSide - GÉNÉRATION DES COUPS LÉGAUX
