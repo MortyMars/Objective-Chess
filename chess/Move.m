@@ -88,21 +88,6 @@
 
 
    // ==================================================================================================
-   // Méthode implémentée pour utilisation par les 'Killer Moves' dans Minimax
-   - (BOOL)isEqual:(id)object {
-      if (![object isKindOfClass:[Move class]]) {
-         return NO;
-      }
-      
-      Move *other = (Move *)object;
-      return (self.start.x == other.start.x &&
-              self.start.y == other.start.y &&
-              self.dest.x == other.dest.x &&
-              self.dest.y == other.dest.y);
-   }
-
-   
-   // ==================================================================================================
    // Méthode permettant de déterminer le move opposé à un move par rapport au centre du Board, nécessaire
    // pour afficher un move dans la liste des coups ou dans le 'hint' lorsque le plateau est retourné
    +(Move *)opMove:(Move *) move {

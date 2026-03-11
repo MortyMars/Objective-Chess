@@ -52,6 +52,9 @@
       // Variables stockant le meilleur coup entre itérations d'Iterative Deepening
       Move *_idBestMove;
       int   _idBestScore;
+      
+      // Killer Moves
+      Move *_killerMoves[64][2];
 
    }
 

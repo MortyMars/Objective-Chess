@@ -76,7 +76,6 @@ static int nbCallsIsKingCheck = 0;
 
        // -----------------------------------------------------------
        // 🔁 ITERATIVE DEEPENING : de depth 1 → NUMBER_MOVES_AHEAD
-       
        for (int depth = 1; depth <= NUMBER_MOVES_AHEAD; depth++) {
 
            // Réinitialiser alpha/beta à chaque itération
@@ -85,11 +84,13 @@ static int nbCallsIsKingCheck = 0;
 
            Move *iterBestMove  = nil;
            int   iterBestScore = -SCORE_INF - 1;
+          
+           memset(_killerMoves, 0, sizeof(_killerMoves));  // ← Killer Moves
 
            // Tri des coups — le hash move de la TT sera promu automatiquement
            NSMutableArray *moves = [NSMutableArray arrayWithArray:
                                        [movesPossibles allObjects]];
-           [self ScoreMovesList:moves board:board side:side];
+          [self ScoreMovesList:moves board:board side:side depth:depth];
 
            // ✨ Promouvoir le meilleur coup de l'itération précédente
            if (_idBestMove) {
@@ -281,7 +282,7 @@ static int nbCallsIsKingCheck = 0;
       
       // Move Ordering avec bonus TT
       // NSLog(@"🔵 AVANT ScoreMovesList, enPassantFile=%d", board->enPassantFile);
-      [self ScoreMovesList:moves board:board side:side];
+      [self ScoreMovesList:moves board:board side:side depth:depth];
       
       // ✨ Bonus énorme pour le coup TT (essayer en premier)
       if (ttMove) {
@@ -393,6 +394,20 @@ static int nbCallsIsKingCheck = 0;
             
          // Beta cutoff
          if (alpha >= beta) {
+            
+            // Killer Move : coup silencieux qui cause un cutoff
+            if (!m.isCapture && !m.isPromotion) {
+              // Éviter les doublons
+              BOOL alreadyKiller = (_killerMoves[depth][0] &&
+                  m.fromSquare == _killerMoves[depth][0].fromSquare &&
+                  m.toSquare   == _killerMoves[depth][0].toSquare);
+              
+              if (!alreadyKiller) {
+                  _killerMoves[depth][1] = _killerMoves[depth][0];
+                  _killerMoves[depth][0] = m;
+              }
+            }
+            
             break;
          }
       }
@@ -688,35 +703,41 @@ static int nbCallsIsKingCheck = 0;
    - (void)ScoreMovesList:(NSArray<Move *> *)moves
                     board:(ChessBoard *)board
                      side:(Side)side
+                    depth:(int)depth
    {
       for (Move *m in moves) {
          
          int score = 0;
          
          if (m.isCapture) {
-            
             int see = [self SEEForMove:m board:board];
             
-            if (see >= 0)
-               score = 10000 + see;   // captures gagnantes
-            else
-               score = 5000 + see;    // captures perdantes
+            if (see >= 0) score = 10000 + see;   // captures gagnantes
+            else score = 5000 + see;             // captures perdantes
             
-         } else {
-            
+         }
+         else {
+            // Killer 1
+            if (_killerMoves[depth][0] &&
+                m.fromSquare == _killerMoves[depth][0].fromSquare &&
+                m.toSquare   == _killerMoves[depth][0].toSquare) {
+              score += 9000;
+            }
+            // Killer 2
+            else if (_killerMoves[depth][1] &&
+                     m.fromSquare == _killerMoves[depth][1].fromSquare &&
+                     m.toSquare   == _killerMoves[depth][1].toSquare) {
+              score += 8000;
+            }
             // 🎯 Coups calmes intéressants
             if (m.movingPiece.type == Cava || m.movingPiece.type == Fou)
                score += 100;  // développement
             
-            if (m.givesCheck)
-               score += 200;
+            if (m.givesCheck) score += 200;
             
-            if (m.isCastling)
-               score += 300;
+            if (m.isCastling) score += 300;
             
-            if (m.isPromotion)
-               score += 900;
-            
+            if (m.isPromotion) score += 900;
          }
          
          m.orderingScore = score;
@@ -1129,12 +1150,12 @@ static int nbCallsIsKingCheck = 0;
           Piece *pionB = board->pieceCase[x][6];
           if (pionB && pionB.type == Pion && pionB.side == sideWhite) {
               evalWhitePOV += 900;
-              NSLog(@"🔵 Pion blanc promo x=%d, evalWhitePOV=%d", x, evalWhitePOV);
+              //NSLog(@"🔵 Pion blanc promo x=%d, evalWhitePOV=%d", x, evalWhitePOV);
           }
           Piece *pionN = board->pieceCase[x][1];
           if (pionN && pionN.type == Pion && pionN.side == sideBlack) {
               evalWhitePOV -= 900;
-              NSLog(@"🔵 Pion noir promo x=%d, evalWhitePOV=%d", x, evalWhitePOV);
+              //NSLog(@"🔵 Pion noir promo x=%d, evalWhitePOV=%d", x, evalWhitePOV);
           }
       }
       // -------------------------------------------
