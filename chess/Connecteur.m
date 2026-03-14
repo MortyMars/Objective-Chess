@@ -112,7 +112,7 @@
       [menuSTD       setState:NO];
       [menuReflechi  setState:NO];
       [menuChampion  setState:NO];
-      NUMBER_MOVES_AHEAD = 3;
+      NUMBER_MOVES_AHEAD = 5;
       monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
@@ -123,7 +123,7 @@
       [menuSTD       setState:NO];
       [menuReflechi  setState:NO];
       [menuChampion  setState:NO];
-      NUMBER_MOVES_AHEAD = 5;
+      NUMBER_MOVES_AHEAD = 7;
       monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
@@ -134,7 +134,7 @@
       [menuSTD       setState:YES]; // Standard
       [menuReflechi  setState:NO];
       [menuChampion  setState:NO];
-      NUMBER_MOVES_AHEAD = 7;
+      NUMBER_MOVES_AHEAD = 9;
       monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
@@ -145,7 +145,7 @@
       [menuSTD       setState:NO];
       [menuReflechi  setState:YES]; // Réfléchi
       [menuChampion  setState:NO];
-      NUMBER_MOVES_AHEAD = 9;
+      NUMBER_MOVES_AHEAD = 11;
       monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
@@ -156,7 +156,7 @@
       [menuSTD       setState:NO];
       [menuReflechi  setState:NO];
       [menuChampion  setState:YES]; // Champions
-      NUMBER_MOVES_AHEAD = 11;
+      NUMBER_MOVES_AHEAD = 13;
       monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }

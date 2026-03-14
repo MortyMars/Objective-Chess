@@ -52,112 +52,142 @@ static int nbCallsIsKingCheck = 0;
    // Cette méthode trouve le meilleur coup pour l'IA en explorant l'arbre des possibilités
    -(Move *)BestMoveForSide:(Side)side Board:(ChessBoard *)board
    {
-       // --- Initialisation des iVars et variables -----------------
-       nbLoop = 0; nbElag = 0; nodeCount = 0;
-       evalCount = 0; moveGenCount = 0; copyBoardCount = 0;
-       evalTotalTime = 0; moveGenTotalTime = 0;
-       memset(historyTable, 0, sizeof(historyTable));
-       isInNullMove = NO;
-       historyCount = 0;
-       memset(positionHistory, 0, sizeof(positionHistory));
-       nodes = 0;
-       _idBestMove  = nil;
-       _idBestScore = -SCORE_INF - 1;
-       [self.transpositionTable newGeneration];
-
-       NSDate *startTime = [NSDate date];
-
-       // --- Vérification légalité des coups -----------------------
-       NSSet *movesPossibles = [self PossibleMovesForSide:side board:board];
-       if (movesPossibles.count == 0) {
-           [monConnecteur AlertMsgPatMatSide:side onBoard:board];
-           return nil;
-       }
-
-       // -----------------------------------------------------------
-       // 🔁 ITERATIVE DEEPENING : de depth 1 → NUMBER_MOVES_AHEAD
-       for (int depth = 1; depth <= NUMBER_MOVES_AHEAD; depth++) {
-
-           // Réinitialiser alpha/beta à chaque itération
-           int alpha = -SCORE_INF;
-           int beta  =  SCORE_INF;
-
-           Move *iterBestMove  = nil;
-           int   iterBestScore = -SCORE_INF - 1;
-          
-           memset(_killerMoves, 0, sizeof(_killerMoves));  // ← Killer Moves
-
-           // Tri des coups — le hash move de la TT sera promu automatiquement
-           NSMutableArray *moves = [NSMutableArray arrayWithArray:
-                                       [movesPossibles allObjects]];
-          [self ScoreMovesList:moves board:board side:side depth:depth];
-
-           // ✨ Promouvoir le meilleur coup de l'itération précédente
-           if (_idBestMove) {
-               for (Move *m in moves) {
-                   if (m.fromSquare == _idBestMove.fromSquare &&
-                       m.toSquare   == _idBestMove.toSquare) {
-                       m.orderingScore += 2000000; // Priorité maximale
-                       break;
-                   }
+      // --- Initialisation des iVars et variables -----------------
+      nbLoop = 0; nbElag = 0; nodeCount = 0;
+      evalCount = 0; moveGenCount = 0; copyBoardCount = 0;
+      evalTotalTime = 0; moveGenTotalTime = 0;
+      memset(historyTable, 0, sizeof(historyTable));
+      isInNullMove = NO;
+      historyCount = 0;
+      memset(positionHistory, 0, sizeof(positionHistory));
+      nodes = 0;
+      _idBestMove  = nil;
+      _idBestScore = -SCORE_INF - 1;
+      [self.transpositionTable newGeneration];
+      
+      NSDate *startTime = [NSDate date];
+      
+      // 📖 Consulter le livre d'ouvertures en premier
+      if (board->nbEntiers <= 10) {  // Limiter aux 10 premiers coups
+        Move *bookMove = [self lookupOpeningBook:board side:side];
+        if (bookMove) {
+            _idBestMove  = bookMove;
+            _idBestScore = 0;
+            return bookMove;
+        }
+      }
+      
+      // --- Vérification légalité des coups -----------------------
+      NSSet *movesPossibles = [self PossibleMovesForSide:side board:board];
+      if (movesPossibles.count == 0) {
+         [monConnecteur AlertMsgPatMatSide:side onBoard:board];
+         return nil;
+      }
+      
+      // -----------------------------------------------------------
+      // 🔁 ITERATIVE DEEPENING : de depth 1 → NUMBER_MOVES_AHEAD
+      for (int depth = 1; depth <= NUMBER_MOVES_AHEAD; depth++) {
+         
+         // Réinitialiser alpha/beta à chaque itération
+         int alpha = -SCORE_INF;
+         int beta  =  SCORE_INF;
+         
+         Move *iterBestMove  = nil;
+         int   iterBestScore = -SCORE_INF - 1;
+         
+         memset(_killerMoves, 0, sizeof(_killerMoves));  // ← Killer Moves
+         
+         // Tri des coups — le hash move de la TT sera promu automatiquement
+         NSMutableArray *moves = [NSMutableArray arrayWithArray:
+                                  [movesPossibles allObjects]];
+         [self ScoreMovesList:moves board:board side:side depth:depth];
+         
+         // ✨ Promouvoir le meilleur coup de l'itération précédente
+         if (_idBestMove) {
+            for (Move *m in moves) {
+               if (m.fromSquare == _idBestMove.fromSquare &&
+                   m.toSquare   == _idBestMove.toSquare) {
+                  m.orderingScore += 2000000; // Priorité maximale
+                  break;
                }
-           }
-
-           [moves sortUsingComparator:^NSComparisonResult(Move *a, Move *b) {
-               return (b.orderingScore - a.orderingScore);
-           }];
-
-           // --- Boucle racine ---
-           for (Move *move in moves) {
-
-               // Skip répétition immédiate
-               if (self.lastIAMove &&
-                   move.fromSquare == self.lastIAMove.toSquare &&
-                   move.toSquare   == self.lastIAMove.fromSquare) {
-                   continue;
-               }
-
-               positionHistory[historyCount++] = board->zobristKey;
-               MoveState st = [board makeMove:move];
-
-               int score = -[self NegamaxForSide:(side == sideWhite ? sideBlack : sideWhite)
-                                           board:board
-                                           depth:depth - 1
-                                           alpha:-beta
-                                            beta:-alpha];
-
-               [board unmakeMove:move state:st];
-               historyCount--;
-
-               if (score > iterBestScore) {
-                   iterBestScore = score;
-                   iterBestMove  = move;
-               }
-               if (score > alpha) alpha = score;
-               if (alpha >= beta) break; // Beta cutoff racine
-           }
-
-           // --- Valider l'itération ---
-           if (iterBestMove) {
-               _idBestMove  = iterBestMove;
-               _idBestScore = iterBestScore;
-           }
-
-           NSTimeInterval elapsed = [[NSDate date] timeIntervalSinceDate:startTime];
-           NSLog(@"🔁 depth=%d → coup=%@ score=%d (%.2fs, %llu nœuds)",
-                 depth, _idBestMove, _idBestScore, elapsed, nodes);
-
-       } // fin iterative deepening
-
-       // --- Stats finales ---
-       NSTimeInterval elapsed = [[NSDate date] timeIntervalSinceDate:startTime];
-       NSLog(@"✅ Coup choisi : %@ (score=%d, %.1fs, %llu nœuds, %.0f n/s)",
-             _idBestMove, _idBestScore, elapsed, nodes,
-             (elapsed > 0) ? nodes/elapsed : 0);
-       [self.transpositionTable printStats];
-
-       self.lastIAMove = _idBestMove;
-       return _idBestMove;
+            }
+         }
+         
+         [moves sortUsingComparator:^NSComparisonResult(Move *a, Move *b) {
+            return (b.orderingScore - a.orderingScore);
+         }];
+         
+         // --- Boucle racine ---
+         for (Move *move in moves) {
+            
+            // Skip répétition immédiate
+            if (self.lastIAMove &&
+                move.fromSquare == self.lastIAMove.toSquare &&
+                move.toSquare   == self.lastIAMove.fromSquare) {
+               continue;
+            }
+            
+            positionHistory[historyCount++] = board->zobristKey;
+            MoveState st = [board makeMove:move];
+            
+            int score = -[self NegamaxForSide:(side == sideWhite ? sideBlack : sideWhite)
+                                        board:board
+                                        depth:depth - 1
+                                        alpha:-beta
+                                         beta:-alpha];
+            
+            [board unmakeMove:move state:st];
+            historyCount--;
+            
+            if (score > iterBestScore) {
+               iterBestScore = score;
+               iterBestMove  = move;
+            }
+            if (score > alpha) alpha = score;
+            if (alpha >= beta) break; // Beta cutoff racine
+         }
+         
+         // --- Valider l'itération ---
+         if (iterBestMove) {
+            _idBestMove  = iterBestMove;
+            _idBestScore = iterBestScore;
+         }
+         
+         NSTimeInterval elapsed = [[NSDate date] timeIntervalSinceDate:startTime];
+         NSLog(@"🔁 depth=%d → coup=%@ score=%d (%.2fs, %llu nœuds)",
+               depth, _idBestMove, _idBestScore, elapsed, nodes);
+         
+      } // fin iterative deepening
+      
+      // ✅ FALLBACK : si aucune itération n'a produit de coup
+      // (cas rare : mat en 1, double échec, retour TT prématuré)
+      if (!_idBestMove) {
+         NSMutableArray<Move *> *fallbackMoves = [NSMutableArray array];
+         [self GenMovesForSide:side board:board into:fallbackMoves];
+         
+         for (Move *m in fallbackMoves) {
+            MoveState st = [board makeMove:m];
+            BOOL legal = ![self IsKingInCheck:side board:board];
+            [board unmakeMove:m state:st];
+            
+            if (legal) {
+               _idBestMove  = m;
+               _idBestScore = 0;  // Score inconnu, valeur neutre
+               NSLog(@"⚠️ Fallback activé : coup %@ choisi par défaut", m);
+               break;
+            }
+         }
+      }
+      
+      // --- Stats finales ---
+      NSTimeInterval elapsed = [[NSDate date] timeIntervalSinceDate:startTime];
+      NSLog(@"✅ Coup choisi : %@ (score=%d, %.1fs, %llu nœuds, %.0f n/s)",
+            _idBestMove, _idBestScore, elapsed, nodes,
+            (elapsed > 0) ? nodes/elapsed : 0);
+      [self.transpositionTable printStats];
+      
+      self.lastIAMove = _idBestMove;
+      return _idBestMove;
       
    } // !BMFS
 
@@ -793,90 +823,100 @@ static int nbCallsIsKingCheck = 0;
       PARTIE 1 : ÉVAL. MATÉRIELLE + POSITIONNELLE
       Tables de valeurs positionnelles pour chaque type de pièce
       Ces tables donnent un bonus/malus selon la position de la pièce sur l'échiquier
-      Convention : les tableaux sont vus du point de vue des Blancs (rangée 0 = fond Blancs) */
+      Convention : les tableaux sont vus du point de vue des Blancs (rangée 0 = fond Blancs)
+      Mais ATTENTION la représentation des tables est inversée par rapport à un board !! */
       
-      /* TABLE PIONS : Encourage l'avancée et le contrôle du centre */
+      /* PIONS : Encourage l'avancée et le contrôle du centre - Table ASYMÉTRIQUE
+      qui devra donc faire l'objet d'un miroir Vertical pour les Noirs ------- */
       static const int pawnTable[8][8] = {
-         {  0,  0,  0,  0,  0,  0,  0,  0 }, // (x0,y0) à (x0,y7) Rangée de promotion
-         {  1,  1,  2,  2,  2,  2,  1,  1 }, // Avant-dernière rangée (au sens échiquéen)
-         {  1,  1,  2,  3,  3,  2,  1,  1 },
-         {  1,  1,  2,  4,  4,  2,  1,  1 },
-         {  0,  0,  1,  3,  3,  1,  0,  0 }, // Rangée 'centrale'
-         {  0,  0,  0,  0,  0,  0,  0,  0 },
-         {  1,  1, -1, -3, -3, -1,  1,  1 },
-         {  0,  0,  0,  0,  0,  0,  0,  0 }  // (x7,y0) à (x7,y7) Rangée de départ
+         {  0,  0,  0,  0,  0,  0,  0,  0 }, // y=0 départ (jamais évalué)
+         {  0,  0,  0,  0,  0,  0,  0,  0 }, // y=1 pas encore bougé
+         {  1,  1,  1,  2,  2,  1,  1,  1 }, // y=2 développement minimal
+         {  1,  1,  2,  4,  4,  2,  1,  1 }, // y=3 centre ✅
+         {  2,  2,  3,  5,  5,  3,  2,  2 }, // y=4 centre avancé ✅✅
+         {  3,  3,  4,  5,  5,  4,  3,  3 }, // y=5 très avancé
+         {  5,  5,  5,  6,  6,  5,  5,  5 }, // y=6 avant-promotion ✅✅✅
+         {  0,  0,  0,  0,  0,  0,  0,  0 }  // y=7 promotion (géré Partie 6)
       };
       
-      /* TABLE CAVALIERS : Encourage position centrale et pénalise les bords */
+      /* CAVALIERS : Encourage position centrale et pénalise les bords
+      Table SYMÉTRIQUE sans correction nécessaire ----------------- */
       static const int knightTable[8][8] = {
-         { -8, -6, -4, -4, -4, -4, -6, -8 },
-         { -6, -2,  0,  1,  1,  0, -2, -6 },
-         { -4,  0,  2,  3,  3,  2,  0, -4 },
-         { -4,  1,  3,  4,  4,  3,  1, -4 },
-         { -4,  1,  3,  4,  4,  3,  1, -4 },
-         { -4,  0,  2,  3,  3,  2,  0, -4 },
-         { -6, -2,  0,  1,  1,  0, -2, -6 },
-         { -8, -6, -4, -4, -4, -4, -6, -8 }
+         {-15,-10, -6, -6, -6, -6,-10,-15 }, // y=0 ← très punitif : éviter le recul
+         {-10, -6, -2,  0,  0, -2, -6,-10 }, // y=1 ← punitif
+         { -4,  0,  3,  4,  4,  3,  0, -4 },
+         { -4,  2,  4,  6,  6,  4,  2, -4 },
+         { -4,  2,  4,  6,  6,  4,  2, -4 },
+         { -4,  0,  3,  4,  4,  3,  0, -4 },
+         {-10, -6, -2,  0,  0, -2, -6,-10 },
+         {-15,-10, -6, -6, -6, -6,-10,-15 }
       };
       
-      /* TABLE FOUS : Encourage diagonales longues et centre */
+      /* FOUS : Encourage diagonales longues et centre
+      Table SYMÉTRIQUE sans correction nécessaire   */
       static const int bishopTable[8][8] = {
-         { -4, -2, -2, -2, -2, -2, -2, -4 },
+         { -4, -2, -2, -2, -2, -2, -2, -4 }, // y=0 fond Blancs
          { -2,  0,  0,  1,  1,  0,  0, -2 },
          { -2,  0,  2,  2,  2,  2,  0, -2 },
-         { -2,  1,  2,  3,  3,  2,  1, -2 },
-         { -2,  1,  2,  3,  3,  2,  1, -2 },
+         { -2,  1,  2,  3,  3,  2,  1, -2 }, // y=3 centre
+         { -2,  1,  2,  3,  3,  2,  1, -2 }, // y=4 centre
          { -2,  0,  2,  2,  2,  2,  0, -2 },
          { -2,  0,  0,  1,  1,  0,  0, -2 },
-         { -4, -2, -2, -2, -2, -2, -2, -4 }
+         { -4, -2, -2, -2, -2, -2, -2, -4 }  // y=7 fond Noirs
       };
       
-      /* TABLE TOURS : Encourage 7ème rangée et colonnes ouvertes (approximatif) */
+      /* TOURS : Encourage 7ème rangée et colonnes ouvertes - Table ASYMÉTRIQUE
+      qui devra donc faire l'objet d'un mirroir V pour les Noirs ----------- */
       static const int rookTable[8][8] = {
-         {  0,  0,  0,  0,  0,  0,  0,  0 },
-         {  2,  2,  2,  2,  2,  2,  2,  2 }, // '7e rangée' au sens échiquéen
-         {  0,  0,  0,  0,  0,  0,  0,  0 },
-         {  0,  0,  0,  0,  0,  0,  0,  0 },
-         {  0,  0,  0,  0,  0,  0,  0,  0 },
-         {  0,  0,  0,  0,  0,  0,  0,  0 },
-         {  0,  0,  0,  0,  0,  0,  0,  0 },
-         {  0,  0,  0,  0,  0,  0,  0,  0 }
+         { -3, -3, -3,  1,  0,  1, -3, -3 }, // y=0 : pénalise coins/b1/g1, encourage d1/f1
+         {  0,  0,  1,  2,  2,  1,  0,  0 }, // y=1 légère préférence d/e
+         {  0,  0,  1,  2,  2,  1,  0,  0 }, // y=2
+         {  0,  0,  1,  2,  2,  1,  0,  0 }, // y=3
+         {  0,  0,  1,  2,  2,  1,  0,  0 }, // y=4
+         {  0,  0,  1,  2,  2,  1,  0,  0 }, // y=5
+         {  3,  3,  4,  5,  5,  4,  3,  3 }, // y=6 7e rangée ✅✅
+         {  0,  0,  0,  0,  0,  0,  0,  0 }  // y=7
       };
       
-      /* TABLE DAME : Légère préférence pour le centre, éviter l'exposition précoce */
+      /* DAME : Préférence pour le centre, éviter l'exposition précoce
+      Table SYMÉTRIQUE sans correction nécessaire ----------------- */
       static const int queenTable[8][8] = {
-         { -4, -2, -2, -1, -1, -2, -2, -4 },
-         { -2,  0,  0,  0,  0,  0,  0, -2 },
-         { -2,  0,  1,  1,  1,  1,  0, -2 },
-         { -1,  0,  1,  2,  2,  1,  0, -1 },
-         { -1,  0,  1,  2,  2,  1,  0, -1 },
-         { -2,  0,  1,  1,  1,  1,  0, -2 },
-         { -2,  0,  0,  0,  0,  0,  0, -2 },
-         { -4, -2, -2, -1, -1, -2, -2, -4 }
+         { -5, -3, -2, -1, -1, -2, -3, -5 }, // y=0 fond : éviter sortie précoce
+         { -3,  0,  0,  0,  0,  0,  0, -3 }, // y=1
+         { -2,  0,  2,  2,  2,  2,  0, -2 }, // y=2
+         { -1,  0,  2,  3,  3,  2,  0, -1 }, // y=3 centre ✅
+         { -1,  0,  2,  3,  3,  2,  0, -1 }, // y=4 centre ✅
+         { -2,  0,  2,  2,  2,  2,  0, -2 }, // y=5
+         { -3,  0,  0,  0,  0,  0,  0, -3 }, // y=6
+         { -5, -3, -2, -1, -1, -2, -3, -5 }  // y=7 fond
       };
       
-      /* TABLE ROI (milieu de partie) : Encourage roque et sécurité sur les côtés */
+      /* ROI milieu de partie : Encourage le roque et la sécurisation du Roi sur les côtés.
+      Table ASYMÉTRIQUE qui devra donc faire l'objet d'un miroir Vertical pour les Noirs.
+      On note que la table Rois -par ses bonus importants pour le roque- primera sur la table
+      Tours, dont les bonus en première ligne sont calculés opportunément post-roque.      */
       static const int kingMiddleGameTable[8][8] = {
-         { -8,-10,-10,-12,-12,-10,-10, -8 },
-         { -8,-10,-10,-12,-12,-10,-10, -8 },
-         { -6, -8, -8,-10,-10, -8, -8, -6 },
-         { -6, -8, -8,-10,-10, -8, -8, -6 },
-         { -4, -6, -6, -8, -8, -6, -6, -4 },
-         { -2, -4, -4, -4, -4, -4, -4, -2 },
-         {  4,  4,  2,  0,  0,  2,  4,  4 },
-         {  6,  8,  4,  2,  2,  4,  8,  6 }
+         {  2, 10,  8,  0,  0, -2, 10,  2 }, // y=0 : g1/b1 après roque ✅✅, e1/d1 dangereux
+         {  4,  6,  2,  0,  0,  2,  4,  2 }, // y=1 couverture pions ✅
+         { -4, -6, -6, -8, -8, -6, -6, -4 }, // y=2
+         { -6, -8, -8,-10,-10, -8, -8, -6 }, // y=3
+         { -8,-10,-10,-12,-12,-10,-10, -8 }, // y=4
+         {-10,-12,-12,-14,-14,-12,-12,-10 }, // y=5 très dangereux
+         {-10,-12,-12,-14,-14,-12,-12,-10 }, // y=6
+         {-12,-14,-14,-14,-14,-14,-14,-12 }  // y=7 fond Noirs = très dangereux pour Blancs
       };
       
-      /* TABLE ROI (fin de partie) : Le roi devient actif au centre */
+      /* ROI fin de partie : Le roi devient actif au centre
+      Table SYMÉTRIQUE sans correction nécessaire        */
       static const int kingEndGameTable[8][8] = {
-         { -8, -6, -4, -2, -2, -4, -6, -8 },
-         { -6, -4, -2,  0,  0, -2, -4, -6 },
-         { -4, -2,  2,  4,  4,  2, -2, -4 },
-         { -4, -2,  4,  6,  6,  4, -2, -4 },
-         { -4, -2,  4,  6,  6,  4, -2, -4 },
-         { -4, -2,  2,  4,  4,  2, -2, -4 },
-         { -6, -4, -2,  0,  0, -2, -4, -6 },
-         { -8, -6, -4, -2, -2, -4, -6, -8 }
+         { -6, -4, -2, -2, -2, -2, -4, -6 }, // y=0
+         { -4,  0,  2,  2,  2,  2,  0, -4 }, // y=1
+         { -2,  2,  4,  6,  6,  4,  2, -2 }, // y=2
+         { -2,  2,  6,  8,  8,  6,  2, -2 }, // y=3 centre ✅
+         { -2,  2,  6,  8,  8,  6,  2, -2 }, // y=4 centre ✅
+         { -2,  2,  4,  6,  6,  4,  2, -2 }, // y=5
+         { -4,  0,  2,  2,  2,  2,  0, -4 }, // y=6
+         { -6, -4, -2, -2, -2, -2, -4, -6 }  // y=7
       };
       
       /* Comptage du matériel total pour déterminer si on est en fin de partie
@@ -915,14 +955,14 @@ static int nbCallsIsKingCheck = 0;
                   
                case Pion:
                   materialValue = 100;
-                  /* Pour les Noirs, on inverse la table (miroir vertical) */
+                  /* Table Pions asymétrique -> miroir V seul pour les Noirs */
                   if (piece.side == sideWhite) positionBonus = pawnTable[y][x];
-                  else positionBonus = pawnTable[7-y][x];
+                  else                         positionBonus = pawnTable[7-y][x];
                   break;
                   
                case Cava:
                   materialValue = 300;
-                  positionBonus = knightTable[y][x];
+                  positionBonus = knightTable[y][x]; // Table symétrique RAS Blancs/Noirs
                   
                   /* BONUS DÉVELOPPEMENT : Cavalier sorti de sa case de départ */
                   if (piece.side == sideWhite && y > 0) developmentWhite += 5;
@@ -931,7 +971,8 @@ static int nbCallsIsKingCheck = 0;
                   
                case Fou:
                   materialValue = 310;
-                  positionBonus = bishopTable[y][x];
+                  positionBonus = bishopTable[y][x]; // Table symétrique RAS Blancs/Noirs
+                  
                   /* BONUS DÉVELOPPEMENT : Fou sorti de sa case de départ */
                   if (piece.side == sideWhite && y > 0) developmentWhite += 5;
                   if (piece.side == sideBlack && y < 7) developmentBlack += 5;
@@ -939,13 +980,14 @@ static int nbCallsIsKingCheck = 0;
                   
                case Tour:
                   materialValue = 500;
+                  /* Table Tours asymétrique -> miroir V+H pour les Noirs */
                   if (piece.side == sideWhite) positionBonus = rookTable[y][x];
-                  else positionBonus = rookTable[7-y][x];
+                  else                         positionBonus = rookTable[7-y][x];
                   break;
                   
                case Dame:
                   materialValue = 900;
-                  positionBonus = queenTable[y][x];
+                  positionBonus = queenTable[y][x]; // Table symétrique RAS Blancs/Noirs
                   /* MALUS SI DAME SORTIE TROP TÔT (avant coups 10-15) */
                   if (board->nbEntiers < 10) {
                      if (piece.side == sideWhite && y > 1) positionBonus -= 10;
@@ -958,11 +1000,11 @@ static int nbCallsIsKingCheck = 0;
                   /* Choix de la table selon la phase de jeu */
                   /* Fin de partie si matériel total < 3000 (approximatif) */
                   if (isEndGame) {
-                     if (piece.side == sideWhite) positionBonus = kingEndGameTable[y][x];
-                     else positionBonus = kingEndGameTable[7-y][x];
+                     positionBonus = kingEndGameTable[y][x]; // Table symétrique RAS Blancs/Noirs
                   } else {
+                     /* Table Rois 'MiddleGame' asymétrique -> miroir V+H pour les Noirs */
                      if (piece.side == sideWhite) positionBonus = kingMiddleGameTable[y][x];
-                     else positionBonus = kingMiddleGameTable[7-y][x];
+                     else                         positionBonus = kingMiddleGameTable[7-y][x];
                   }
                   break;
             } // Fin de switch
@@ -1077,8 +1119,9 @@ static int nbCallsIsKingCheck = 0;
             if (piece && piece.type == Roi) {
                
                // ✅ NOUVEAU : Pénalité si Roi au centre en milieu de partie
-               //BOOL isEndGame = (totalMaterial < 2000);  // Peu de matériel
-               BOOL isEndGame = (materialWhite + materialBlack < 2600);
+               // on réutilise 'isEndGame' de la partie 1
+               // on commente donc la ligne ci-dessous
+               //BOOL isEndGame = (materialWhite + materialBlack < 2600);
                
                
                if (!isEndGame) {
@@ -1110,14 +1153,13 @@ static int nbCallsIsKingCheck = 0;
                // ✅ BONUS : Compter les pions protecteurs devant le Roi
                if (piece.side == sideWhite && y == 0) {  // Roi Blanc sur rangée 0
                   int pawnShield = 0;
-                  
                   // Vérifier les 3 colonnes devant le Roi
                   for (int dx = -1; dx <= 1; dx++) {
                      int checkX = x + dx;
                      if (checkX >= 0 && checkX < 8) {
                         Piece *pawn = [board piece_colX:checkX rangY:1];
                         if (pawn && pawn.type == Pion && pawn.side == sideWhite) {
-                           pawnShield += 10;  // Bonus par pion protecteur
+                           pawnShield += 20;  // Bonus par pion protecteur
                         }
                      }
                   }
@@ -1127,7 +1169,6 @@ static int nbCallsIsKingCheck = 0;
                
                if (piece.side == sideBlack && y == 7) {  // Roi Noir sur rangée 7
                   int pawnShield = 0;
-                  
                   for (int dx = -1; dx <= 1; dx++) {
                      int checkX = x + dx;
                      if (checkX >= 0 && checkX < 8) {
@@ -1158,7 +1199,97 @@ static int nbCallsIsKingCheck = 0;
               //NSLog(@"🔵 Pion noir promo x=%d, evalWhitePOV=%d", x, evalWhitePOV);
           }
       }
+      
+      /* -------------------------------------------
+      PARTIE 7 : BONUS ROQUE (MiddleGame only)    */
+      if (!isEndGame) {
+         
+         // --- BLANCS ---
+         Piece *whiteKing = nil;
+         int wkx = 0, wky = 0;
+         for (int x = 0; x < 8 && !whiteKing; x++)
+            for (int y = 0; y < 8 && !whiteKing; y++) {
+               Piece *p = board->pieceCase[x][y];
+               if (p && p.type == Roi && p.side == sideWhite) {
+                  whiteKing = p; wkx = x; wky = y;
+               }
+            }
+         
+         if (whiteKing) {
+            BOOL wCastledKS  = (wkx == 6 && wky == 0);  // g1
+            BOOL wCastledQS  = (wkx == 2 && wky == 0);  // c1
+            BOOL wCanCastleK = (board->castlingRights & 1);
+            BOOL wCanCastleQ = (board->castlingRights & 2);
+            BOOL wKingOnE1   = (wkx == 4 && wky == 0);  // pas encore bougé
+            
+            if (wCastledKS || wCastledQS) {
+               evalWhitePOV += 60;
+            } else if (wKingOnE1 && (wCanCastleK || wCanCastleQ)) {
+               
+               // ✅ NOUVEAU : vérifier que le chemin est libre
+               BOOL kingsideFree  = !board->pieceCase[5][0] &&
+               !board->pieceCase[6][0]; // f1 et g1 libres
+               BOOL queensideFree = !board->pieceCase[1][0] &&
+               !board->pieceCase[2][0] &&
+               !board->pieceCase[3][0]; // b1, c1, d1 libres
+               
+               BOOL canActuallyCastle = (wCanCastleK && kingsideFree) ||
+               (wCanCastleQ && queensideFree);
+               
+               if (canActuallyCastle) {
+                  evalWhitePOV += 20;   // Roque réellement possible
+               } else {
+                  evalWhitePOV -= 30;   // Droit formel mais chemin bloqué ❌
+               }
+            } else {
+               evalWhitePOV -= 50;       // Droit perdu
+            }
+         }
+         
+         // --- NOIRS ---
+         Piece *blackKing = nil;
+         int bkx = 0, bky = 0;
+         for (int x = 0; x < 8 && !blackKing; x++)
+            for (int y = 0; y < 8 && !blackKing; y++) {
+               Piece *p = board->pieceCase[x][y];
+               if (p && p.type == Roi && p.side == sideBlack) {
+                  blackKing = p; bkx = x; bky = y;
+               }
+            }
+         
+         if (blackKing) {
+            BOOL bCastledKS  = (bkx == 6 && bky == 7);  // g8
+            BOOL bCastledQS  = (bkx == 2 && bky == 7);  // c8
+            BOOL bCanCastleK = (board->castlingRights & 4);
+            BOOL bCanCastleQ = (board->castlingRights & 8);
+            BOOL bKingOnE8   = (bkx == 4 && bky == 7);  // pas encore bougé
+            
+            if (bCastledKS || bCastledQS) {
+               evalWhitePOV -= 60;
+            } else if (bKingOnE8 && (bCanCastleK || bCanCastleQ)) {
+               
+               // ✅ NOUVEAU : vérifier que le chemin est libre
+               BOOL kingsideFree  = !board->pieceCase[5][7] &&
+               !board->pieceCase[6][7]; // f8 et g8 libres
+               BOOL queensideFree = !board->pieceCase[1][7] &&
+               !board->pieceCase[2][7] &&
+               !board->pieceCase[3][7]; // b8, c8, d8 libres
+               
+               BOOL canActuallyCastle = (bCanCastleK && kingsideFree) ||
+               (bCanCastleQ && queensideFree);
+               
+               if (canActuallyCastle) {
+                  evalWhitePOV += 20;   // Roque réellement possible
+               } else {
+                  evalWhitePOV -= 30;   // Droit formel mais chemin bloqué ❌
+               }
+            } else {
+               evalWhitePOV -= 50;       // Droit perdu
+            }
+         }
+      }
       // -------------------------------------------
+      
       
       /* La mise à jour de l'interface est déplacée dans 'MakeIAMoveForSide' et sa variante 'Silent'
       pour limiter le nombre de mise à jour de l'interface pendant que l'IA décide de son coup    */
@@ -1409,42 +1540,41 @@ static int nbCallsIsKingCheck = 0;
    // Méthode SEE Static Exchange Evaluation
    - (int)SEEForMove:(Move *)move board:(ChessBoard *)board
    {
-      // Valeur gagnée
-      int gain = [self ValueOfPiece:move.capturedPiece.type];
-      
-      // Coût : pièce qui capture
-      int attackerValue = [self ValueOfPiece:move.movingPiece.type];
-      
-      // ✅ CRITIQUE : Copier le board pour ne pas affecter l'original
-      ChessBoard *testBoard = board.copy;
-      
-      
-      /* Le traitement concernera uniquement une copie du board -- */
-      MoveState st = [testBoard makeMove:move];
-      
-      Side side = move.movingPiece.side;
-      Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
-      
-      NSMutableArray<Move *> *recaptures = [NSMutableArray arrayWithCapacity:8];
-      [self GenCapturForSide:otherSide board:testBoard into:recaptures];
-      
-      int worstRecapture = 0;
-      
-      for (Move *rm in recaptures) {
-         if (rm.toSquare == move.toSquare) {
-            int v = [self ValueOfPiece:rm.movingPiece.type];
-            worstRecapture = MAX(worstRecapture, v);
-         }
-      }
-      
-      [testBoard unmakeMove:move state:st];
-      /* Fin de traitement sur la copie du board ----------------- */
-      
-      
-      // 👉 BILAN MATÉRIEL RÉEL
-      return gain - attackerValue - worstRecapture;
+       // Gain immédiat de la capture
+       int gain = [self ValueOfPiece:move.capturedPiece.type];
+       int attackerValue = [self ValueOfPiece:move.movingPiece.type];
+       
+       // Si on perd la pièce qui capture sans recapture possible → SEE = gain - attacker
+       // On cherche uniquement la recapture la moins chère (1 niveau)
+       ChessBoard *testBoard = board.copy;
+       MoveState st = [testBoard makeMove:move];
+       
+       Side otherSide = (move.movingPiece.side == sideWhite) ? sideBlack : sideWhite;
+       
+       NSMutableArray<Move *> *recaptures = [NSMutableArray arrayWithCapacity:8];
+       [self GenCapturForSide:otherSide board:testBoard into:recaptures];
+       
+       // Recapture la moins chère sur la case cible
+       int minRecaptureValue = INT_MAX;
+       for (Move *rm in recaptures) {
+           if (rm.dest.x == move.dest.x && rm.dest.y == move.dest.y) {
+               int v = [self ValueOfPiece:rm.movingPiece.type];
+               if (v < minRecaptureValue) minRecaptureValue = v;
+           }
+       }
+       
+       [testBoard unmakeMove:move state:st];
+       
+       if (minRecaptureValue == INT_MAX) {
+           // Pas de recapture → gain pur
+           return gain;
+       }
+       
+       // Recapture possible : gain - perte si recapture rentable pour l'adversaire
+       return gain - MAX(0, attackerValue - minRecaptureValue);
       
    } // !SEEForMove
+
 
 
    // ================================================================================================
@@ -1675,7 +1805,7 @@ static int nbCallsIsKingCheck = 0;
       int mobilityBonus = (whiteMobility - blackMobility) * 2;
 
       // ✅ LOG temporaire pour observer
-      // NSLog(@"📊 Mobilité: W=%d, B=%d, bonus=%+d", whiteMobility, blackMobility, mobilityBonus);
+      //NSLog(@"📊 Mobilité: W=%d, B=%d, bonus=%+d", whiteMobility, blackMobility, mobilityBonus);
 
       return mobilityBonus;
    }
@@ -1690,7 +1820,155 @@ static int nbCallsIsKingCheck = 0;
       return (int)moves.count;
    }
 
-   
+
+// ================================================================================================
+// Méthode de construction de l'Opening Book
+- (void)buildOpeningBook {
+    self.openingBook = @{
+        
+        // ============================================================
+        // POSITION INITIALE
+        // ============================================================
+        @"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w" : @"e2e4",
+        
+        // ============================================================
+        // APRÈS 1.e4
+        // ============================================================
+        @"rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b" : @"e7e5",
+        @"rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w" : @"g1f3",
+        @"rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b" : @"b8c6",
+        @"r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w" : @"f1c4",
+        // Ruy Lopez
+        @"r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w" : @"f1b5",
+        
+        // Défense Sicilienne
+        @"rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b" : @"c7c5",
+        @"rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w" : @"g1f3",
+        @"rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b" : @"b8c6",
+        
+        // Défense Française
+        @"rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b" : @"e7e6",
+        @"rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w" : @"d2d4",
+        @"rnbqkbnr/pppp1ppp/4p3/8/3PP3/8/PPP2PPP/RNBQKBNR b" : @"d7d5",
+        
+        // ============================================================
+        // APRÈS 1.d4
+        // ============================================================
+        @"rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b" : @"d7d5",
+        @"rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w" : @"c2c4",
+        @"rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b" : @"e7e6",
+        // Gambit Dame
+        @"rnbqkbnr/ppp2ppp/4p3/3p4/2PP4/8/PP2PPPP/RNBQKBNR w" : @"b1c3",
+        @"rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b" : @"c7c6",
+        
+        // Défense Nimzo-Indienne
+        @"rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b" : @"g8f6",
+        @"rnbqkb1r/pppppppp/5n2/8/3P4/8/PPP1PPPP/RNBQKBNR w" : @"c2c4",
+        @"rnbqkb1r/pppppppp/5n2/8/2PP4/8/PP2PPPP/RNBQKBNR b" : @"e7e6",
+        @"rnbqkb1r/pppp1ppp/4pn2/8/2PP4/8/PP2PPPP/RNBQKBNR w" : @"b1c3",
+        @"rnbqkb1r/pppp1ppp/4pn2/8/2PP4/2N5/PP2PPPP/R1BQKBNR b" : @"f8b4",
+        
+        // ============================================================
+        // DÉVELOPPEMENT GÉNÉRAL (positions communes)
+        // ============================================================
+        // Développer cavaliers et fous, préparer roque
+        @"r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b" : @"g8f6",
+        @"r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w" : @"e1g1",
+        @"r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQ1RK1 b" : @"f8c5",
+    };
+}
+
+
+// ================================================================================================
+// Méthode lookupOpeningBook
+-(Move *)lookupOpeningBook:(ChessBoard *)board
+                       side:(Side)side
+{
+    if (!self.openingBook) return nil;
+    
+    // Générer le FEN partiel (pièces + trait seulement)
+    NSString *fen = [self partialFEN:board side:side];
+    NSString *bookMove = self.openingBook[fen];
+    
+    if (!bookMove) return nil;
+    
+    // Convertir "e2e4" → Move
+    int fx = [bookMove characterAtIndex:0] - 'a';
+    int fy = [bookMove characterAtIndex:1] - '1';
+    int tx = [bookMove characterAtIndex:2] - 'a';
+    int ty = [bookMove characterAtIndex:3] - '1';
+    
+    // Vérifier que le coup est légal
+    NSMutableArray<Move *> *moves = [NSMutableArray array];
+    [self GenMovesForSide:side board:board into:moves];
+    
+    for (Move *m in moves) {
+        if (m.start.x == fx && m.start.y == fy &&
+            m.dest.x  == tx && m.dest.y  == ty) {
+            // Vérifier légalité
+            MoveState st = [board makeMove:m];
+            BOOL legal = ![self IsKingInCheck:side board:board];
+            [board unmakeMove:m state:st];
+            if (legal) {
+                NSLog(@"📖 Opening book : %@", bookMove);
+                return m;
+            }
+        }
+    }
+    return nil;
+}
+
+
+// ================================================================================================
+// Méthode partialFEN
+-(NSString *)partialFEN:(ChessBoard *)board side:(Side)side
+{
+    NSMutableString *fen = [NSMutableString string];
+    
+    // Pièces (y=7 → y=0, rangée 8 → rangée 1)
+    for (int y = 7; y >= 0; y--) {
+        int empty = 0;
+        for (int x = 0; x < 8; x++) {
+            Piece *p = board->pieceCase[x][y];
+            if (!p) {
+                empty++;
+            } else {
+                if (empty > 0) {
+                    [fen appendFormat:@"%d", empty];
+                    empty = 0;
+                }
+                NSString *symbol = [self fenSymbolForPiece:p];
+                [fen appendString:symbol];
+            }
+        }
+        if (empty > 0) [fen appendFormat:@"%d", empty];
+        if (y > 0) [fen appendString:@"/"];
+    }
+    
+    // Trait
+    [fen appendString:(side == sideWhite) ? @" w" : @" b"];
+    
+    return fen;
+}
+
+
+// ================================================================================================
+// Méthode fenSymbolForPiece
+- (NSString *)fenSymbolForPiece:(Piece *)p
+{
+    NSString *symbols[] = {@"P", @"N", @"B", @"R", @"Q", @"K"};
+    PieceType types[]   = {Pion, Cava, Fou, Tour, Dame, Roi};
+    
+    for (int i = 0; i < 6; i++) {
+        if (p.type == types[i]) {
+            return (p.side == sideWhite) ? symbols[i] :
+                   [symbols[i] lowercaseString];
+        }
+    }
+    return @"?";
+}
+
+
    
 @end
 

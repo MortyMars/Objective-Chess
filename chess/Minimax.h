@@ -64,6 +64,9 @@
 
    @property (nonatomic, strong) Move *lastIAMove;  // Dernier coup joué
 
+   // Introduction d'un Opening Book
+   @property (nonatomic, strong) NSDictionary<NSString *, NSString *> *openingBook;
+
    // Historique des positions pour détection de répétition
    #define MAX_GAME_LENGTH 512
 
@@ -125,6 +128,9 @@
    // Méthodes ajoutant la 'Mobilité' dans EvalBoardForSide
    -(int)EvaluateMobility:(ChessBoard *)board;
    -(int)CountPseudoLegalMovesForSide:(Side)side board:(ChessBoard *)board;
+
+   // Méthode de construction de l'Opening Book
+   -(void)buildOpeningBook;
 
 
    
