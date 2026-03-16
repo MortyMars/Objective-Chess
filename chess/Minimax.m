@@ -42,6 +42,7 @@ static int nbCallsIsKingCheck = 0;
          cacheHits = 0;
          cacheMisses = 0;
          self.transpositionTable = [[TranspositionTable alloc] initWithSizeMB:128];
+         [self buildOpeningBook];  // Ouverture de l'Opening Book
       }
       return self;
    }
@@ -57,7 +58,7 @@ static int nbCallsIsKingCheck = 0;
       evalCount = 0; moveGenCount = 0; copyBoardCount = 0;
       evalTotalTime = 0; moveGenTotalTime = 0;
       memset(historyTable, 0, sizeof(historyTable));
-      isInNullMove = NO;
+      //isInNullMove = NO;
       historyCount = 0;
       memset(positionHistory, 0, sizeof(positionHistory));
       nodes = 0;
@@ -68,7 +69,7 @@ static int nbCallsIsKingCheck = 0;
       NSDate *startTime = [NSDate date];
       
       // 📖 Consulter le livre d'ouvertures en premier
-      if (board->nbEntiers <= 10) {  // Limiter aux 10 premiers coups
+      if (board->nbEntiers <= 10) {  // Limiter aux 10 premiers coups entiers (Joueur+IA)
         Move *bookMove = [self lookupOpeningBook:board side:side];
         if (bookMove) {
             _idBestMove  = bookMove;
@@ -134,7 +135,8 @@ static int nbCallsIsKingCheck = 0;
                                         board:board
                                         depth:depth - 1
                                         alpha:-beta
-                                         beta:-alpha];
+                                         beta:-alpha
+                                   inNullMove:NO];
             
             [board unmakeMove:move state:st];
             historyCount--;
@@ -154,8 +156,8 @@ static int nbCallsIsKingCheck = 0;
          }
          
          NSTimeInterval elapsed = [[NSDate date] timeIntervalSinceDate:startTime];
-         NSLog(@"🔁 depth=%d → coup=%@ score=%d (%.2fs, %llu nœuds)",
-               depth, _idBestMove, _idBestScore, elapsed, nodes);
+         // NSLog(@"🔁 depth=%d → coup=%@ score=%d (%.2fs, %llu nœuds)",
+         //       depth, _idBestMove, _idBestScore, elapsed, nodes);
          
       } // fin iterative deepening
       
@@ -181,9 +183,17 @@ static int nbCallsIsKingCheck = 0;
       
       // --- Stats finales ---
       NSTimeInterval elapsed = [[NSDate date] timeIntervalSinceDate:startTime];
-      NSLog(@"✅ Coup choisi : %@ (score=%d, %.1fs, %llu nœuds, %.0f n/s)",
-            _idBestMove, _idBestScore, elapsed, nodes,
-            (elapsed > 0) ? nodes/elapsed : 0);
+      NSLog(@"---------------------------------------------------------");
+      if (sideIA==sideBlack) {
+         NSLog(@"✅ Best Move : %@ (score=%d, %.1fs, %llu nœuds, %.0f n/s)",
+               _idBestMove, _idBestScore, elapsed, nodes,
+               (elapsed > 0) ? nodes/elapsed : 0);
+      } else {
+         NSLog(@"✅ Best Move : %@ (score=%d, %.1fs, %llu nœuds, %.0f n/s)",
+               [Move opMove:_idBestMove], _idBestScore, elapsed, nodes,
+               (elapsed > 0) ? nodes/elapsed : 0);
+      }
+      
       [self.transpositionTable printStats];
       
       self.lastIAMove = _idBestMove;
@@ -200,10 +210,9 @@ static int nbCallsIsKingCheck = 0;
                   depth:(int)depth
                   alpha:(int)alpha
                    beta:(int)beta
+             inNullMove:(BOOL)inNullMove
    {
       nodes++;
-      
-      int alphaOrig = alpha;  // ✨ Sauvegarder alpha original pour TT
       
       #ifdef DEBUG_ZOBRIST
          uint64_t keyEntry = board->zobristKey;
@@ -251,6 +260,11 @@ static int nbCallsIsKingCheck = 0;
          }
       }
       
+      
+      // Sauvegarder alpha APRÈS ajustements TT, et AVANT exploration
+      int alphaOrig = alpha;
+      
+      
       // ----------------------------------------------------------------------
       // Quiescence Search à profondeur 0
       if (depth <= 0) {
@@ -272,10 +286,11 @@ static int nbCallsIsKingCheck = 0;
       // 3. Pas déjà dans un null move (éviter récursion infinie)
       // 4. Pas dans une position de mat proche (optionnel)
 
-      if (depth >= 3 && !inCheck && !isInNullMove) {
-        
+      if (depth >= 3 && !inCheck && !inNullMove) {
+         
+        /* Suppression reprise Claude */
         // Activer le flag
-        isInNullMove = YES;
+        //isInNullMove = YES;
         
         // L'adversaire joue (sans coup réel)
         Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
@@ -288,10 +303,12 @@ static int nbCallsIsKingCheck = 0;
                                         board:board
                                         depth:depth - 1 - R
                                         alpha:-beta
-                                         beta:-beta + 1];
+                                         beta:-beta + 1
+                                   inNullMove:YES];
         
+        /* Suppression reprise Claude */
         // Désactiver le flag
-        isInNullMove = NO;
+        //isInNullMove = NO;
          
         // ✅ LOG pour debug
         //NSLog(@"🔍 NMP depth=%d, nullScore=%d, beta=%d, cutoff=%d",
@@ -392,7 +409,8 @@ static int nbCallsIsKingCheck = 0;
                                         board:board
                                         depth:depth-1
                                         alpha:-beta
-                                         beta:-alpha];
+                                         beta:-alpha
+                                   inNullMove:NO];
             
             // ✅ LOG pour les coups suspects
             if (depth == NUMBER_MOVES_AHEAD) {  // Seulement au niveau racine
@@ -427,14 +445,15 @@ static int nbCallsIsKingCheck = 0;
             
             // Killer Move : coup silencieux qui cause un cutoff
             if (!m.isCapture && !m.isPromotion) {
+               int sideIdx = (side == sideWhite)? 0 : 1;
               // Éviter les doublons
               BOOL alreadyKiller = (_killerMoves[depth][0] &&
-                  m.fromSquare == _killerMoves[depth][0].fromSquare &&
-                  m.toSquare   == _killerMoves[depth][0].toSquare);
+                  m.fromSquare == _killerMoves[depth][sideIdx][0].fromSquare &&
+                  m.toSquare   == _killerMoves[depth][sideIdx][0].toSquare);
               
               if (!alreadyKiller) {
-                  _killerMoves[depth][1] = _killerMoves[depth][0];
-                  _killerMoves[depth][0] = m;
+                  _killerMoves[depth][sideIdx][1] = _killerMoves[depth][sideIdx][0];
+                  _killerMoves[depth][sideIdx][0] = m;
               }
             }
             
@@ -487,11 +506,10 @@ static int nbCallsIsKingCheck = 0;
    {
       nodes++;
       
-               #ifdef DEBUG_ZOBRIST
-               uint64_t keyEntry = board->zobristKey;
-               #endif
+      #ifdef DEBUG_ZOBRIST
+      uint64_t keyEntry = board->zobristKey;
+      #endif
 
-      
       Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
       
       BOOL inCheck = [self IsKingInCheck:side board:board];
@@ -503,14 +521,12 @@ static int nbCallsIsKingCheck = 0;
          standPat = [self EvalBoardForSide:side board:board];
          
          if (standPat >= beta) {
-            
-               #ifdef DEBUG_ZOBRIST
-               NSAssert(board->zobristKey == keyEntry,
-                        @"Zobrist corrompu : QS stand-pat cutoff");
-               #endif
-            
-            return beta;}
-         
+            #ifdef DEBUG_ZOBRIST
+            NSAssert(board->zobristKey == keyEntry,
+                     @"Zobrist corrompu : QS stand-pat cutoff");
+            #endif
+            return standPat;  // fail-soft : retourner le score réel
+         }
          if (standPat > alpha) alpha = standPat;
       }
       
@@ -534,14 +550,13 @@ static int nbCallsIsKingCheck = 0;
       
       // 4️⃣ Boucle QS
       for (Move *m in moves) {
-         
          // 🔹 DELTA PRUNING
          if (!inCheck) {
+            NSAssert(standPat != -INF, @"standPat non initialisé dans delta pruning");
             int gain = [self ValueOfPiece:m.capturedPiece.type];
             if (standPat + gain + DELTA_MARGIN < alpha)
                continue;
          }
-         
          // 🔹 SEE FILTER
          if (!inCheck) {
             int see = [self SEEForMove:m board:board];
@@ -549,77 +564,27 @@ static int nbCallsIsKingCheck = 0;
                continue;
          }
          
-         // 🔴 INTERDICTION DES SUICIDES DE DAME
-         if (!inCheck && m.movingPiece.type == Dame && ![self IsSquareDefended:m.toSquare
-                                                                        bySide:side
-                                                                         board:board]) {
-            continue;
-         }
-         
-         // On peut y aller
-         
-               #ifdef DEBUG_ZOBRIST
-               // GÉNÉRATION CLÉ ZOBRIST AVANT MAKEMOVE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-               uint64_t keyBefore = board->zobristKey;
-               #endif
-         
+         // Après ces filtres, on peut y aller
          MoveState st = [board makeMove:m];
          
-               #ifdef DEBUG_ZOBRIST
-               uint64_t z2 = recomputeZobrist(board);
-               if (z2 != board->zobristKey) {
-                   NSLog(@"❌ Quiescence: Zobrist mismatch après makeMove %@", m);
-                   NSLog(@"   Hash actuel=%llx, recalculé=%llx", board->zobristKey, z2);
-                   NSLog(@"   Move: castling=%d EP=%d capture=%d promo=%d",
-                         m.isCastling, m.isEnPassant, m.isCapture, m.isPromotion);
-                   NSLog(@"   fromSq=%d toSq=%d", m.fromSquare, m.toSquare);
-                  NSAssert(board->zobristKey == z2,  // ✅ Assertion correcte
-                           @"Zobrist corrompu après makeMove");
-               }
-               #endif
-         
-               /* Assertion incorrecte
-               #ifdef DEBUG_ZOBRIST
-                  NSAssert(board->zobristKey == keyEntry,
-                           @"Zobrist corrompu : QS stand-pat cutoff");
-               #endif
-               */
-         
-         if (![self IsKingInCheck:side board:board]) {
-            
+         BOOL legal = ![self IsKingInCheck:side board:board];
+         if (legal) {
             int score = -[self QuiescenceForSide:otherSide
                                            board:board
                                            alpha:-beta
                                             beta:-alpha
                                          qsDepth:qsDepth + 1];
             
-            [board unmakeMove:m state:st];
+            [board unmakeMove:m state:st];  // ← toujours ici, légal ou non
             
-            #ifdef DEBUG_ZOBRIST
-            // COMPARAISON CLÉ ZOBRIST APRÈS UNMAKEMOVE
-            NSAssert(board->zobristKey == keyBefore, @"❌ Quiescence Zobrist make/unmake incohérent");
-            #endif
-
-            #ifdef DEBUG_ZOBRIST
-            NSAssert(board->zobristKey == keyEntry,
-                     @"Zobrist corrompu : QS stand-pat cutoff");
-            #endif
+            if (score >= beta)  return score;  // fail-soft
             
-            if (score >= beta) {
-               #ifdef DEBUG_ZOBRIST
-                  NSAssert(board->zobristKey == keyEntry,
-                           @"Zobrist corrompu : QS stand-pat cutoff");
-                  #endif
-               return beta;
-            }
+            if (score > alpha)  alpha = score;
             
-            if (score > alpha) alpha = score;
-            
-         } // !if !IsKingInCheck
-         
-         else [board unmakeMove:m state:st]; // si IsKingInCheck on annule le coup
-         
-      } // !for move
+         } else {
+            [board unmakeMove:m state:st]; // si en échec on annule le coup
+         }
+      }
       
       #ifdef DEBUG_ZOBRIST
       NSAssert(board->zobristKey == keyEntry,
@@ -630,32 +595,7 @@ static int nbCallsIsKingCheck = 0;
       
    } // !QuiescenceForSide
 
-   /* Méthode obsolète
-   // ================================================================================================
-   // MÉTHODE SortMovesByPriority
-   // TRI DES COUPS PAR PRIORITÉ pour améliorer l'efficacité de l'élagage alpha-beta
-   // Principe : Les meilleurs coups sont examinés en premier, ce qui provoque plus de cutoffs
-   // et réduit donc le nombre de branches à explorer
-   -(NSArray *)SortMovesByPriority:(NSSet *)moves
-                             board:(ChessBoard *)board
-                              side:(Side)side
-                             depth:(int)depth
-   {
-      // Conversion du NSSet en NSArray pour pouvoir le trier
-      NSArray *movesArray = [moves allObjects];
-      
-      return [movesArray sortedArrayUsingComparator:^NSComparisonResult(Move *m1, Move *m2) {
-         int score1 = [self ScoreMove:m1 board:board side:side depth:depth];
-         int score2 = [self ScoreMove:m2 board:board side:side depth:depth];
-         
-         if (score2 > score1) return NSOrderedAscending;
-         if (score2 < score1) return NSOrderedDescending;
-         return NSOrderedSame;
-      }];
-   }   */
-
-
-
+   
    // ================================================================================================
    // MÉTHODE ScoreMove - ÉVALUATION D'UN COUP (Ne pas confondre avec 'ScoreMovesList'
    // Attribution d'un score heuristique rapide basé sur :
@@ -735,6 +675,8 @@ static int nbCallsIsKingCheck = 0;
                      side:(Side)side
                     depth:(int)depth
    {
+      int sideIdx = (side == sideWhite)? 0 : 1;
+      
       for (Move *m in moves) {
          
          int score = 0;
@@ -748,15 +690,15 @@ static int nbCallsIsKingCheck = 0;
          }
          else {
             // Killer 1
-            if (_killerMoves[depth][0] &&
-                m.fromSquare == _killerMoves[depth][0].fromSquare &&
-                m.toSquare   == _killerMoves[depth][0].toSquare) {
+            if (_killerMoves[depth][sideIdx][0] &&
+                m.fromSquare == _killerMoves[depth][sideIdx][0].fromSquare &&
+                m.toSquare   == _killerMoves[depth][sideIdx][0].toSquare) {
               score += 9000;
             }
             // Killer 2
-            else if (_killerMoves[depth][1] &&
-                     m.fromSquare == _killerMoves[depth][1].fromSquare &&
-                     m.toSquare   == _killerMoves[depth][1].toSquare) {
+            else if (_killerMoves[depth][sideIdx][1] &&
+                     m.fromSquare == _killerMoves[depth][sideIdx][1].fromSquare &&
+                     m.toSquare   == _killerMoves[depth][sideIdx][1].toSquare) {
               score += 8000;
             }
             // 🎯 Coups calmes intéressants
@@ -983,6 +925,39 @@ static int nbCallsIsKingCheck = 0;
                   /* Table Tours asymétrique -> miroir V+H pour les Noirs */
                   if (piece.side == sideWhite) positionBonus = rookTable[y][x];
                   else                         positionBonus = rookTable[7-y][x];
+                  
+                  /* MALUS TOUR BOUGÉE AVANT ROQUE
+                  Si la tour a bougé et que le roi n'a pas encore roquer
+                  → pénalité proportionnelle à la phase de jeu            */
+                  if (!isEndGame && piece.numMoves > 0) {
+                     BOOL kingHasCastled = NO;
+                     if (piece.side == sideWhite) {
+                        /* Roi Blanc a roquer si wkx == 2 ou 6, wky == 0 */
+                        Piece *wk = board->pieceCase[2][0];
+                        if (!wk || wk.type != Roi || wk.side != sideWhite)
+                           wk = board->pieceCase[6][0];
+                        
+                        kingHasCastled = (wk && wk.type == Roi &&
+                                          wk.side == sideWhite && wk.numMoves > 0);
+                     }
+                     else {
+                        Piece *bk = board->pieceCase[2][7];
+                        
+                        if (!bk || bk.type != Roi || bk.side != sideBlack)
+                           bk = board->pieceCase[6][7];
+                        
+                        kingHasCastled = (bk && bk.type == Roi &&
+                                          bk.side == sideBlack && bk.numMoves > 0);
+                        
+                     }
+                     
+                     if (!kingHasCastled) {
+                        /* Malus croissant : -25 dès le 1er mouvement       */
+                        int rookPenalty = -25;
+                        if (piece.side == sideWhite) evalWhitePOV += rookPenalty;
+                        else                         evalWhitePOV -= rookPenalty;
+                     }
+                  }
                   break;
                   
                case Dame:
@@ -1233,8 +1208,19 @@ static int nbCallsIsKingCheck = 0;
                !board->pieceCase[2][0] &&
                !board->pieceCase[3][0]; // b1, c1, d1 libres
                
-               BOOL canActuallyCastle = (wCanCastleK && kingsideFree) ||
-               (wCanCastleQ && queensideFree);
+               //BOOL canActuallyCastle = (wCanCastleK && kingsideFree) ||
+               //(wCanCastleQ && queensideFree);
+               
+               /* Vérifier que les Tours n'ont pas bougé */
+               Piece *wRookK = board->pieceCase[7][0];  // h1
+               Piece *wRookQ = board->pieceCase[0][0];  // a1
+               BOOL wRookKIntact = (wRookK && wRookK.type == Tour &&
+                                    wRookK.side == sideWhite && wRookK.numMoves == 0);
+               BOOL wRookQIntact = (wRookQ && wRookQ.type == Tour &&
+                                    wRookQ.side == sideWhite && wRookQ.numMoves == 0);
+               BOOL canActuallyCastle = (wCanCastleK && kingsideFree && wRookKIntact) ||
+                                        (wCanCastleQ && queensideFree && wRookQIntact);
+               /* Fin de vérif déplacement des tours */
                
                if (canActuallyCastle) {
                   evalWhitePOV += 20;   // Roque réellement possible
@@ -1244,6 +1230,9 @@ static int nbCallsIsKingCheck = 0;
             } else {
                evalWhitePOV -= 50;       // Droit perdu
             }
+            
+            // NSLog(@"wks=%d, wky=%d, wCastledKS=%d, wCanCastleK=%d, \nevalWhitePOV=%d, castlingRights=%d",
+            //         wkx,    wky,    wCastledKS,    wCanCastleK,      evalWhitePOV,    board->castlingRights);
          }
          
          // --- NOIRS ---
@@ -1275,16 +1264,27 @@ static int nbCallsIsKingCheck = 0;
                !board->pieceCase[2][7] &&
                !board->pieceCase[3][7]; // b8, c8, d8 libres
                
-               BOOL canActuallyCastle = (bCanCastleK && kingsideFree) ||
-               (bCanCastleQ && queensideFree);
+               //BOOL canActuallyCastle = (bCanCastleK && kingsideFree) ||
+               //(bCanCastleQ && queensideFree);
+               
+               /* Vérifier que les Tours n'ont pas bougé */
+               Piece *bRookK = board->pieceCase[7][7];  // h8
+               Piece *bRookQ = board->pieceCase[0][7];  // a8
+               BOOL bRookKIntact = (bRookK && bRookK.type == Tour &&
+                                    bRookK.side == sideBlack && bRookK.numMoves == 0);
+               BOOL bRookQIntact = (bRookQ && bRookQ.type == Tour &&
+                                    bRookQ.side == sideBlack && bRookQ.numMoves == 0);
+               BOOL canActuallyCastle = (bCanCastleK && kingsideFree && bRookKIntact) ||
+                                        (bCanCastleQ && queensideFree && bRookQIntact);
+               /* Fin de vérif déplacement des tours */
                
                if (canActuallyCastle) {
                   evalWhitePOV += 20;   // Roque réellement possible
                } else {
-                  evalWhitePOV -= 30;   // Droit formel mais chemin bloqué ❌
+                  evalWhitePOV += 30;   // Malus pour Noirs = positif POV Blancs
                }
             } else {
-               evalWhitePOV -= 50;       // Droit perdu
+               evalWhitePOV += 50;       // Droit perdu = malus Noirs = positif POV Blancs
             }
          }
       }
@@ -1579,7 +1579,7 @@ static int nbCallsIsKingCheck = 0;
 
    // ================================================================================================
    // Méthode retournant la valeur d'une pièce
-   - (int)ValueOfPiece:(PieceType)p
+   -(int)ValueOfPiece:(PieceType)p
    {
       switch (p) {
          case Pion       : return 100;     // valeur de base
@@ -1821,102 +1821,132 @@ static int nbCallsIsKingCheck = 0;
    }
 
 
-// ================================================================================================
-// Méthode de construction de l'Opening Book
-- (void)buildOpeningBook {
-    self.openingBook = @{
-        
-        // ============================================================
-        // POSITION INITIALE
-        // ============================================================
-        @"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w" : @"e2e4",
-        
-        // ============================================================
-        // APRÈS 1.e4
-        // ============================================================
-        @"rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b" : @"e7e5",
-        @"rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w" : @"g1f3",
-        @"rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b" : @"b8c6",
-        @"r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w" : @"f1c4",
-        // Ruy Lopez
-        @"r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w" : @"f1b5",
-        
-        // Défense Sicilienne
-        @"rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b" : @"c7c5",
-        @"rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w" : @"g1f3",
-        @"rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b" : @"b8c6",
-        
-        // Défense Française
-        @"rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b" : @"e7e6",
-        @"rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w" : @"d2d4",
-        @"rnbqkbnr/pppp1ppp/4p3/8/3PP3/8/PPP2PPP/RNBQKBNR b" : @"d7d5",
-        
-        // ============================================================
-        // APRÈS 1.d4
-        // ============================================================
-        @"rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b" : @"d7d5",
-        @"rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w" : @"c2c4",
-        @"rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b" : @"e7e6",
-        // Gambit Dame
-        @"rnbqkbnr/ppp2ppp/4p3/3p4/2PP4/8/PP2PPPP/RNBQKBNR w" : @"b1c3",
-        @"rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b" : @"c7c6",
-        
-        // Défense Nimzo-Indienne
-        @"rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b" : @"g8f6",
-        @"rnbqkb1r/pppppppp/5n2/8/3P4/8/PPP1PPPP/RNBQKBNR w" : @"c2c4",
-        @"rnbqkb1r/pppppppp/5n2/8/2PP4/8/PP2PPPP/RNBQKBNR b" : @"e7e6",
-        @"rnbqkb1r/pppp1ppp/4pn2/8/2PP4/8/PP2PPPP/RNBQKBNR w" : @"b1c3",
-        @"rnbqkb1r/pppp1ppp/4pn2/8/2PP4/2N5/PP2PPPP/R1BQKBNR b" : @"f8b4",
-        
-        // ============================================================
-        // DÉVELOPPEMENT GÉNÉRAL (positions communes)
-        // ============================================================
-        // Développer cavaliers et fous, préparer roque
-        @"r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b" : @"g8f6",
-        @"r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w" : @"e1g1",
-        @"r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQ1RK1 b" : @"f8c5",
-    };
-}
+   // ================================================================================================
+   // Méthode de construction de l'Opening Book
+   - (void)buildOpeningBook {
+       self.openingBook = @{
+           // ── POSITION INITIALE ────────────────────────────────
+           @"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w" :
+               @[@"e2e4", @"d2d4", @"c2c4", @"g1f3"],
+           // ── APRÈS 1.e4 ───────────────────────────────────────
+           @"rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b" :
+               @[@"e7e5", @"c7c5", @"e7e6", @"c7c6", @"d7d5"],
+           // 1.e4 e5
+           @"rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w" :
+               @[@"g1f3", @"f2f4", @"b1c3"],
+           @"rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b" :
+               @[@"b8c6", @"g8f6", @"d7d6"],
+           // 1.e4 e5 2.Cf3 Cc6 → Giuoco / Ruy Lopez
+           @"r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w" :
+               @[@"f1c4", @"f1b5", @"d2d4"],
+           // Giuoco Piano : 3.Fc4 Fc5
+           @"r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b" :
+               @[@"f8c5", @"g8f6", @"f7f5"],
+           @"r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w" :
+               @[@"e1g1", @"d2d3", @"b2b4"],
+           // Ruy Lopez : 3.Fb5 a6
+           @"r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R b" :
+               @[@"a7a6", @"g8f6", @"f7f5"],
+           @"r1bqkbnr/1ppp1ppp/p1n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w" :
+               @[@"f1a4", @"f1c4", @"e1g1"],
+           // Défense Sicilienne : 1...c5
+           @"rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w" :
+               @[@"g1f3", @"b1c3", @"c2c3"],
+           @"rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b" :
+               @[@"b8c6", @"d7d6", @"e7e6"],
+           // Défense Française : 1...e6
+           @"rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w" :
+               @[@"d2d4", @"d2d3", @"g1f3"],
+           @"rnbqkbnr/pppp1ppp/4p3/8/3PP3/8/PPP2PPP/RNBQKBNR b" :
+               @[@"d7d5", @"c7c5", @"g8f6"],
+           // ── APRÈS 1.d4 ───────────────────────────────────────
+           @"rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b" :
+               @[@"d7d5", @"g8f6", @"e7e6", @"c7c5"],
+           // 1.d4 d5 → Gambit Dame
+           @"rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w" :
+               @[@"c2c4", @"g1f3", @"e2e3"],
+           @"rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b" :
+               @[@"e7e6", @"c7c6", @"d5c4"],
+           // 1.d4 Cf6 → Nimzo / Est-Indienne
+           @"rnbqkb1r/pppppppp/5n2/8/3P4/8/PPP1PPPP/RNBQKBNR w" :
+               @[@"c2c4", @"g1f3", @"b1c3"],
+           @"rnbqkb1r/pppppppp/5n2/8/2PP4/8/PP2PPPP/RNBQKBNR b" :
+               @[@"e7e6", @"g7g6", @"c7c5"],
+           // ── APRÈS 1.c4 (Anglaise) ────────────────────────────
+           @"rnbqkbnr/pppppppp/8/8/2P5/8/PP1PPPPP/RNBQKBNR b" :
+               @[@"e7e5", @"g8f6", @"c7c5"],
+           // ── APRÈS 1.Cf3 ──────────────────────────────────────
+           @"rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R b" :
+               @[@"d7d5", @"g8f6", @"c7c5", @"e7e6"],
+       };
+   }
 
-
-// ================================================================================================
-// Méthode lookupOpeningBook
--(Move *)lookupOpeningBook:(ChessBoard *)board
-                       side:(Side)side
-{
-    if (!self.openingBook) return nil;
-    
-    // Générer le FEN partiel (pièces + trait seulement)
-    NSString *fen = [self partialFEN:board side:side];
-    NSString *bookMove = self.openingBook[fen];
-    
-    if (!bookMove) return nil;
-    
-    // Convertir "e2e4" → Move
-    int fx = [bookMove characterAtIndex:0] - 'a';
-    int fy = [bookMove characterAtIndex:1] - '1';
-    int tx = [bookMove characterAtIndex:2] - 'a';
-    int ty = [bookMove characterAtIndex:3] - '1';
-    
-    // Vérifier que le coup est légal
-    NSMutableArray<Move *> *moves = [NSMutableArray array];
-    [self GenMovesForSide:side board:board into:moves];
-    
-    for (Move *m in moves) {
-        if (m.start.x == fx && m.start.y == fy &&
-            m.dest.x  == tx && m.dest.y  == ty) {
-            // Vérifier légalité
-            MoveState st = [board makeMove:m];
-            BOOL legal = ![self IsKingInCheck:side board:board];
-            [board unmakeMove:m state:st];
-            if (legal) {
-                NSLog(@"📖 Opening book : %@", bookMove);
-                return m;
+   // ================================================================================================
+   // Méthode lookupOpeningBook
+   -(Move *)lookupOpeningBook:(ChessBoard *)board
+                         side:(Side)side
+   {
+      if (!self.openingBook) return nil;
+      
+      // Générer le FEN partiel (pièces + trait seulement)
+      NSString *fen = [self partialFEN:board side:side];
+      
+      
+      
+      NSArray<NSString *> *candidates = self.openingBook[fen];
+      
+      if (!candidates || candidates.count == 0) return nil;
+      
+      
+      // Mélanger les candidats pour varier le jeu
+      
+      NSMutableArray *shuffled = [NSMutableArray arrayWithArray:candidates];
+      
+      for (NSInteger i = shuffled.count - 1; i > 0; i--) {
+         
+         NSInteger j = arc4random_uniform((uint32_t)(i + 1));
+         
+         [shuffled exchangeObjectAtIndex:i withObjectAtIndex:j];
+         
+      }
+      
+      
+      
+      
+      NSMutableArray<Move *> *legalMoves = [NSMutableArray array];
+      
+      [self GenMovesForSide:side board:board into:legalMoves];
+      
+      
+      for (NSString *bookMove in shuffled) {
+         
+         // Convertir "e2e4" → Move
+         int fx = [bookMove characterAtIndex:0] - 'a';
+         int fy = [bookMove characterAtIndex:1] - '1';
+         int tx = [bookMove characterAtIndex:2] - 'a';
+         int ty = [bookMove characterAtIndex:3] - '1';
+         
+         
+         
+         
+         for (Move *m in legalMoves) {
+            if (m.start.x == fx && m.start.y == fy &&
+                m.dest.x  == tx && m.dest.y  == ty) {
+               // Vérifier légalité
+               MoveState st = [board makeMove:m];
+               BOOL legal = ![self IsKingInCheck:side board:board];
+               [board unmakeMove:m state:st];
+               if (legal) {
+                  NSLog(@"---------------------------------------------------------");
+                  NSLog(@"📖 Opening book : %@", bookMove);
+                  return m;
+               }
             }
-        }
-    }
-    return nil;
-}
+         }
+         
+      } // fin boucle candidats
+      return nil;
+   }
 
 
 // ================================================================================================

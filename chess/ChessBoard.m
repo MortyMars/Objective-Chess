@@ -473,6 +473,16 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       
       MoveState st = [self makeMove:firstAImove];           // réalisation graphique du coup
       
+      // Affichage du Best Move en Log
+      NSLog(@"---------------------------------------------------------");
+      NSLog(@"✅ Best Move : %@", [Move opMove:firstAImove]);
+      
+      // Affichage du move en Log : c'est le n°1 de lIA, et comme l'IA a les Noirs
+      // il faut inverser la notation du coup effectué
+      NSLog(@"🎲 Coup n°1 IA : %@", [Move opMove:firstAImove]);
+      // NSLog(@"🌤️ Eval coup IA     => EvalWhitePOV : %d, Str%@", liveEvalWhitePOV, liveStrEvalBoard);
+      NSLog(@"---------------------------------------------------------\n");
+      
       /* Init de la liste des coups joués et traitement chaine du 1er coup, sachant qu'il ne peut y avoir
        à ce stade de la partie, de promotion de pion ou de position d'échec, d'où les paramètres fixés à @""
        Par ailleurs, inutile de gérer les infos de Roque car le premier coup ne peut consister à Roquer */

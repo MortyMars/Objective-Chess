@@ -62,9 +62,11 @@
       // Forcer le scroll du contrôle vers le bas pour voir tjs les derniers coups
       [monConnecteur.txtListeCoupsPartie
             scrollRangeToVisible:NSMakeRange(monConnecteur.txtListeCoupsPartie.string.length, 0)];
-   }
+      
+   } // !MaJtxtListeCoupsPartie
 
    
+
    // =============================================================================================
    // Implémentation Méthode d'édition de la liste des coups
    // Appelée par AppDelegate pour la mise à jour du 1er coup qd l'IA a les Blancs
@@ -73,9 +75,10 @@
       // Sortie concaténée
       txtListeCoupsPartie.string = [txtListeCoupsPartie.string stringByAppendingString:texteSortie];
    
-   } // Fin de Méthode
+   } // !InitialiseListeCoupsPartie
 
    
+
    // =============================================================================================
    // Méthode d'instance assurant le repérage des rang. et col. selon l'orientation de l'échiquier
    -(void)MajReperesCases
@@ -102,7 +105,8 @@
          lettresSideBlancsBas    .hidden = YES;
          lettresSideNoirsBas     .hidden = NO;
       }
-   } // Fin de Méthode MajReperesCases
+      
+   } // !MajReperesCases
 
 
    // Gestion des items du menu 'Partie->Difficulté'
@@ -112,7 +116,7 @@
       [menuSTD       setState:NO];
       [menuReflechi  setState:NO];
       [menuChampion  setState:NO];
-      NUMBER_MOVES_AHEAD = 5;
+      NUMBER_MOVES_AHEAD = 6;
       monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
@@ -134,7 +138,7 @@
       [menuSTD       setState:YES]; // Standard
       [menuReflechi  setState:NO];
       [menuChampion  setState:NO];
-      NUMBER_MOVES_AHEAD = 9;
+      NUMBER_MOVES_AHEAD = 8;
       monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
@@ -145,7 +149,7 @@
       [menuSTD       setState:NO];
       [menuReflechi  setState:YES]; // Réfléchi
       [menuChampion  setState:NO];
-      NUMBER_MOVES_AHEAD = 11;
+      NUMBER_MOVES_AHEAD = 9;
       monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
@@ -156,11 +160,13 @@
       [menuSTD       setState:NO];
       [menuReflechi  setState:NO];
       [menuChampion  setState:YES]; // Champions
-      NUMBER_MOVES_AHEAD = 13;
+      NUMBER_MOVES_AHEAD = 10;
       monConnecteur.lblInfo.cell.stringValue =
                               [NSString stringWithFormat:@"Info : NUMBER_MOVES_AHEAD = %d", NUMBER_MOVES_AHEAD];
    }
-   // Fin de gestion des items du menu 'Partie->Difficulté'
+   // !SetDifficultyX
+
+   
 
    // ==================================================================================================
    // Méthode d'affichage DÉLÉGUÉE
@@ -192,6 +198,7 @@
       qu'interrompre le programme en attente d'un clic sur 'OK', bouton = 1 n'est qu'un artifice */
       
    }
+
 
 
    // ================================================================================================

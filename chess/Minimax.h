@@ -46,15 +46,18 @@
       // Compteur de profondeur de pile make/unmake
       //int depthCounter;
       
+      /* Supprimé des iVar, et désormais passé en paramètre
       // Drapeau utilisé par le Null Move Pruning
-      @public BOOL isInNullMove;  // initialisé dans BMFS
+      //@public BOOL isInNullMove;  // initialisé dans BMFS
+      Fin de suppression */
       
       // Variables stockant le meilleur coup entre itérations d'Iterative Deepening
       Move *_idBestMove;
       int   _idBestScore;
       
       // Killer Moves
-      Move *_killerMoves[64][2];
+      Move *_killerMoves[64][2][2]; // [max depth Negamax] [side 0=W 1=B] [slot]
+      /* Noter qu'une max depth Negamax 'limitée' à 64 nous laisse de la marge */
 
    }
 
@@ -65,7 +68,7 @@
    @property (nonatomic, strong) Move *lastIAMove;  // Dernier coup joué
 
    // Introduction d'un Opening Book
-   @property (nonatomic, strong) NSDictionary<NSString *, NSString *> *openingBook;
+   @property NSDictionary<NSString *, NSArray<NSString *> *> *openingBook;
 
    // Historique des positions pour détection de répétition
    #define MAX_GAME_LENGTH 512
@@ -75,7 +78,15 @@
                   board:(ChessBoard *)board
                   depth:(int)depth
                   alpha:(int)alpha
-                   beta:(int)beta;
+                   beta:(int)beta
+             inNullMove:(BOOL)inNullMove;
+
+
+   -(int)QuiescenceForSide:(Side)side
+                     board:(ChessBoard *)board
+                     alpha:(int)alpha
+                      beta:(int)beta
+                   qsDepth:(int)qsDepth;
 
 
    // MÉTHODES AJOUTÉES POUR LE REFACTORING DU MOTEUR
@@ -119,6 +130,8 @@
    -(BOOL)doesPieceAtX:(int)px Y:(int)py
          attackSquareX:(int)tx Y:(int)ty
                  board:(ChessBoard *)board;
+
+   -(int)ValueOfPiece:(PieceType)p;
 
    // Helper 'doesPieceAtX'
    -(BOOL)isPathClearFromX:(int)fx Y:(int)fy

@@ -109,7 +109,7 @@ void TestInvolution(void)
       assert(monConnecteur.maChessView->liveBoard->enPassantFile == savedEPFile);
    }
    
-   NSLog(@"✅ TestInvolution OK (%lu moves)", (unsigned long)moves.count);
+   NSLog(@"✅ TestInvolution OK (%lu moves)\n", (unsigned long)moves.count);
 }
 
 

@@ -296,7 +296,7 @@ BOOL engineIsBusy = NO;
       liveEvalWhitePOV = [maMinimax EvalBoardForSide:sideWhite board:liveBoard]; // Recalcul d'EvalBoard, base liveBoard
       liveStrEvalBoard =[ChessView VisualIndicator:liveEvalWhitePOV];
       monConnecteur.lblEvalBoard.cell.title = liveStrEvalBoard;
-      NSLog(@"#### Coup Joueur => liveEvalWhitePOV = %d, Indicator = %@\n", liveEvalWhitePOV, liveStrEvalBoard);
+      NSLog(@"🌤️ Eval coup Joueur => EvalWhitePOV : %d, Str%@\n", liveEvalWhitePOV, liveStrEvalBoard);
       
       // Mise à jour de la Vue dans le thread ppal (si on n'y est pas déjà le cas) pour rendre visible la MàJ
       // de la status barre
@@ -352,8 +352,15 @@ BOOL engineIsBusy = NO;
       
       // Réalisation du move
       // ✅ Seulement si aiMove existe
-      NSLog(@"✅ Coup IA choisi : %@", aiMove);
       MoveState st = [liveBoard makeMove:aiMove];
+      
+      // Affichage du coup IA en Log
+      if (sideIA == sideBlack) {
+         NSLog(@"🎲 Coup n°%d IA : %@", liveBoard->nbEntiers, aiMove);
+      }
+      else {
+         NSLog(@"🎲 Coup n°%d IA : %@", liveBoard->nbEntiers, [Move opMove:aiMove]);
+      }
       
       // Gestion des indicateurs d'affichage du Roque dans la liste des coups joués
       petitRoque = NO;
@@ -412,7 +419,8 @@ BOOL engineIsBusy = NO;
       liveEvalWhitePOV = [maMinimax EvalBoardForSide:sideWhite board:liveBoard]; // Recalcul de EvalBoard, base liveBoard
       liveStrEvalBoard = [ChessView VisualIndicator:liveEvalWhitePOV];
       monConnecteur.lblEvalBoard.cell.title = liveStrEvalBoard;
-      NSLog(@"#### Coup IA     => liveEvalWhitePOV = %d, Indicator = %@\n", liveEvalWhitePOV, liveStrEvalBoard);
+      NSLog(@"🌤️ Eval coup IA     => EvalWhitePOV : %d, Str%@", liveEvalWhitePOV, liveStrEvalBoard);
+      NSLog(@"---------------------------------------------------------\n");
       
       // L'IA ayant joué on inverse sideCourant
       sideCourant = (sideCourant == sideWhite) ? sideBlack : sideWhite;
@@ -571,6 +579,14 @@ BOOL engineIsBusy = NO;
          if (movesPossibles.count == 0) {
             [monConnecteur AlertMsgPatMatSide:sideIA onBoard:liveBoard];
          }
+      }
+      
+      // Affichage du coup joueur en Log
+      if (sideIA==sideBlack) {
+         NSLog(@"👩‍🦰 Coup n°%d Joueur : %@",liveBoard->nbEntiers, moveJoueur);
+      }
+      else {
+         NSLog(@"👩‍🦰 Coup n°%d Joueur : %@",liveBoard->nbEntiers-1, [Move opMove:moveJoueur]);
       }
       
       // Mise à jour de la Vue dans le thread ppal si on n'y est pas déjà

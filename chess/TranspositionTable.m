@@ -69,10 +69,10 @@
            generation = 0;
            memset(&stats, 0, sizeof(TTStats));
            
-           NSLog(@"✅ TranspositionTable créée:");
-           NSLog(@"   Taille demandée: %zu MB", sizeMB);
-           NSLog(@"   Taille réelle: %.2f MB", (numEntries * TT_ENTRY_SIZE) / (1024.0 * 1024.0));
-           NSLog(@"   Nombre d'entrées: %zu", numEntries);
+           NSLog(@"✅ TranspositionTable créée :");
+           NSLog(@"    - Taille demandée  : %zu MB", sizeMB);
+           NSLog(@"    - Taille réelle    : %.2f MB", (numEntries * TT_ENTRY_SIZE) / (1024.0 * 1024.0));
+           NSLog(@"    - Nombre d'entrées : %zu\n", numEntries);
        }
        return self;
       
@@ -299,17 +299,17 @@
    }
 
    -(void)printStats {
-       NSLog(@"📊 ===== TranspositionTable Stats =====");
-       NSLog(@"   Taille: %.1f MB (%zu entrées)",
-             (numEntries * TT_ENTRY_SIZE) / (1024.0 * 1024.0), numEntries);
-       NSLog(@"   Probes: %llu", stats.probes);
-       NSLog(@"   Hits: %llu (%.1f%%)", stats.hits, [self hitRate]);
-       NSLog(@"   Collisions: %llu", stats.collisions);
-       NSLog(@"   Stores: %llu", stats.stores);
-       NSLog(@"   Overwrites: %llu", stats.overwrites);
-       NSLog(@"   Fill rate: %.1f%%", [self fillRate]);
-       NSLog(@"   Génération: %d", generation);
-       NSLog(@"=====================================");
+       NSLog(@"📈 TranspositionTable Stats :");
+       //NSLog(@"   - Taille     : %.1f MB (%zu entrées)",
+       //      (numEntries * TT_ENTRY_SIZE) / (1024.0 * 1024.0), numEntries);
+       NSLog(@"    - Probes     : %llu", stats.probes);
+       NSLog(@"    - Hits       : %llu (%.1f%%)", stats.hits, [self hitRate]);
+       NSLog(@"    - Collisions : %llu", stats.collisions);
+       NSLog(@"    - Stores     : %llu", stats.stores);
+       NSLog(@"    - Overwrites : %llu", stats.overwrites);
+       NSLog(@"    - Fill rate  : %.1f%%", [self fillRate]);
+       NSLog(@"    - Génération : %d", generation);
+       //NSLog(@"=====================================");
    }
 
 @end

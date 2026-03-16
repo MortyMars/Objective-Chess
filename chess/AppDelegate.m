@@ -65,11 +65,9 @@
       //maMinimax = maMinimax;
       maMinimax = [[Minimax alloc] init];
       
-      // NSLog pour le fun...
-      NSLog(@"Welcome sur Objective-Chess\n");
-      
       // MCN - NSLog de contrôle
-      NSLog(@"Interface initialisée et chargée\n");
+      NSLog(@"Interface initialisée et chargée");
+      NSLog(@"Welcome sur Objective-Chess 😉\n");
       
       // Initialisation de la clé de hachage Zobrist
       InitZobrist();
