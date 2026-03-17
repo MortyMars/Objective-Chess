@@ -11,9 +11,20 @@
 #import "Zobrist.h"
 #import "TranspositionTable.h"
 
+
 #define INF 1000000     // Définit le score infini pour limiter sans contraindre
 #define QS_MAX_DEPTH 4  // Profondeur choisie pour la Quiescence
 
+
+// Constantes LMR (Late Moves Reductions - profondeur d'analyse)
+/* Les valeurs proposées sont volontairement conservatives pour une première intégration.
+Si le jeu est stable, on peut ensuite abaisser LMR_MOVE_THRESHOLD à 2 et monter
+LMR_REDUCTION_2 à 3 pour gratter encore de la profondeur.                              */
+#define LMR_MIN_DEPTH      3   // profondeur minimale pour déclencher LMR
+#define LMR_MOVE_THRESHOLD 3   // index minimal du coup pour déclencher LMR
+#define LMR_REDUCTION_1    1   // réduction standard
+#define LMR_REDUCTION_2    2   // réduction agressive (coups très tardifs)
+#define LMR_LATE_MOVE      6   // seuil pour réduction agressive
 
 
 @class Move, ChessBoard; // compte tenu de l'appel de ces 2 classes dans la classe Minimax

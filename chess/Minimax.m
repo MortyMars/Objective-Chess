@@ -10,9 +10,12 @@
 #import "ChessBoard+MakeMoves.h"
 #import "ChessConfig.h"
 #import "Util.h"
+#import "PeSTO.h"
 
 
-#define SCORE_INF 10000000 // Définit à 10 000 000 le plus bas des scores (affecté d'un signe -)
+#define MATE_SCORE    100000   // définition de la valeur de base du mat
+#define SCORE_INF     200000   // définit à 200000 le plus bas des scores
+                               // SCORE_INF > MATE_SCORE, et SCORE_INF < INT_MAX/2
 
 
 
@@ -155,7 +158,7 @@ static int nbCallsIsKingCheck = 0;
             _idBestScore = iterBestScore;
          }
          
-         NSTimeInterval elapsed = [[NSDate date] timeIntervalSinceDate:startTime];
+         // NSTimeInterval elapsed = [[NSDate date] timeIntervalSinceDate:startTime];
          // NSLog(@"🔁 depth=%d → coup=%@ score=%d (%.2fs, %llu nœuds)",
          //       depth, _idBestMove, _idBestScore, elapsed, nodes);
          
@@ -350,15 +353,15 @@ static int nbCallsIsKingCheck = 0;
       // Traiter le cas Mat/Pat
       if (moves.count == 0) {
          
-      #ifdef DEBUG_ZOBRIST
-            NSAssert(board->zobristKey == keyEntry,
-                     @"Zobrist corrompu : sortie Negamax sans coups");
-      #endif
+         #ifdef DEBUG_ZOBRIST
+               NSAssert(board->zobristKey == keyEntry,
+                        @"Zobrist corrompu : sortie Negamax sans coups");
+         #endif
          
          int score;
          if ([self IsKingInCheck:side board:board]) {
             // Mat : très mauvais pour le camp qui joue
-            score = -100000 + (NUMBER_MOVES_AHEAD - depth);
+            score = -MATE_SCORE + (NUMBER_MOVES_AHEAD - depth);
          } else {
             // Pat : nul
             score = 0;
@@ -377,6 +380,8 @@ static int nbCallsIsKingCheck = 0;
       // Recherche principale
       Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
       Move *bestMove = nil;  // ✨ Tracker le meilleur coup pour TT
+      
+      int moveIndex = 0;   // ← compteur LMR
       
       for (Move *m in moves) {
          
@@ -405,12 +410,59 @@ static int nbCallsIsKingCheck = 0;
          // Filtre de légalité
          if (![self IsKingInCheck:side board:board]) {
             
-            int score = -[self NegamaxForSide:otherSide
-                                        board:board
-                                        depth:depth-1
-                                        alpha:-beta
-                                         beta:-alpha
-                                   inNullMove:NO];
+            // ── LMR : conditions d'éligibilité ──────────────────
+            /* Dans Negamax, les coups sont triés du meilleur au moins bon. Les premiers coups
+            (TT move, captures gagnantes, killers) méritent une recherche pleine profondeur.
+            Les coups tardifs dans la liste —les moins prometteurs— ont peu de chances d'être le
+            meilleur coup. LMR parie sur ça : on les recherche à profondeur réduite. Si le score
+            réduit dépasse alpha, on re-recherche à pleine profondeur pour confirmer. ------- */
+            BOOL lmrEligible = (depth >= LMR_MIN_DEPTH)           // profondeur suffisante
+                            && (moveIndex >= LMR_MOVE_THRESHOLD)  // coup tardif
+                            && !m.isCapture                       // pas une capture
+                            && !m.isPromotion                     // pas une promotion
+                            && !inCheck;                          // pas en échec
+                        
+            // ── Calcul de R ─────────────────────────────────────
+            int R = 0;
+            if (lmrEligible) {
+                  R = (moveIndex >= LMR_LATE_MOVE) ? LMR_REDUCTION_2 : LMR_REDUCTION_1;
+            }
+            
+            int score;
+            
+            // RECHERCHE RÉDUITE EN MODE LMR
+            if (R > 0) {
+               // ── Recherche réduite LMR ────────────────────────
+               score = -[self NegamaxForSide:otherSide
+                                       board:board
+                                       depth:depth-1 - R // profondeur réduire de R (1 ou 2)
+                                       alpha:-beta
+                                        beta:-alpha
+                                  inNullMove:NO];
+            
+            
+               // ── Re-recherche pleine profondeur si prometteur ─
+               if (score > alpha) {
+                  score = -[self NegamaxForSide:otherSide
+                                          board:board
+                                          depth:depth-1
+                                          alpha:-beta
+                                           beta:-alpha
+                                     inNullMove:NO];
+               }
+               // NSLog de contrôle du déclenchement du LMR
+               // NSLog(@"🔻 LMR depth=%d moveIndex=%d R=%d", depth, moveIndex, R);
+            }
+            // RECHERCHE PLEINE PROFONDEUR (NEGAMAX STANDARD)
+            else {
+               // ── Recherche pleine profondeur coups prioritaires
+               score = -[self NegamaxForSide:otherSide
+                                       board:board
+                                       depth:depth-1
+                                       alpha:-beta
+                                        beta:-alpha
+                                  inNullMove:NO];
+            } // Brackett MCN !?
             
             // ✅ LOG pour les coups suspects
             if (depth == NUMBER_MOVES_AHEAD) {  // Seulement au niveau racine
@@ -428,6 +480,9 @@ static int nbCallsIsKingCheck = 0;
          // ✅ Retirer la position de l'historique APRÈS unmakeMove
          historyCount--;
          
+         // Incrémenter après chaque coup tenté (légal ou non)
+         moveIndex++;
+         
          #ifdef DEBUG_ZOBRIST
                uint64_t keyAfterUnmake = board->zobristKey;
                uint64_t z3 = recomputeZobrist(board);
@@ -442,7 +497,6 @@ static int nbCallsIsKingCheck = 0;
             
          // Beta cutoff
          if (alpha >= beta) {
-            
             // Killer Move : coup silencieux qui cause un cutoff
             if (!m.isCapture && !m.isPromotion) {
                int sideIdx = (side == sideWhite)? 0 : 1;
@@ -456,10 +510,10 @@ static int nbCallsIsKingCheck = 0;
                   _killerMoves[depth][sideIdx][0] = m;
               }
             }
-            
             break;
          }
-      }
+         
+      } // Sortie de boucle for de Recherche Principale
       
       #ifdef DEBUG_ZOBRIST
          NSAssert(board->zobristKey == keyEntry,
@@ -757,248 +811,86 @@ static int nbCallsIsKingCheck = 0;
       evalWhitePOV = 0;  /* Évaluation du point de vue des Blancs (convention Negamax) */
       
       /* Variables pour statistiques intermédiaires */
-      int materialWhite = 0, materialBlack = 0;
+      //int materialWhite = 0, materialBlack = 0;
+      //int developmentWhite = 0, developmentBlack = 0;
+      //int totalMaterial = 0;  /* Pour détecter la fin de partie */
+      
+      // ── PARTIE 1 : MATÉRIEL + PST PESTO + INTERPOLATION DE PHASE ─────────────
+      evalWhitePOV = 0;
+      // Accumulateurs mg/eg séparés pour chaque camp
+      int mgWhite = 0, egWhite = 0;
+      int mgBlack = 0, egBlack = 0;
+      // Compteurs pour le calcul de phase
+      int knights = 0, bishops = 0, rooks = 0, queens = 0;
+      // Variables de développement (conservées pour Partie 3)
       int developmentWhite = 0, developmentBlack = 0;
-      int totalMaterial = 0;  /* Pour détecter la fin de partie */
-      
-      /* -------------------------------------------
-      PARTIE 1 : ÉVAL. MATÉRIELLE + POSITIONNELLE
-      Tables de valeurs positionnelles pour chaque type de pièce
-      Ces tables donnent un bonus/malus selon la position de la pièce sur l'échiquier
-      Convention : les tableaux sont vus du point de vue des Blancs (rangée 0 = fond Blancs)
-      Mais ATTENTION la représentation des tables est inversée par rapport à un board !! */
-      
-      /* PIONS : Encourage l'avancée et le contrôle du centre - Table ASYMÉTRIQUE
-      qui devra donc faire l'objet d'un miroir Vertical pour les Noirs ------- */
-      static const int pawnTable[8][8] = {
-         {  0,  0,  0,  0,  0,  0,  0,  0 }, // y=0 départ (jamais évalué)
-         {  0,  0,  0,  0,  0,  0,  0,  0 }, // y=1 pas encore bougé
-         {  1,  1,  1,  2,  2,  1,  1,  1 }, // y=2 développement minimal
-         {  1,  1,  2,  4,  4,  2,  1,  1 }, // y=3 centre ✅
-         {  2,  2,  3,  5,  5,  3,  2,  2 }, // y=4 centre avancé ✅✅
-         {  3,  3,  4,  5,  5,  4,  3,  3 }, // y=5 très avancé
-         {  5,  5,  5,  6,  6,  5,  5,  5 }, // y=6 avant-promotion ✅✅✅
-         {  0,  0,  0,  0,  0,  0,  0,  0 }  // y=7 promotion (géré Partie 6)
-      };
-      
-      /* CAVALIERS : Encourage position centrale et pénalise les bords
-      Table SYMÉTRIQUE sans correction nécessaire ----------------- */
-      static const int knightTable[8][8] = {
-         {-15,-10, -6, -6, -6, -6,-10,-15 }, // y=0 ← très punitif : éviter le recul
-         {-10, -6, -2,  0,  0, -2, -6,-10 }, // y=1 ← punitif
-         { -4,  0,  3,  4,  4,  3,  0, -4 },
-         { -4,  2,  4,  6,  6,  4,  2, -4 },
-         { -4,  2,  4,  6,  6,  4,  2, -4 },
-         { -4,  0,  3,  4,  4,  3,  0, -4 },
-         {-10, -6, -2,  0,  0, -2, -6,-10 },
-         {-15,-10, -6, -6, -6, -6,-10,-15 }
-      };
-      
-      /* FOUS : Encourage diagonales longues et centre
-      Table SYMÉTRIQUE sans correction nécessaire   */
-      static const int bishopTable[8][8] = {
-         { -4, -2, -2, -2, -2, -2, -2, -4 }, // y=0 fond Blancs
-         { -2,  0,  0,  1,  1,  0,  0, -2 },
-         { -2,  0,  2,  2,  2,  2,  0, -2 },
-         { -2,  1,  2,  3,  3,  2,  1, -2 }, // y=3 centre
-         { -2,  1,  2,  3,  3,  2,  1, -2 }, // y=4 centre
-         { -2,  0,  2,  2,  2,  2,  0, -2 },
-         { -2,  0,  0,  1,  1,  0,  0, -2 },
-         { -4, -2, -2, -2, -2, -2, -2, -4 }  // y=7 fond Noirs
-      };
-      
-      /* TOURS : Encourage 7ème rangée et colonnes ouvertes - Table ASYMÉTRIQUE
-      qui devra donc faire l'objet d'un mirroir V pour les Noirs ----------- */
-      static const int rookTable[8][8] = {
-         { -3, -3, -3,  1,  0,  1, -3, -3 }, // y=0 : pénalise coins/b1/g1, encourage d1/f1
-         {  0,  0,  1,  2,  2,  1,  0,  0 }, // y=1 légère préférence d/e
-         {  0,  0,  1,  2,  2,  1,  0,  0 }, // y=2
-         {  0,  0,  1,  2,  2,  1,  0,  0 }, // y=3
-         {  0,  0,  1,  2,  2,  1,  0,  0 }, // y=4
-         {  0,  0,  1,  2,  2,  1,  0,  0 }, // y=5
-         {  3,  3,  4,  5,  5,  4,  3,  3 }, // y=6 7e rangée ✅✅
-         {  0,  0,  0,  0,  0,  0,  0,  0 }  // y=7
-      };
-      
-      /* DAME : Préférence pour le centre, éviter l'exposition précoce
-      Table SYMÉTRIQUE sans correction nécessaire ----------------- */
-      static const int queenTable[8][8] = {
-         { -5, -3, -2, -1, -1, -2, -3, -5 }, // y=0 fond : éviter sortie précoce
-         { -3,  0,  0,  0,  0,  0,  0, -3 }, // y=1
-         { -2,  0,  2,  2,  2,  2,  0, -2 }, // y=2
-         { -1,  0,  2,  3,  3,  2,  0, -1 }, // y=3 centre ✅
-         { -1,  0,  2,  3,  3,  2,  0, -1 }, // y=4 centre ✅
-         { -2,  0,  2,  2,  2,  2,  0, -2 }, // y=5
-         { -3,  0,  0,  0,  0,  0,  0, -3 }, // y=6
-         { -5, -3, -2, -1, -1, -2, -3, -5 }  // y=7 fond
-      };
-      
-      /* ROI milieu de partie : Encourage le roque et la sécurisation du Roi sur les côtés.
-      Table ASYMÉTRIQUE qui devra donc faire l'objet d'un miroir Vertical pour les Noirs.
-      On note que la table Rois -par ses bonus importants pour le roque- primera sur la table
-      Tours, dont les bonus en première ligne sont calculés opportunément post-roque.      */
-      static const int kingMiddleGameTable[8][8] = {
-         {  2, 10,  8,  0,  0, -2, 10,  2 }, // y=0 : g1/b1 après roque ✅✅, e1/d1 dangereux
-         {  4,  6,  2,  0,  0,  2,  4,  2 }, // y=1 couverture pions ✅
-         { -4, -6, -6, -8, -8, -6, -6, -4 }, // y=2
-         { -6, -8, -8,-10,-10, -8, -8, -6 }, // y=3
-         { -8,-10,-10,-12,-12,-10,-10, -8 }, // y=4
-         {-10,-12,-12,-14,-14,-12,-12,-10 }, // y=5 très dangereux
-         {-10,-12,-12,-14,-14,-12,-12,-10 }, // y=6
-         {-12,-14,-14,-14,-14,-14,-14,-12 }  // y=7 fond Noirs = très dangereux pour Blancs
-      };
-      
-      /* ROI fin de partie : Le roi devient actif au centre
-      Table SYMÉTRIQUE sans correction nécessaire        */
-      static const int kingEndGameTable[8][8] = {
-         { -6, -4, -2, -2, -2, -2, -4, -6 }, // y=0
-         { -4,  0,  2,  2,  2,  2,  0, -4 }, // y=1
-         { -2,  2,  4,  6,  6,  4,  2, -2 }, // y=2
-         { -2,  2,  6,  8,  8,  6,  2, -2 }, // y=3 centre ✅
-         { -2,  2,  6,  8,  8,  6,  2, -2 }, // y=4 centre ✅
-         { -2,  2,  4,  6,  6,  4,  2, -2 }, // y=5
-         { -4,  0,  2,  2,  2,  2,  0, -4 }, // y=6
-         { -6, -4, -2, -2, -2, -2, -4, -6 }  // y=7
-      };
-      
-      /* Comptage du matériel total pour déterminer si on est en fin de partie
-      ✅ Pré-calculer totalMaterial AVANT la boucle principale              */
-
-      // Passe 1 : calcul du matériel total (sans le Roi)
-      totalMaterial = 0;
+      // ── Passe unique sur le board ─────────────────────────────────────────────
       for (int x = 0; x < 8; x++) {
           for (int y = 0; y < 8; y++) {
-              Piece *p = [board piece_colX:x rangY:y];
-              if (!p || p.type == Roi || p.type == Invalide) continue;
-              switch (p.type) {
-                  case Pion:  totalMaterial += 100; break;
-                  case Cava:  totalMaterial += 300; break;
-                  case Fou:   totalMaterial += 310; break;
-                  case Tour:  totalMaterial += 500; break;
-                  case Dame:  totalMaterial += 900; break;
+              Piece *piece = board->pieceCase[x][y];
+              if (!piece || piece.type == Invalide) continue;
+              int sq   = y * 8 + x;   // convention : y=0 fond Blancs
+              int side = (piece.side == sideWhite) ? 0 : 1;
+              int type = (int)piece.type;
+              int mg = PeSTO_PieceValueMG[type] + PeSTO_LookupMG(type, sq, side);
+              int eg = PeSTO_PieceValueEG[type] + PeSTO_LookupEG(type, sq, side);
+              // Comptage pour la phase (toutes pièces des deux camps)
+              switch (piece.type) {
+                  case Cava: knights++; break;
+                  case Fou:  bishops++; break;
+                  case Tour: rooks++;   break;
+                  case Dame: queens++;  break;
                   default: break;
               }
+              // Bonus développement (conservé pour Partie 3)
+              if (piece.type == Cava || piece.type == Fou) {
+                  if (piece.side == sideWhite && y > 0) developmentWhite += 5;
+                  if (piece.side == sideBlack && y < 7) developmentBlack += 5;
+              }
+              // Malus Tour bougée prématurément (conservé)
+              if (piece.type == Tour && piece.numMoves > 0) {
+                  BOOL kingHasCastled = NO;
+                  if (piece.side == sideWhite) {
+                      Piece *wk = board->pieceCase[2][0];
+                      if (!wk || wk.type != Roi || wk.side != sideWhite)
+                          wk = board->pieceCase[6][0];
+                      kingHasCastled = (wk && wk.type == Roi &&
+                                        wk.side == sideWhite && wk.numMoves > 0);
+                  } else {
+                      Piece *bk = board->pieceCase[2][7];
+                      if (!bk || bk.type != Roi || bk.side != sideBlack)
+                          bk = board->pieceCase[6][7];
+                      kingHasCastled = (bk && bk.type == Roi &&
+                                        bk.side == sideBlack && bk.numMoves > 0);
+                  }
+                  if (!kingHasCastled) {
+                      if (piece.side == sideWhite) { mgWhite -= 25; egWhite -= 10; }
+                      else                         { mgBlack -= 25; egBlack -= 10; }
+                  }
+              }
+              // Malus Dame sortie trop tôt
+              if (piece.type == Dame && board->nbEntiers < 10) {
+                  if (piece.side == sideWhite && y > 1) mgWhite -= 10;
+                  if (piece.side == sideBlack && y < 6) mgBlack -= 10;
+              }
+              // Accumulation
+              if (piece.side == sideWhite) { mgWhite += mg; egWhite += eg; }
+              else                         { mgBlack += mg; egBlack += eg; }
           }
       }
-      BOOL isEndGame = (totalMaterial < 2600);
+      // ── Interpolation de phase ────────────────────────────────────────────────
+      int phase = PeSTO_GamePhase(knights, bishops, rooks, queens);
+      // Score interpolé du point de vue des Blancs
+      int scoreWhite = PeSTO_Interpolate(mgWhite, egWhite, phase);
+      int scoreBlack = PeSTO_Interpolate(mgBlack, egBlack, phase);
+      evalWhitePOV   = scoreWhite - scoreBlack;
+      // Exposer la phase pour les Parties suivantes
+      // (remplace le booléen isEndGame utilisé dans Parties 5 et 7)
+      BOOL isEndGame = (phase < 80);  // ~30% du matériel restant
       
-      // Passe 2 : évaluation complète
-      for (int x = 0; x < 8; x++) {
-         for (int y = 0; y < 8; y++) {
-            Piece *piece = [board piece_colX:x rangY:y];
-            if (!piece) continue;
-            int materialValue = 0;  // Valeur matérielle
-            int positionBonus = 0;  // Bonus positionnel
-            
-            /* Détermination de la valeur de base et du bonus positionnel */
-            switch (piece.type) {
-               case Invalide:
-                  break;
-                  
-               case Pion:
-                  materialValue = 100;
-                  /* Table Pions asymétrique -> miroir V seul pour les Noirs */
-                  if (piece.side == sideWhite) positionBonus = pawnTable[y][x];
-                  else                         positionBonus = pawnTable[7-y][x];
-                  break;
-                  
-               case Cava:
-                  materialValue = 300;
-                  positionBonus = knightTable[y][x]; // Table symétrique RAS Blancs/Noirs
-                  
-                  /* BONUS DÉVELOPPEMENT : Cavalier sorti de sa case de départ */
-                  if (piece.side == sideWhite && y > 0) developmentWhite += 5;
-                  if (piece.side == sideBlack && y < 7) developmentBlack += 5;
-                  break;
-                  
-               case Fou:
-                  materialValue = 310;
-                  positionBonus = bishopTable[y][x]; // Table symétrique RAS Blancs/Noirs
-                  
-                  /* BONUS DÉVELOPPEMENT : Fou sorti de sa case de départ */
-                  if (piece.side == sideWhite && y > 0) developmentWhite += 5;
-                  if (piece.side == sideBlack && y < 7) developmentBlack += 5;
-                  break;
-                  
-               case Tour:
-                  materialValue = 500;
-                  /* Table Tours asymétrique -> miroir V+H pour les Noirs */
-                  if (piece.side == sideWhite) positionBonus = rookTable[y][x];
-                  else                         positionBonus = rookTable[7-y][x];
-                  
-                  /* MALUS TOUR BOUGÉE AVANT ROQUE
-                  Si la tour a bougé et que le roi n'a pas encore roquer
-                  → pénalité proportionnelle à la phase de jeu            */
-                  if (!isEndGame && piece.numMoves > 0) {
-                     BOOL kingHasCastled = NO;
-                     if (piece.side == sideWhite) {
-                        /* Roi Blanc a roquer si wkx == 2 ou 6, wky == 0 */
-                        Piece *wk = board->pieceCase[2][0];
-                        if (!wk || wk.type != Roi || wk.side != sideWhite)
-                           wk = board->pieceCase[6][0];
-                        
-                        kingHasCastled = (wk && wk.type == Roi &&
-                                          wk.side == sideWhite && wk.numMoves > 0);
-                     }
-                     else {
-                        Piece *bk = board->pieceCase[2][7];
-                        
-                        if (!bk || bk.type != Roi || bk.side != sideBlack)
-                           bk = board->pieceCase[6][7];
-                        
-                        kingHasCastled = (bk && bk.type == Roi &&
-                                          bk.side == sideBlack && bk.numMoves > 0);
-                        
-                     }
-                     
-                     if (!kingHasCastled) {
-                        /* Malus croissant : -25 dès le 1er mouvement       */
-                        int rookPenalty = -25;
-                        if (piece.side == sideWhite) evalWhitePOV += rookPenalty;
-                        else                         evalWhitePOV -= rookPenalty;
-                     }
-                  }
-                  break;
-                  
-               case Dame:
-                  materialValue = 900;
-                  positionBonus = queenTable[y][x]; // Table symétrique RAS Blancs/Noirs
-                  /* MALUS SI DAME SORTIE TROP TÔT (avant coups 10-15) */
-                  if (board->nbEntiers < 10) {
-                     if (piece.side == sideWhite && y > 1) positionBonus -= 10;
-                     if (piece.side == sideBlack && y < 6) positionBonus -= 10;
-                  }
-                  break;
-                  
-               case Roi:
-                  materialValue = 100000;
-                  /* Choix de la table selon la phase de jeu */
-                  /* Fin de partie si matériel total < 3000 (approximatif) */
-                  if (isEndGame) {
-                     positionBonus = kingEndGameTable[y][x]; // Table symétrique RAS Blancs/Noirs
-                  } else {
-                     /* Table Rois 'MiddleGame' asymétrique -> miroir V+H pour les Noirs */
-                     if (piece.side == sideWhite) positionBonus = kingMiddleGameTable[y][x];
-                     else                         positionBonus = kingMiddleGameTable[7-y][x];
-                  }
-                  break;
-            } // Fin de switch
-            
-            /* DÉSACTIVER Accumulation du matériel total (pour détecter fin de partie) */
-            //if (piece.type != Roi) totalMaterial += materialValue;
-            
-            /* Ajout de la valeur + bonus positionnel selon la couleur */
-            int pieceValue = materialValue + positionBonus;
-            
-            if (piece.side == sideWhite) {
-               materialWhite += pieceValue;
-               evalWhitePOV  += pieceValue;   // Blancs = positif
-            } else {
-               materialBlack += pieceValue;
-               evalWhitePOV  -= pieceValue;   // Noirs = négatif
-            }
-         } // !for 'y'
-      } // !for 'x' et fin de parcours de l'échiquier
+      // NSLog de contrôle (ATTENTION VERBEUX)
+      /* NSLog(@"📊 Phase=%d isEndGame=%d (knights=%d bishops=%d rooks=%d queens=%d)",
+            phase, isEndGame, knights, bishops, rooks, queens); */
       
       /* -------------------------------------------
       PARTIE 2 : ÉVAL. DE LA STRUCTURE DE PIONS
@@ -1106,7 +998,7 @@ static int nbCallsIsKingCheck = 0;
                   
                   if (!isOnEdge) {
                      // Roi au centre = TRÈS DANGEREUX
-                     int dangerPenalty = -60;  // Grosse pénalité
+                     int dangerPenalty = -120;  // ~1.5 pion PeSTO
                      
                      if (piece.side == sideWhite) {
                         evalWhitePOV += dangerPenalty;
@@ -1115,7 +1007,7 @@ static int nbCallsIsKingCheck = 0;
                      }
                   } else if (!isInCorner) {
                      // Roi sur le bord mais pas dans le coin
-                     int edgePenalty = -20;
+                     int edgePenalty = -40;
                      
                      if (piece.side == sideWhite) {
                         evalWhitePOV += edgePenalty;
@@ -1134,7 +1026,7 @@ static int nbCallsIsKingCheck = 0;
                      if (checkX >= 0 && checkX < 8) {
                         Piece *pawn = [board piece_colX:checkX rangY:1];
                         if (pawn && pawn.type == Pion && pawn.side == sideWhite) {
-                           pawnShield += 20;  // Bonus par pion protecteur
+                           pawnShield += 40; // ~0.5 pion PeSTO par pion protecteur
                         }
                      }
                   }
@@ -1149,7 +1041,7 @@ static int nbCallsIsKingCheck = 0;
                      if (checkX >= 0 && checkX < 8) {
                         Piece *pawn = [board piece_colX:checkX rangY:6];
                         if (pawn && pawn.type == Pion && pawn.side == sideBlack) {
-                           pawnShield += 20;
+                           pawnShield += 40; // ~0.5 pion PeSTO par pion protecteur
                         }
                      }
                   }
@@ -1165,12 +1057,12 @@ static int nbCallsIsKingCheck = 0;
       for (int x = 0; x < 8; x++) {
           Piece *pionB = board->pieceCase[x][6];
           if (pionB && pionB.type == Pion && pionB.side == sideWhite) {
-              evalWhitePOV += 900;
+              evalWhitePOV += 400; // PeSTO couvre déjà ~178 via table Pion EG rang 7
               //NSLog(@"🔵 Pion blanc promo x=%d, evalWhitePOV=%d", x, evalWhitePOV);
           }
           Piece *pionN = board->pieceCase[x][1];
           if (pionN && pionN.type == Pion && pionN.side == sideBlack) {
-              evalWhitePOV -= 900;
+              evalWhitePOV -= 400;
               //NSLog(@"🔵 Pion noir promo x=%d, evalWhitePOV=%d", x, evalWhitePOV);
           }
       }
@@ -1198,7 +1090,7 @@ static int nbCallsIsKingCheck = 0;
             BOOL wKingOnE1   = (wkx == 4 && wky == 0);  // pas encore bougé
             
             if (wCastledKS || wCastledQS) {
-               evalWhitePOV += 60;
+               evalWhitePOV += 40; // PeSTO couvre déjà une partie via Roi MG
             } else if (wKingOnE1 && (wCanCastleK || wCanCastleQ)) {
                
                // ✅ NOUVEAU : vérifier que le chemin est libre
@@ -1223,12 +1115,12 @@ static int nbCallsIsKingCheck = 0;
                /* Fin de vérif déplacement des tours */
                
                if (canActuallyCastle) {
-                  evalWhitePOV += 20;   // Roque réellement possible
+                  evalWhitePOV += 30;   // Roque réellement possible
                } else {
-                  evalWhitePOV -= 30;   // Droit formel mais chemin bloqué ❌
+                  evalWhitePOV -= 40;   // Droit formel mais chemin bloqué ❌
                }
             } else {
-               evalWhitePOV -= 50;       // Droit perdu
+               evalWhitePOV -= 80;       // Droit perdu
             }
             
             // NSLog(@"wks=%d, wky=%d, wCastledKS=%d, wCanCastleK=%d, \nevalWhitePOV=%d, castlingRights=%d",
@@ -1254,7 +1146,7 @@ static int nbCallsIsKingCheck = 0;
             BOOL bKingOnE8   = (bkx == 4 && bky == 7);  // pas encore bougé
             
             if (bCastledKS || bCastledQS) {
-               evalWhitePOV -= 60;
+               evalWhitePOV -= 40;
             } else if (bKingOnE8 && (bCanCastleK || bCanCastleQ)) {
                
                // ✅ NOUVEAU : vérifier que le chemin est libre
@@ -1279,12 +1171,12 @@ static int nbCallsIsKingCheck = 0;
                /* Fin de vérif déplacement des tours */
                
                if (canActuallyCastle) {
-                  evalWhitePOV += 20;   // Roque réellement possible
+                  evalWhitePOV += 30;   // Roque réellement possible
                } else {
-                  evalWhitePOV += 30;   // Malus pour Noirs = positif POV Blancs
+                  evalWhitePOV += 40;   // Malus pour Noirs = positif POV Blancs
                }
             } else {
-               evalWhitePOV += 50;       // Droit perdu = malus Noirs = positif POV Blancs
+               evalWhitePOV += 80;       // Droit perdu = malus Noirs = positif POV Blancs
             }
          }
       }
@@ -1295,7 +1187,7 @@ static int nbCallsIsKingCheck = 0;
       pour limiter le nombre de mise à jour de l'interface pendant que l'IA décide de son coup    */
       
       // Assertion pour debug
-      NSAssert(abs(evalWhitePOV) < 50000,
+      NSAssert(abs(evalWhitePOV) < SCORE_INF,
           @"⚠️ Score suspect : %d", evalWhitePOV);
       
       /* CONVERSION FINALE POUR NEGAMAX :

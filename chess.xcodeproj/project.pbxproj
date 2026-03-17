@@ -34,6 +34,8 @@
 		835926FF2F43ED0D003B50CB /* TranspositionTable.m in Sources */ = {isa = PBXBuildFile; fileRef = 835926FE2F43ED0D003B50CB /* TranspositionTable.m */; };
 		835927002F43ED0D003B50CB /* TranspositionTable.m in Sources */ = {isa = PBXBuildFile; fileRef = 835926FE2F43ED0D003B50CB /* TranspositionTable.m */; };
 		8359FCE82561F309000CCF2A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8359FCE72561F309000CCF2A /* AppDelegate.m */; };
+		8391B0482F68A5040001DD3C /* PeSTO.m in Sources */ = {isa = PBXBuildFile; fileRef = 8391B0472F68A5040001DD3C /* PeSTO.m */; };
+		8391B0492F68A5040001DD3C /* PeSTO.m in Sources */ = {isa = PBXBuildFile; fileRef = 8391B0472F68A5040001DD3C /* PeSTO.m */; };
 		839B0EA62393F4E300254843 /* Util.m in Sources */ = {isa = PBXBuildFile; fileRef = 839B0EA52393F4E300254843 /* Util.m */; };
 		83A693AE28273A430098C629 /* Codes FEN.txt in Resources */ = {isa = PBXBuildFile; fileRef = 83A693AC28273A430098C629 /* Codes FEN.txt */; };
 		83A693AF28273A430098C629 /* Codes FEN.txt in Resources */ = {isa = PBXBuildFile; fileRef = 83A693AC28273A430098C629 /* Codes FEN.txt */; };
@@ -101,6 +103,8 @@
 		835926FE2F43ED0D003B50CB /* TranspositionTable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TranspositionTable.m; sourceTree = "<group>"; };
 		8359FCE62561F309000CCF2A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		8359FCE72561F309000CCF2A /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		8391B0462F68A5040001DD3C /* PeSTO.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PeSTO.h; sourceTree = "<group>"; };
+		8391B0472F68A5040001DD3C /* PeSTO.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PeSTO.m; sourceTree = "<group>"; };
 		839B0EA52393F4E300254843 /* Util.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Util.m; sourceTree = "<group>"; };
 		83A693AC28273A430098C629 /* Codes FEN.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "Codes FEN.txt"; sourceTree = SOURCE_ROOT; };
 		83B442B0254F17A00008D95C /* Connecteur.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Connecteur.h; sourceTree = "<group>"; };
@@ -190,6 +194,8 @@
 				49C031A21794B4D6001A2048 /* Move.m */,
 				83FFBCC527C5658C008DEBF3 /* MoveToStr.h */,
 				83FFBCC327C56562008DEBF3 /* MoveToStr.m */,
+				8391B0462F68A5040001DD3C /* PeSTO.h */,
+				8391B0472F68A5040001DD3C /* PeSTO.m */,
 				49AE4AE31794909A009D59BE /* Piece.h */,
 				49AE4AE41794909A009D59BE /* Piece.m */,
 				49AE4AEB1794A5CE009D59BE /* Pos.h */,
@@ -355,6 +361,7 @@
 				835927002F43ED0D003B50CB /* TranspositionTable.m in Sources */,
 				835926FB2F438AB1003B50CB /* ChessBoard+MakeMoves.m in Sources */,
 				8342C20D2F38CAC40063DF68 /* Zobrist.m in Sources */,
+				8391B0482F68A5040001DD3C /* PeSTO.m in Sources */,
 				49AE4ADC17948D73009D59BE /* ChessBoard.m in Sources */,
 				49AE4AE51794909A009D59BE /* Piece.m in Sources */,
 				839B0EA62393F4E300254843 /* Util.m in Sources */,
@@ -370,6 +377,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8391B0492F68A5040001DD3C /* PeSTO.m in Sources */,
 				833949A228120B1B0043F12F /* BoardsForTests.m in Sources */,
 				835926F82F438AB1003B50CB /* Minimax+GenMoves.m in Sources */,
 				835926FF2F43ED0D003B50CB /* TranspositionTable.m in Sources */,
