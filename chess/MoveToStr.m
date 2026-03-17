@@ -121,12 +121,12 @@
       NSString* movVerStr = @"";
       NSMutableString* strDuMove=[NSMutableString stringWithFormat:@"%@",movVerStr];
       
-      // Test initial si roque ou pas, car si roque pas de notation compliquée : o-o ou o-o-o
+      // Si le move est un roque --> pas de notation compliquée : o-o ou o-o-o suffit
       if (petitRoque || grandRoque) {
          [strDuMove appendString:(petitRoque) ? @"o-o     " : @"o-o-o   "];
       }
+      // Si le move n'est pas un roque --> la description complète du coup est nécessaire
       else {
-         // Il n'y a pas roque --> on s'oblige à la description complète du coup
          movVerStr = [NSMutableString stringWithFormat:@"%@",move];
          
          int typPrenante = [board pieceAtPos:move.start].type;

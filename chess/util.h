@@ -18,9 +18,12 @@
 #define SQ_Y(sq)   ((sq) >> 3)
 
 /* Macro de debugging des Move sous forme de 'square' selon l'usage
- NSLog(@"Move %@ -> %@", SQ_STR(m.fromSquare), SQ_STR(m.toSquare));  */
+NSLog(@"Move %@ -> %@", SQ_STR(m.fromSquare), SQ_STR(m.toSquare));  */
 #define SQ_STR(sq) \
     ([NSString stringWithFormat:@"%c%d", 'a'+SQ_X(sq), SQ_Y(sq)+1])
+
+// Valeur de base du Mat
+#define MATE_SCORE    100000   // définition de la valeur de base du mat
 
 
 

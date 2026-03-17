@@ -20,13 +20,13 @@ typedef NS_ENUM(uint8_t, TTNodeType) {
 
 // Entrée de la table de transposition
 typedef struct {
-    uint64_t key;           // Clé Zobrist (64 bits complets pour détection collision)
-    int16_t  score;         // Score de la position (int16 suffit : [-32768, 32767])
+    uint64_t key;             // Clé Zobrist (64 bits complets pour détection collision)
+    int32_t  score;           // Score de la position (int32 nécessaire pour scores PeSTO/mat (> ±32767)
     int16_t  bestMoveEncoded; // Coup encodé : fromSq | (toSq << 6) | (flags << 12)
-    uint8_t  depth;         // Profondeur de recherche restante
-    uint8_t  nodeType;      // Type de nœud (TTNodeType)
-    uint8_t  generation;    // Génération pour le scheme de remplacement
-    uint8_t  padding;       // Alignement mémoire (struct = 16 bytes)
+    uint8_t  depth;           // Profondeur de recherche restante
+    uint8_t  nodeType;        // Type de nœud (TTNodeType)
+    uint8_t  generation;      // Génération pour le scheme de remplacement
+    uint8_t  padding;         // Alignement mémoire (struct = 16 bytes)
 } TTEntry;
 
 

@@ -365,26 +365,30 @@ BOOL engineIsBusy = NO;
       // Gestion des indicateurs d'affichage du Roque dans la liste des coups joués
       petitRoque = NO;
       grandRoque = NO;
-      if (sideJoueur == sideWhite) {
-         if (aiMove.isCastling && aiMove.fromSquare == 4 && aiMove.toSquare == 6) {
+      //if (sideJoueur == sideWhite) {
+         //if (aiMove.isCastling && aiMove.fromSquare == 4 && aiMove.toSquare == 6) {
+         if (aiMove.isCastling && aiMove.start.x == 4 && aiMove.dest.x == 6) {
             petitRoque = YES;
             grandRoque = NO;
          }
-         else if (aiMove.isCastling && aiMove.fromSquare == 4 && aiMove.toSquare == 2) {
+         //else if (aiMove.isCastling && aiMove.fromSquare == 4 && aiMove.toSquare == 2) {
+         else if (aiMove.isCastling && aiMove.start.x == 4 && aiMove.dest.x == 2) {
             petitRoque = NO;
             grandRoque = YES;
          }
-      }
-      else if (sideJoueur == sideBlack) {
+      //}
+      /* else if (sideJoueur == sideBlack) {
+         //if (aiMove.isCastling && aiMove.fromSquare == 60 && aiMove.toSquare == 62) {
          if (aiMove.isCastling && aiMove.fromSquare == 60 && aiMove.toSquare == 62) {
             petitRoque = YES;
             grandRoque = NO;
          }
+         //else if (aiMove.isCastling && aiMove.fromSquare == 60 && aiMove.toSquare == 58) {
          else if (aiMove.isCastling && aiMove.fromSquare == 60 && aiMove.toSquare == 58) {
             petitRoque = NO;
             grandRoque = YES;
          }
-      }
+      } */
       // Fin de gestion des indicateurs
       
       /* Sauvegarde des indicateurs de roque car RAZ plus loin par 'TestEchecFavSide' (???)
@@ -508,17 +512,19 @@ BOOL engineIsBusy = NO;
       // Gestion des indicateurs d'affichage du Roque dans la liste des coups joués
       petitRoque = NO;
       grandRoque = NO;
-      if (sideJoueur == sideWhite) {
-         if (moveJoueur.isCastling && moveJoueur.fromSquare == 4 && moveJoueur.toSquare == 6) {
+      //if (sideJoueur == sideWhite) {
+         //if (moveJoueur.isCastling && moveJoueur.fromSquare == 4 && moveJoueur.toSquare == 6) {
+         if (moveJoueur.isCastling && moveJoueur.start.x == 4 && moveJoueur.dest.x == 6) {
             petitRoque = YES;
             grandRoque = NO;
          }
-         else if (moveJoueur.isCastling && moveJoueur.fromSquare == 4 && moveJoueur.toSquare == 2) {
+         //else if (moveJoueur.isCastling && moveJoueur.fromSquare == 4 && moveJoueur.toSquare == 2) {
+         else if (moveJoueur.isCastling && moveJoueur.start.x == 4 && moveJoueur.dest.x == 2) {
             petitRoque = NO;
             grandRoque = YES;
          }
-      }
-      else if (sideJoueur == sideBlack) {
+      //}
+      /* else if (sideJoueur == sideBlack) {
          if (moveJoueur.isCastling && moveJoueur.fromSquare == 60 && moveJoueur.toSquare == 62) {
             petitRoque = YES;
             grandRoque = NO;
@@ -527,7 +533,7 @@ BOOL engineIsBusy = NO;
             petitRoque = NO;
             grandRoque = YES;
          }
-      }
+      } */
       // Fin de gestion des indicateurs
       
       /* Sauvegarde des indicateurs de Roque et de Prise e.p., car -bizarement- [Minimax TestEchecFavSide]

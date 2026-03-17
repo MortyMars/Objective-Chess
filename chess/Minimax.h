@@ -78,6 +78,9 @@ LMR_REDUCTION_2 à 3 pour gratter encore de la profondeur.                      
 
    @property (nonatomic, strong) Move *lastIAMove;  // Dernier coup joué
 
+   // Property temporaire pour Debug
+   @property (nonatomic) int lastPhase; // phase PeSTO du dernier EvalBoardForSide
+
    // Introduction d'un Opening Book
    @property NSDictionary<NSString *, NSArray<NSString *> *> *openingBook;
 

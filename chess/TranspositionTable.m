@@ -193,57 +193,63 @@
        nodeType:(TTNodeType)nodeType
        bestMove:(Move * _Nullable)bestMove {
       
-       stats.stores++;
-       
-       size_t index = [self indexForKey:zobristKey];
-       TTEntry *entry = &table[index];
-       
-       // Scheme de remplacement : "depth-preferred with generation"
-       // Remplacer si:
-       // 1. Entrée vide (key == 0)
-       // 2. Même position (key == zobristKey)
-       // 3. Ancienne génération ET profondeur <= nouvelle profondeur
-       // 4. Même génération MAIS profondeur inférieure
-       
-       BOOL shouldReplace = NO;
-       
-       if (entry->key == 0) {
-           // Entrée vide
-           shouldReplace = YES;
-       }
-       else if (entry->key == zobristKey) {
-           // Même position : toujours remplacer si profondeur >= ou nouvelle génération
-           shouldReplace = (depth >= entry->depth) || (generation != entry->generation);
-       }
-       else {
-           // Collision : remplacer si ancienne génération ou profondeur très supérieure
-           if (entry->generation != generation) {
-               shouldReplace = YES;
-           }
-           else if (depth >= entry->depth + 3) {  // Seuil de remplacement
-               shouldReplace = YES;
-           }
-       }
-       
-       if (shouldReplace) {
-           if (entry->key != 0 && entry->key != zobristKey) {
-               stats.overwrites++;
-               LOG_TT(@"TT store: OVERWRITE old_key=%llx new_key=%llx", entry->key, zobristKey);
-           }
-           
-           entry->key = zobristKey;
-           entry->score = (int16_t)score;
-           entry->depth = (uint8_t)depth;
-           entry->nodeType = (uint8_t)nodeType;
-           entry->generation = generation;
-           entry->bestMoveEncoded = [self encodeMove:bestMove];
-           
-           LOG_TT(@"TT store: key=%llx depth=%d score=%d type=%d",
-                  zobristKey, depth, score, nodeType);
-       }
-       else {
-           LOG_TT(@"TT store: REJECTED (depth too low) key=%llx", zobristKey);
-       }
+      stats.stores++;
+      
+      size_t index = [self indexForKey:zobristKey];
+      TTEntry *entry = &table[index];
+      
+      // Scheme de remplacement : "depth-preferred with generation"
+      // Remplacer si:
+      // 1. Entrée vide (key == 0)
+      // 2. Même position (key == zobristKey)
+      // 3. Ancienne génération ET profondeur <= nouvelle profondeur
+      // 4. Même génération MAIS profondeur inférieure
+      
+      BOOL shouldReplace = NO;
+      
+      if (entry->key == 0) {
+         // Entrée vide
+         shouldReplace = YES;
+      }
+      else if (entry->key == zobristKey) {
+         // Même position : toujours remplacer si profondeur >= ou nouvelle génération
+         shouldReplace = (depth >= entry->depth) || (generation != entry->generation);
+      }
+      else {
+         // Collision : remplacer si ancienne génération ou profondeur très supérieure
+         if (entry->generation != generation) {
+            shouldReplace = YES;
+         }
+         else if (depth >= entry->depth + 3) {  // Seuil de remplacement
+            shouldReplace = YES;
+         }
+      }
+      
+      if (shouldReplace) {
+         if (entry->key != 0 && entry->key != zobristKey) {
+            stats.overwrites++;
+            LOG_TT(@"TT store: OVERWRITE old_key=%llx new_key=%llx", entry->key, zobristKey);
+         }
+         
+         // Ajuster les scores de mat pour qu'ils soient indépendants de la profondeur
+         // Convention : stocker le score depuis la racine, pas depuis le nœud courant
+         int storedScore = score;
+         if (score >  (MATE_SCORE - NUMBER_MOVES_AHEAD)) storedScore = score + depth;
+         if (score < -(MATE_SCORE - NUMBER_MOVES_AHEAD)) storedScore = score - depth;
+         entry->score = storedScore;
+         
+         entry->key = zobristKey;
+         entry->depth = (uint8_t)depth;
+         entry->nodeType = (uint8_t)nodeType;
+         entry->generation = generation;
+         entry->bestMoveEncoded = [self encodeMove:bestMove];
+         
+         LOG_TT(@"TT store: key=%llx depth=%d score=%d type=%d",
+                zobristKey, depth, score, nodeType);
+      }
+      else {
+         LOG_TT(@"TT store: REJECTED (depth too low) key=%llx", zobristKey);
+      }
       
    } // !store
 
