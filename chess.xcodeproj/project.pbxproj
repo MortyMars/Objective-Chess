@@ -34,6 +34,8 @@
 		835926FF2F43ED0D003B50CB /* TranspositionTable.m in Sources */ = {isa = PBXBuildFile; fileRef = 835926FE2F43ED0D003B50CB /* TranspositionTable.m */; };
 		835927002F43ED0D003B50CB /* TranspositionTable.m in Sources */ = {isa = PBXBuildFile; fileRef = 835926FE2F43ED0D003B50CB /* TranspositionTable.m */; };
 		8359FCE82561F309000CCF2A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8359FCE72561F309000CCF2A /* AppDelegate.m */; };
+		836D55DE2F6A1B9600BAC6C8 /* Minimax+OpeningBook.m in Sources */ = {isa = PBXBuildFile; fileRef = 836D55DD2F6A1B9600BAC6C8 /* Minimax+OpeningBook.m */; };
+		836D55DF2F6A1B9600BAC6C8 /* Minimax+OpeningBook.m in Sources */ = {isa = PBXBuildFile; fileRef = 836D55DD2F6A1B9600BAC6C8 /* Minimax+OpeningBook.m */; };
 		8391B0482F68A5040001DD3C /* PeSTO.m in Sources */ = {isa = PBXBuildFile; fileRef = 8391B0472F68A5040001DD3C /* PeSTO.m */; };
 		8391B0492F68A5040001DD3C /* PeSTO.m in Sources */ = {isa = PBXBuildFile; fileRef = 8391B0472F68A5040001DD3C /* PeSTO.m */; };
 		839B0EA62393F4E300254843 /* Util.m in Sources */ = {isa = PBXBuildFile; fileRef = 839B0EA52393F4E300254843 /* Util.m */; };
@@ -103,6 +105,8 @@
 		835926FE2F43ED0D003B50CB /* TranspositionTable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TranspositionTable.m; sourceTree = "<group>"; };
 		8359FCE62561F309000CCF2A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		8359FCE72561F309000CCF2A /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		836D55DC2F6A1B9600BAC6C8 /* Minimax+OpeningBook.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Minimax+OpeningBook.h"; sourceTree = "<group>"; };
+		836D55DD2F6A1B9600BAC6C8 /* Minimax+OpeningBook.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "Minimax+OpeningBook.m"; sourceTree = "<group>"; };
 		8391B0462F68A5040001DD3C /* PeSTO.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PeSTO.h; sourceTree = "<group>"; };
 		8391B0472F68A5040001DD3C /* PeSTO.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PeSTO.m; sourceTree = "<group>"; };
 		839B0EA52393F4E300254843 /* Util.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Util.m; sourceTree = "<group>"; };
@@ -190,6 +194,8 @@
 				49C0319F1794B238001A2048 /* Minimax.m */,
 				835926F62F438AB1003B50CB /* Minimax+GenMoves.h */,
 				835926F72F438AB1003B50CB /* Minimax+GenMoves.m */,
+				836D55DC2F6A1B9600BAC6C8 /* Minimax+OpeningBook.h */,
+				836D55DD2F6A1B9600BAC6C8 /* Minimax+OpeningBook.m */,
 				49C031A11794B4D6001A2048 /* Move.h */,
 				49C031A21794B4D6001A2048 /* Move.m */,
 				83FFBCC527C5658C008DEBF3 /* MoveToStr.h */,
@@ -368,6 +374,7 @@
 				83FFBCC427C56562008DEBF3 /* MoveToStr.m in Sources */,
 				49AE4AEA17949AD1009D59BE /* RuleBook.m in Sources */,
 				49AE4AB017948BAD009D59BE /* main.m in Sources */,
+				836D55DF2F6A1B9600BAC6C8 /* Minimax+OpeningBook.m in Sources */,
 				49C031A01794B238001A2048 /* Minimax.m in Sources */,
 				83172A4627FA0873006FB509 /* Diagramme.m in Sources */,
 			);
@@ -378,6 +385,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8391B0492F68A5040001DD3C /* PeSTO.m in Sources */,
+				836D55DE2F6A1B9600BAC6C8 /* Minimax+OpeningBook.m in Sources */,
 				833949A228120B1B0043F12F /* BoardsForTests.m in Sources */,
 				835926F82F438AB1003B50CB /* Minimax+GenMoves.m in Sources */,
 				835926FF2F43ED0D003B50CB /* TranspositionTable.m in Sources */,

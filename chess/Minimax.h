@@ -156,8 +156,7 @@ LMR_REDUCTION_2 à 3 pour gratter encore de la profondeur.                      
    -(int)EvaluateMobility:(ChessBoard *)board;
    -(int)CountPseudoLegalMovesForSide:(Side)side board:(ChessBoard *)board;
 
-   // Méthode de construction de l'Opening Book
-   -(void)buildOpeningBook;
+   
 
 
    
