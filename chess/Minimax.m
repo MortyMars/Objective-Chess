@@ -156,13 +156,15 @@ static int nbCallsIsKingCheck = 0;
          if (iterBestMove) {
             _idBestMove  = iterBestMove;
             _idBestScore = iterBestScore;
-            // Log de Debug
+            /* // Log de Debug
             if (board->nbEntiers >= 28 && board->nbEntiers <= 42) {
-                NSLog(@"🔍 Coup %d : phase=%d isEndGame=%d score=%d",
-                      board->nbEntiers, self.lastPhase,
-                      (self.lastPhase < 80), _idBestScore);
+                NSLog(@"🔥 Coup %d : phase=%d isEndGame=%d score=%d",
+                      board->nbEntiers,
+                      self.lastPhase,
+                      (self.lastPhase < 80),
+                      _idBestScore);
             }
-            // Fin Log Debug
+            // Fin Log Debug */
          }
          
          // NSTimeInterval elapsed = [[NSDate date] timeIntervalSinceDate:startTime];
@@ -208,15 +210,6 @@ static int nbCallsIsKingCheck = 0;
       
       self.lastIAMove = _idBestMove;
       
-      // Log ciblé finale — à commenter après diagnostic
-      if (board->nbEntiers >= 28 && board->nbEntiers <= 42) {
-          NSLog(@"🔍 Coup %d : phase=%d isEndGame=%d score=%d",
-                board->nbEntiers,
-                self.lastPhase,
-                (self.lastPhase < 80),
-                _idBestScore);
-      }
-      
       return _idBestMove;
       
    } // !BMFS
@@ -258,34 +251,43 @@ static int nbCallsIsKingCheck = 0;
       Move *ttMove = nil;
       TTEntry *ttEntry = [self.transpositionTable probe:board->zobristKey
                                                bestMove:&ttMove];
-
+      
+      BOOL inCheck = [self IsKingInCheck:side board:board];
+      
       if (ttEntry) {
-          // ttMove est déjà rempli automatiquement !
-          
-          // Utiliser le score de la TT si la profondeur est suffisante
-          if (ttEntry->depth >= depth) {
-            int ttScore = ttEntry->score;
-            
-            switch (ttEntry->nodeType) {
-               case TT_EXACT:
-                  // Score exact : retourner directement
-                  return ttScore;
-                  
-               case TT_LOWER_BOUND:
-                  // Fail-high (beta cutoff) : score >= ttScore
-                  if (ttScore >= beta) return ttScore;
-                  if (ttScore > alpha) alpha = ttScore;
-                  break;
-                  
-               case TT_UPPER_BOUND:
-                  // Fail-low (alpha cutoff) : score <= ttScore
-                  if (ttScore <= alpha) return ttScore;
-                  if (ttScore < beta) beta = ttScore;
-                  break;
-            }
-            
-            // Fenêtre alpha-beta fermée ?
-            if (alpha >= beta) return ttScore;
+         // ttMove est déjà rempli automatiquement !
+         // Utiliser le score de la TT si la profondeur est suffisante
+         if (ttEntry->depth >= depth) {
+            // Ne pas utiliser le score TT si la position a déjà été vue
+            // (le contexte peut avoir changé depuis le stockage)
+            BOOL seenBefore = !inCheck && [self isSeenBefore:board->zobristKey];
+            if (!seenBefore) {
+               
+               int ttScore = ttEntry->score;
+               
+               switch (ttEntry->nodeType) {
+                  case TT_EXACT:
+                     // Score exact : retourner directement
+                     return ttScore;
+                     
+                  case TT_LOWER_BOUND:
+                     // Fail-high (beta cutoff) : score >= ttScore
+                     if (ttScore >= beta) return ttScore;
+                     if (ttScore > alpha) alpha = ttScore;
+                     break;
+                     
+                  case TT_UPPER_BOUND:
+                     // Fail-low (alpha cutoff) : score <= ttScore
+                     if (ttScore <= alpha) return ttScore;
+                     if (ttScore < beta) beta = ttScore;
+                     break;
+               }
+               
+               // Fenêtre alpha-beta fermée ?
+               if (alpha >= beta) return ttScore;
+            } // fin !seenBefore
+            // Si seenBefore : on garde ttMove pour l'ordonnancement
+            // mais on ne retourne pas le score — on re-cherche
          }
       }
       
@@ -306,8 +308,9 @@ static int nbCallsIsKingCheck = 0;
       
       // ----------------------------------------------------------------------
       // ✅ NULL MOVE PRUNING
-
-      BOOL inCheck = [self IsKingInCheck:side board:board];
+      
+      // Déclaration /Définition de 'inCheck' avancé en 'ProbeTT'
+      // BOOL inCheck = [self IsKingInCheck:side board:board];
 
       // Conditions pour NMP :
       // 1. Profondeur suffisante (≥ 3)
@@ -545,6 +548,34 @@ static int nbCallsIsKingCheck = 0;
          NSAssert(board->zobristKey == keyEntry,
                   @"Zobrist corrompu : sortie Negamax normale");
       #endif
+      
+      /* Bloc suspecté de bug, commenté
+      // ── FILTRE PIÈCE SUSPENDUE POST-COUP ─────────────────────────
+      // Si le meilleur coup laisse une pièce majeure en prise,
+      // pénaliser le score pour décourager ce coup à la racine.
+      if (bestMove && depth >= 2 && !inCheck) {
+          static const int majorVal[7] = { 0, 0, 337, 365, 477, 1025, 0 };
+          //  Ne surveiller que N, B, R, Q (pas pions ni roi)
+          MoveState st = [board makeMove:bestMove];
+          for (int x = 0; x < 8; x++) {
+              for (int y = 0; y < 8; y++) {
+                  Piece *p = board->pieceCase[x][y];
+                  if (!p || majorVal[p.type] == 0) continue;
+                  if (p.side != side) continue;  // nos pièces seulement
+                  int sq = y * 8 + x;
+                  Side enemy = (side == sideWhite) ? sideBlack : sideWhite;
+                  BOOL attacked = [self IsSquareAttackedAtX:x Y:y
+                                                     bySide:enemy Board:board];
+                  BOOL defended = [self IsSquareDefended:sq bySide:side board:board];
+                  if (attacked && !defended) {
+                      alpha -= majorVal[p.type] / 2;
+                  }
+              }
+          }
+          [board unmakeMove:bestMove state:st];
+         
+      } Fin de bloc commenté */
+
       
       // ----------------------------------------------------------------------
       // 💾 STORE TT : Stocker le résultat dans la table
@@ -913,7 +944,7 @@ static int nbCallsIsKingCheck = 0;
       evalWhitePOV   = scoreWhite - scoreBlack;
       // Exposer la phase pour les Parties suivantes
       // (remplace le booléen isEndGame utilisé dans Parties 5 et 7)
-      BOOL isEndGame = (phase < 80);  // ~30% du matériel restant
+      BOOL isEndGame = (phase < 128);  // ~30% du matériel restant
       
       // NSLog de contrôle (ATTENTION VERBEUX)
       /* NSLog(@"📊 Phase=%d isEndGame=%d (knights=%d bishops=%d rooks=%d queens=%d)",
@@ -1264,8 +1295,68 @@ static int nbCallsIsKingCheck = 0;
             }
          }
       }
-      // -------------------------------------------
       
+      /* -------------------------------------------
+      PARTIE 8 : PIÈCES SUSPENDUES                */
+      /* Bonus pour le camp qui joue si des pièces adverses sont attaquées
+      et non défendues ou défendues par une pièce de valeur supérieure.
+      Exprimé en POV Blancs, symétrique par construction.               */
+      if (!isEndGame) {
+
+          static const int hangVal[7] = { 0, 82, 337, 365, 477, 1025, 0 };
+          //                           Inv  P    N    B    R    Q    K
+
+          Side playingSide = side;
+          Side enemySide   = (side == sideWhite) ? sideBlack : sideWhite;
+
+          for (int x = 0; x < 8; x++) {
+              for (int y = 0; y < 8; y++) {
+                  Piece *p = board->pieceCase[x][y];
+
+                  // On évalue uniquement les pièces adverses
+                  if (!p || p.type == Invalide ||
+                      p.type == Pion || p.type == Roi) continue;
+                  if (p.side != enemySide) continue;
+
+                  int val = hangVal[p.type];
+
+                  // Valeur minimale de l'attaquant du camp qui joue
+                  int minAtk = [self minAttackerValue:x y:y
+                                               bySide:playingSide board:board];
+                  if (minAtk == 0) continue;
+
+                  // La pièce adverse est-elle défendue par une pièce amie ?
+                  BOOL defended = [self IsSquareAttackedAtX:x Y:y
+                                                     bySide:enemySide Board:board];
+
+                  int penalty = 0;
+
+                  if (!defended) {
+                      if (minAtk < val) {
+                          // Pièce suspendue par attaquant moins cher → vrai gain
+                          penalty = -((val - minAtk) / 2);
+                      } else if (minAtk == val) {
+                          // Échange de pièces égales → léger avantage
+                          penalty = -(val / 8);
+                      }
+                      // Si minAtk > val : l'attaque est défavorable → pas de bonus
+                  } else {
+                      if (minAtk < val) {
+                          // Défendue mais attaquant moins cher → échange potentiellement favorable
+                          penalty = -((val - minAtk) / 4);
+                      }
+                  }
+
+                  // Bonus pour le camp qui joue = on soustrait la pénalité adverse
+                  // Toujours exprimé en POV Blancs
+                  if (penalty != 0) {
+                      if (playingSide == sideWhite) evalWhitePOV -= penalty;
+                      else                          evalWhitePOV += penalty;
+                  }
+              }
+          }
+      }
+      // -------------------------------------------
       
       /* La mise à jour de l'interface est déplacée dans 'MakeIAMoveForSide' et sa variante 'Silent'
       pour limiter le nombre de mise à jour de l'interface pendant que l'IA décide de son coup    */
@@ -1808,6 +1899,101 @@ static int nbCallsIsKingCheck = 0;
        return count;
    }
 
+
+   // ================================================================================================
+   // Méthode isSeenBefore - Retourne YES si la position a déjà été vue au moins une fois
+   // (utilisé pour invalider le score TT, plus strict que isRepetition)
+   -(BOOL)isSeenBefore:(uint64_t)zobristKey {
+       for (int i = 0; i < historyCount; i++) {
+           if (positionHistory[i] == zobristKey) return YES;
+       }
+       return NO;
+   }
+
+
+   // ================================================================================================
+   // Retourne la valeur PeSTO de la pièce adverse la moins chère
+   // pouvant capturer la case (x,y). Retourne 0 si aucun attaquant.
+   -(int)minAttackerValue:(int)x y:(int)y bySide:(Side)side board:(ChessBoard *)board
+   {
+       static const int val[7] = { 0, 82, 337, 365, 477, 1025, 20000 };
+       int minVal = 0;
+
+       // ── Pions ────────────────────────────────────────────────────
+       int pawnDir = (side == sideWhite) ? -1 : 1;
+       for (int dx = -1; dx <= 1; dx += 2) {
+           int px = x + dx;
+           int py = y + pawnDir;
+           if (px < 0 || px > 7 || py < 0 || py > 7) continue;
+           Piece *p = board->pieceCase[px][py];
+           if (p && p.side == side && p.type == Pion) {
+               if (minVal == 0 || val[Pion] < minVal) minVal = val[Pion];
+           }
+       }
+
+       // ── Cavaliers ────────────────────────────────────────────────
+       static const int kn[8][2] = {{1,2},{2,1},{-1,2},{-2,1},
+                                     {1,-2},{2,-1},{-1,-2},{-2,-1}};
+       for (int i = 0; i < 8; i++) {
+           int nx = x + kn[i][0], ny = y + kn[i][1];
+           if (nx < 0 || nx > 7 || ny < 0 || ny > 7) continue;
+           Piece *p = board->pieceCase[nx][ny];
+           if (p && p.side == side && p.type == Cava) {
+               if (minVal == 0 || val[Cava] < minVal) minVal = val[Cava];
+           }
+       }
+
+       // ── Fous + Dame (diagonales) ─────────────────────────────────
+       static const int bDirs[4][2] = {{1,1},{1,-1},{-1,1},{-1,-1}};
+       for (int d = 0; d < 4; d++) {
+           int nx = x + bDirs[d][0], ny = y + bDirs[d][1];
+           while (nx >= 0 && nx < 8 && ny >= 0 && ny < 8) {
+               Piece *p = board->pieceCase[nx][ny];
+               if (p) {
+                   if (p.side == side &&
+                       (p.type == Fou || p.type == Dame)) {
+                       int v = val[p.type];
+                       if (minVal == 0 || v < minVal) minVal = v;
+                   }
+                   break;
+               }
+               nx += bDirs[d][0]; ny += bDirs[d][1];
+           }
+       }
+
+       // ── Tours + Dame (lignes) ────────────────────────────────────
+       static const int rDirs[4][2] = {{1,0},{-1,0},{0,1},{0,-1}};
+       for (int d = 0; d < 4; d++) {
+           int nx = x + rDirs[d][0], ny = y + rDirs[d][1];
+           while (nx >= 0 && nx < 8 && ny >= 0 && ny < 8) {
+               Piece *p = board->pieceCase[nx][ny];
+               if (p) {
+                   if (p.side == side &&
+                       (p.type == Tour || p.type == Dame)) {
+                       int v = val[p.type];
+                       if (minVal == 0 || v < minVal) minVal = v;
+                   }
+                   break;
+               }
+               nx += rDirs[d][0]; ny += rDirs[d][1];
+           }
+       }
+
+       // ── Roi ──────────────────────────────────────────────────────
+       for (int dx = -1; dx <= 1; dx++) {
+           for (int dy = -1; dy <= 1; dy++) {
+               if (dx == 0 && dy == 0) continue;
+               int nx = x + dx, ny = y + dy;
+               if (nx < 0 || nx > 7 || ny < 0 || ny > 7) continue;
+               Piece *p = board->pieceCase[nx][ny];
+               if (p && p.side == side && p.type == Roi) {
+                   if (minVal == 0 || val[Roi] < minVal) minVal = val[Roi];
+               }
+           }
+       }
+
+       return minVal;
+   } // !minAttackerValue
 
    
 @end

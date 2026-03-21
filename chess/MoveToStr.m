@@ -21,8 +21,7 @@
 
 
    // ==================================================================================================
-   // Méthode de classe
-   // MCN - Extraction Transformation
+   // Méthode de classe - Extraction Transformation
    +(NSMutableString *) ConvertEnStringMove:(Move *) move
                                    PromPion:(NSString *) promPion
                                    StrEchec:(NSString *) strEchec
@@ -78,7 +77,6 @@
 
 
    // ==================================================================================================
-   // Méthode de classe
    // Mise en forme de la suite des coups, pour avoir deux déplacements par ligne (Blancs puis Noirs)
    +(void) MettreEnFormeChaine:(NSString *) moveToStr
                   Protagoniste:(NSString *) strJ_IA;
@@ -130,7 +128,8 @@
          movVerStr = [NSMutableString stringWithFormat:@"%@",move];
          
          int typPrenante = [board pieceAtPos:move.start].type;
-         int typPrise    = [board pieceAtPos:move.dest] .type;
+         //int typPrise    = [board pieceAtPos:move.dest] .type;
+         int typPrise    = move.capturedPiece ? (int)move.capturedPiece.type : 0;
          NSString *strType[6] = {@"",@"C",@"F",@"T",@"D",@"R"}; // notation française (sic)
          
          // Si le plateau est retourné on traitera 'moveOpposed' au lieu de 'move' pour un

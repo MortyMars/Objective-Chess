@@ -71,4 +71,5 @@ Recherche de bug (pos légale non jouée):                                |
 ----------------------------------------                                |
 r7/pp4k1/8/2bn4/5q2/r6P/3p2K1/8 b - - 0                                 |
 r7/pp4k1/8/2bn4/2q5/r6P/3p4/7K w - - 0 1                                |  Moves attendus Kh1>h2, qc4>f4+, Kh2>g2, qf4>f3+
+rnbk2nr/ppp2p1p/4p3/6p1/3PpP2/2P2RNq/PP5P/RNBQ1BK1 b - - 0 1            |  Bug d'affichage des coups joués
 

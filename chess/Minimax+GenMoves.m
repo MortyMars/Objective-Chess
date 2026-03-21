@@ -712,12 +712,22 @@
       
       // 2️⃣ Attaque par Pion
       // Direction d'attaque du pion dépend de son camp ET de l'orientation du plateau
+      /* Dépendait AVANT de sideJoueur ce qui est incorrect dans le repère moteur.
       int pawnDir;
       if (sideJoueur == sideWhite) {
          pawnDir = (attackingSide == sideWhite) ? 1 : -1;
       } else {
          pawnDir = (attackingSide == sideWhite) ? -1 : 1;
-      }
+      } */
+      
+      // APRÈS — Modification en direction absolue dans le repère canonique
+      // Blancs avancent toujours vers y croissant
+      // Un pion Blanc en (px, py) attaque (px±1, py+1)
+      // Donc une case (x,y) est attaquée par un pion Blanc venant de (x±1, y-1)
+      int pawnDir = (attackingSide == sideWhite) ? -1 : 1;
+      // pawnDir = direction vers la rangée d'où vient le pion attaquant
+      // Blanc attaque vers +y → vient de y-1 → pawnDir = -1
+      // Noir attaque vers -y → vient de y+1 → pawnDir = +1
       
       for (int dx = -1; dx <= 1; dx += 2) {
          int px = x + dx;

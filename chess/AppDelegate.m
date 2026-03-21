@@ -54,8 +54,8 @@
       
       /* Initialisation du niveau de prospection IA par appel à la méthode ad-hoc
       On note que c'est AppDelegate (self) qui envoit le message à SetDifficultyX
-      Ici on choisit le niveau 2, qui correspond à fixer NUMBER_MOVE_AHEAD à 7 */
-      [monConnecteur SetDifficulty2:self];
+      Ici on choisit le niveau 3, qui correspond à fixer NUMBER_MOVE_AHEAD à 8 */
+      [monConnecteur SetDifficulty3:self];
       
       
       // Revoir finalité de cette commande car je ne me rappelle plus...
