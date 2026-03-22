@@ -227,9 +227,6 @@ CA
                     <textField identifier="chiffresSideBlancs" focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" preferredMaxLayoutWidth="13" id="huy-nn-Je9">
                         <rect key="frame" x="699" y="84" width="17" height="570"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <constraints>
-                            <constraint firstAttribute="height" constant="570" id="tSt-Ql-DRu"/>
-                        </constraints>
                         <textFieldCell key="cell" lineBreakMode="charWrapping" selectable="YES" title="8        7        6        5        4        3        2        1 " id="nm0-sE-JR7">
                             <font key="font" metaFont="system" size="16"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -257,9 +254,6 @@ CA
                     <textField identifier="chiffresSideBlancsGauche" focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" preferredMaxLayoutWidth="13" id="XEc-yi-VdK">
                         <rect key="frame" x="38" y="86" width="17" height="570"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <constraints>
-                            <constraint firstAttribute="height" constant="570" id="NSz-r9-Yvm"/>
-                        </constraints>
                         <textFieldCell key="cell" lineBreakMode="charWrapping" selectable="YES" title="8        7        6        5        4        3        2        1 " id="X7W-qz-pji">
                             <font key="font" metaFont="system" size="16"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -463,12 +457,9 @@ CA
                         </connections>
                     </button>
                 </subviews>
-                <constraints>
-                    <constraint firstItem="huy-nn-Je9" firstAttribute="top" relation="greaterThanOrEqual" secondItem="372" secondAttribute="top" constant="63" id="UlP-Bi-8wX"/>
-                </constraints>
             </view>
             <contentBorderThickness minY="32"/>
-            <point key="canvasLocation" x="-1270.5" y="-6445"/>
+            <point key="canvasLocation" x="-1299" y="-6447"/>
         </window>
         <customObject id="kit-5z-Zxr" userLabel="monAppDelegate" customClass="AppDelegate">
             <connections>

@@ -565,11 +565,15 @@ NSString *strPieces;
       Move *aiMove = [maMinimax BestMoveForSide:side Board:board];
       ChessBoard* savedBoard = board.copy; // Sauvegardé pour usage dans 'ConvertEnStringMove' avt 'PerformMove'
       
-      // Réalisation du move - NOTER : c'est 'PerformMove' qui positionne les indicateurs de roque
-      MoveState st = [board makeMove:aiMove];
+      /* RÉALISATION EFFECTIVE DU MOVE  ----  Il ne s'agit pas ici d'un "move de test" défait plus tard
+      par un 'unmakeMove'. On utilise donc un Cast forcé vers un 'void', car un 'MoveState' retourné ne
+      serait pas utilisé par un unmakeMove à suivre, ce qui créerait une alerte du compilateur.      */
+      // MoveState st = [board makeMove:aiMove];
+      (void)[board makeMove:aiMove];
       
       /* Sauvegarde des indic de roque  et de prise e.p. car RAZ plus loin par 'TestEchecFavSide' (???)
-      avant de pouvoir les exploiter dans 'ConvertEnStringMove' */
+      avant de pouvoir les exploiter dans 'ConvertEnStringMove'
+      NOTER : c'est 'PerformMove' qui positionne les indicateurs de roque */
       BOOL roque = petitRoque;         BOOL ROQUE = grandRoque;         BOOL ENPASS = enPassant;
       
       /* MCN - AJOUT DU COUP IA À LA LISTE DE CEUX DÉJÀ JOUÉS

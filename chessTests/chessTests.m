@@ -3,8 +3,10 @@
 //  Created by MCN on 24/03/2022.
 //  Copyright © 2022 MCN - All rights reserved.
 
+
 #import "ChessTests.h"
 #import "BoardsForTests.h"
+#import "ChessBoard+MakeMoves.h"
 
 
 
@@ -43,7 +45,12 @@
       
       
       NSLog(@"\n\nBoard de départ standard créé : \n%@\n",testBoard);
-      int negaMax =[maMinimax NegamaxForSide:sideBlack board:testBoard depth:3 alpha:-INT_MAX beta:INT_MAX];
+      int negaMax =[maMinimax NegamaxForSide:sideBlack
+                                       board:testBoard
+                                       depth:3
+                                       alpha:-INT_MAX
+                                        beta:INT_MAX
+                                  inNullMove:NO];
       XCTAssertTrue(negaMax < 103900);
       NSLog(@"\n\n Valeur de retour de NegamaxFS = %d \n\n",negaMax);
    }
@@ -415,10 +422,11 @@
       [self measureBlock:^{
          // Put the code you want to measure the time of here.
          [maMinimax NegamaxForSide:sideWhite
-                           board:[BoardsForTests ConfigBoardMatEn3Cas2]
-                           depth:4
-                           alpha:-INT_MAX
-                            beta:+INT_MAX];
+                             board:[BoardsForTests ConfigBoardMatEn3Cas2]
+                             depth:4
+                             alpha:-INT_MAX
+                              beta:+INT_MAX
+                        inNullMove:NO];
       }];
       
       /* Résultat du test réalisé le 20/04/22 avec NUMBER_MOVE_AHEAD = 4 :

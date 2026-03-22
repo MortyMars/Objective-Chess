@@ -21,14 +21,23 @@
    //+(void) initBoardStd;
 
    -(void)testNegamaxFS;
+
    -(void)testCoupDuBerger;
+
    -(void)test1MatEn20CoupsMax;
+
    -(void)test2MatEn20CoupsMax;
+
    -(void)testPerformanceBestMoveFS;
+
    -(void)testPerformancePossibleMoveFS;
+
    -(void)testPerformancePerformMove;
+
    -(void)testPerformanceEvalBoardFS;
+
    -(void)testPerformanceNegamaxFS ;
+
    -(void)testFonctEvaluation;
 
 

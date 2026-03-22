@@ -304,55 +304,16 @@ BOOL engineIsBusy = NO;
          self.needsDisplay = YES;
       });
       
-      // Début effectif de réalisation du move AI
+      // CONSTRUCTION DU MOVE AI
       Move *aiMove = [maMinimax BestMoveForSide:sideIA Board:liveBoard];
-      
-      /*
-      // Recherche bug #################################################################################
-      // ✅ LOG DÉTAILLÉ
-      NSLog(@"🔍 Move retourné par BestMoveForSide:");
-      NSLog(@"   Move: %@", aiMove);
-      NSLog(@"   fromSquare: %d (%d,%d)", aiMove.fromSquare,
-            aiMove.fromSquare % 8, aiMove.fromSquare / 8);
-      NSLog(@"   toSquare: %d (%d,%d)", aiMove.toSquare,
-            aiMove.toSquare % 8, aiMove.toSquare / 8);
-      NSLog(@"   Pièce sur case départ: %@",
-            liveBoard->pieceCase[aiMove.fromSquare % 8][aiMove.fromSquare / 8]);
-
-      if (!aiMove) {
-          NSLog(@"❌ aiMove est nil !");
-          return;
-      }
-
-      Piece *testPiece = liveBoard->pieceCase[aiMove.fromSquare % 8][aiMove.fromSquare / 8];
-      if (!testPiece) {
-          NSLog(@"❌ Pas de pièce en (%d,%d) !",
-                aiMove.fromSquare % 8, aiMove.fromSquare / 8);
-          NSLog(@"📋 État du board:");
-          for (int y = 7; y >= 0; y--) {
-              NSMutableString *line = [NSMutableString stringWithFormat:@"   y=%d: ", y];
-              for (int x = 0; x < 8; x++) {
-                  Piece *p = liveBoard->pieceCase[x][y];
-                  if (p) {
-                      [line appendFormat:@"%@%c ",
-                           (p.side == sideWhite ? @"W" : @"B"),
-                           "?PNBRQK"[p.type]];
-                  } else {
-                      [line appendString:@".. "];
-                  }
-              }
-              NSLog(@"%@", line);
-          }
-          return;  // ✅ Ne pas faire makeMove !
-      }
-      // Fin recherche bug #############################################################################
-      */
       
       ChessBoard* savedBoard = liveBoard.copy; // Sauvegardé pour ConvertEnStringMove avant PerformMove
       
-      // Réalisation du move
-      // ✅ Seulement si aiMove existe
-      MoveState st = [liveBoard makeMove:aiMove];
+      /* RÉALISATION EFFECTIVE DU MOVE  ----  Il ne s'agit pas ici d'un "move de test" défait plus tard
+      par un 'unmakeMove'. On utilise donc un Cast forcé vers un 'void', car un 'MoveState' retourné ne
+      serait pas utilisé par un unmakeMove à suivre, ce qui créerait une alerte du compilateur.      */
+      //MoveState st = [liveBoard makeMove:aiMove];
+      (void)[liveBoard makeMove:aiMove];
       
       // Affichage du coup IA en Log
       if (sideIA == sideBlack) {
@@ -496,9 +457,11 @@ BOOL engineIsBusy = NO;
       
       ChessBoard* savedBoard = liveBoard.copy;
       
-      /* Réalisation du move - AVEC mise à jour Zobrist
-      NB : on ne fera PAS d'unmakeMove car c'est un vrai coup, pas une exploration */
-      MoveState st = [liveBoard makeMove:moveJoueur];
+      /* RÉALISATION EFFECTIVE DU MOVE  ----  Il ne s'agit pas ici d'un "move de test" défait plus tard
+      par un 'unmakeMove'. On utilise donc un Cast forcé vers un 'void', car un 'MoveState' retourné ne
+      serait pas utilisé par un unmakeMove à suivre, ce qui créerait une alerte du compilateur.      */
+      // MoveState st = [liveBoard makeMove:moveJoueur];
+      (void)[liveBoard makeMove:moveJoueur];
       
       #ifdef DEBUG_ZOBRIST
          uint64_t hashApres = liveBoard->zobristKey;
@@ -612,11 +575,15 @@ BOOL engineIsBusy = NO;
       Move *aiMove = [maMinimax BestMoveForSide:side Board:board];
       ChessBoard* savedBoard = board.copy; // Sauvegardé pour usage dans 'ConvertEnStringMove' avt le move
       
-      // Réalisation du move - NOTER : c'est 'PerformMove' qui positionne les indicateurs de roque
-      MoveState st = [board makeMove:aiMove];
+      /* RÉALISATION EFFECTIVE DU MOVE  ----  Il ne s'agit pas ici d'un "move de test" défait plus tard
+      par un 'unmakeMove'. On utilise donc un Cast forcé vers un 'void', car un 'MoveState' retourné ne
+      serait pas utilisé par un unmakeMove à suivre, ce qui créerait une alerte du compilateur.      */
+      // MoveState st = [board makeMove:aiMove];
+      (void)[board makeMove:aiMove];
       
-      /* Sauvegarde des indicateurs de roque  et de prise e.p. car RAZ plus loin par 'TestEchecFavSide' (???)
-      avant de pouvoir les exploiter dans 'ConvertEnStringMove' */
+      /* Sauvegarde des indicateurs de roque et de prise e.p. car RAZ plus loin par 'TestEchecFavSide' (???)
+      avant de pouvoir les exploiter dans 'ConvertEnStringMove'
+      NOTER : c'est 'PerformMove' qui positionne les indicateurs de roque*/
       BOOL roque = petitRoque;
       BOOL ROQUE = grandRoque;
       BOOL ENPASS = enPassant;

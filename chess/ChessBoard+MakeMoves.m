@@ -231,12 +231,12 @@
       
    } // !makeMove
 
+   
    // ==================================================================================================
    // Méthode d'instance 'unmakeMove' permettant d'annuler un move de test et de rétablir le board
    // initial en restaurant les positions et indicateurs d'avant move
    -(void)unmakeMove:(Move *)m state:(MoveState)st
    {
-      
       #ifdef DEBUG_ZOBRIST
             LOG_UNMAKE(@"moving back from toSq=%d (%d,%d) start=(%d,%d) dest=(%d,%d)",
                        m.toSquare,

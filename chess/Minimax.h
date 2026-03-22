@@ -36,8 +36,8 @@ LMR_REDUCTION_2 à 3 pour gratter encore de la profondeur.                      
       @public  // Déclaration des iVars comme publiques pour accès aux catégories
       int nbLoop;
       int nbElag;
-      int nodeCount; // dble emploi avec nodes ?
-      uint64_t nodes;     // dble emploi avec nodeCount ?
+      //int nodeCount; // dble emploi avec nodes ?
+      uint64_t nodes;
 
       // Variables de profilling
       int evalCount ;

@@ -13,8 +13,7 @@
 
 @class Piece, Move, Pos;
 
-typedef struct
-{
+typedef struct {
     Piece      *captured;     // pièce capturée lors du move (ou nil s'il n'y en a pas)
     PieceType  oldType;       // type de la pièce déplacée avant sa promotion
     BOOL       wasPromotion;
@@ -25,16 +24,16 @@ typedef struct
     // ajouts TT - Zobrist
     uint8_t    oldCastleRights;  // anciens droits de roque
     int8_t     oldEnPassantFile; // ancienne colonne de prise en passant
-   
 } MoveState;
 
 
 /* Déclaration de la Classe ChessBoard qui dérive de NSObject et qui adopte le protocole <NSCopying>,
 ce qui permettra notamment de faire des copies d'objets ChessBoard, ...ce dont nous avons besoin  */
 @interface ChessBoard : NSObject <NSCopying>
+
    {
       /* Variable d'instance (iVars) -tableau à 2 dimensions- désignant la pièce en case [x] [y]
-       Déclarée publique pour pouvoir y accéder via l'opérateur '->' dans d'autres classes */
+      Déclarée publique pour pouvoir y accéder via l'opérateur '->' dans d'autres classes     */
       @public Piece *pieceCase[8][8];
       
       /* Autres variables d'instances, créées pour stocker les valeurs liées à la 'Status Bar' */
@@ -49,38 +48,47 @@ ce qui permettra notamment de faire des copies d'objets ChessBoard, ...ce dont n
                                           // 15 -> qkQK
       @public int8_t    enPassantFile;    // -1 ou 0..7
       @public Side      sideToMove;
-
    }
 
    // 'lastmove' est le dernier move réalisé, déclaré ici, mais défini dans 'PerformMove'
    @property (nonatomic, strong) Move *lastMove;
    
-   /* 'currentEvaluation' détermine l'évaluation en cours, à partir de laquelle l'évaluation
-    incrémentale démarre ; elle est utilisée dans 'PerformMove' */
-   //@property int currentEvaluation;
-   
-
    // Méthodes (d'instance)
    -(id)         init;
+
    -(void)       SetupPieces;
-   -(Piece *)    piece_colX:(int)x rangY:(int)y;
+
+   -(Piece *)    piece_colX:(int)x
+                      rangY:(int)y;
+
    -(Piece *)    pieceAtPos:(Pos *)pos;
-   -(Piece *)    MovePieceDeStart:(Pos *)start ADest:(Pos *)dest;
+
+   -(Piece *)    MovePieceDeStart:(Pos *)start
+                            ADest:(Pos *)dest;
+
    -(void)       PerformMove:(Move *)move;
+
    -(id)         copyWithZone:(NSZone *)zone;
+
    -(NSString *) description;
 
    -(void)       PremCoupAIBlancs;
+
    -(PieceType)  SelectPromoPionForSide:(Side)side;
+
    -(void)       CalculerStrRoque;
+
    -(void)       DeterminerCibleEP:(Move *)move;
+
    -(void)       CompterDemiCoups:(Move *)move;
+
    -(void)       ProposerNulle50Coups;
+
    -(void)       AlertePartieNulle;
 
-   -(Move *)buildMoveFrom:(Pos *)start
-                       to:(Pos *)dest
-                    board:(ChessBoard *)board;
+   -(Move *)     buildMoveFrom:(Pos *)start
+                            to:(Pos *)dest
+                         board:(ChessBoard *)board;
 
    // Ajout des Méthodes IBAction liées à l'utilisation des menus et boutons
    // Modes de jeu

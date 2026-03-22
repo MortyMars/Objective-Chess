@@ -471,7 +471,11 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       Move* firstAImove = [maMinimax BestMoveForSide:sideWhite Board:self];
       ChessBoard* boardAvantMove = self.copy;   // sauvegardé pour ConvertEnStringMove avant PerformMove
       
-      MoveState st = [self makeMove:firstAImove];           // réalisation graphique du coup
+      /* RÉALISATION EFFECTIVE DU MOVE  ----  Il ne s'agit pas ici d'un "move de test" défait plus tard
+      par un 'unmakeMove'. On utilise donc un Cast forcé vers un 'void', car un 'MoveState' retourné ne
+      serait pas utilisé par un unmakeMove à suivre, ce qui créerait une alerte du compilateur.      */
+      // MoveState st = [self makeMove:firstAImove];
+      (void)[self makeMove:firstAImove];
       
       // Affichage du Best Move en Log
       NSLog(@"---------------------------------------------------------");
@@ -484,27 +488,27 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       NSLog(@"---------------------------------------------------------\n");
       
       /* Init de la liste des coups joués et traitement chaine du 1er coup, sachant qu'il ne peut y avoir
-       à ce stade de la partie, de promotion de pion ou de position d'échec, d'où les paramètres fixés à @""
-       Par ailleurs, inutile de gérer les infos de Roque car le premier coup ne peut consister à Roquer */
+      à ce stade de la partie, de promotion de pion ou de position d'échec, d'où les paramètres fixés à @""
+      Par ailleurs, inutile de gérer les infos de Roque car le premier coup ne peut consister à Roquer */
       
       NSMutableString* premMoveToStr = [MoveToStr ConvertEnStringMove:firstAImove
                                                              PromPion:@""
                                                              StrEchec:@""
                                                                 Board:boardAvantMove];
       /* Edition  de la chaine 'stringCoupsPartie'
-       RAZ de principe, avant affectation de la valeur souhaitée pour la chaine... */
+      RAZ de principe, avant affectation de la valeur souhaitée pour la chaine... */
       stringCoupsPartie = @"";
       /* ...puis ajout du 1er coup venant d'être réalisé par l'IA jouant les Blancs */
       stringCoupsPartie =[NSString stringWithFormat:@"1.\tIA : %@", premMoveToStr];
       /* À ce stade on n'a fait que la mise à jour de la chaine de caractères,
-       mais c'est AppDelegate qui s'occupe de son affichage dans le contrôle de l'IU */
+      mais c'est AppDelegate qui s'occupe de son affichage dans le contrôle de l'IU */
       
       
       
       // Le premier coup étant achevé on inverse sideCourant
       sideCourant = sideBlack;
       
-   } // Fin de PremCoupAIBlancs
+   } // !PremCoupAIBlancs
 
 
    // ============================================================================================

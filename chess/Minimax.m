@@ -20,8 +20,7 @@
 #define SCORE_INF     200000   // définit à 200000 le plus bas des scores
                                // SCORE_INF > MATE_SCORE, et SCORE_INF < INT_MAX/2
 
-static int nodes = 0;
-static int nbCallsIsKingCheck = 0;
+//static int nodes = 0;
 
 
 @interface Minimax () {
@@ -57,14 +56,19 @@ static int nbCallsIsKingCheck = 0;
    -(Move *)BestMoveForSide:(Side)side Board:(ChessBoard *)board
    {
       // --- Initialisation des iVars et variables -----------------
-      nbLoop = 0; nbElag = 0; nodeCount = 0;
-      evalCount = 0; moveGenCount = 0; copyBoardCount = 0;
-      evalTotalTime = 0; moveGenTotalTime = 0;
+      nbLoop = 0;
+      nbElag = 0;
+      //nodeCount = 0; // iVar caduque
+      nodes = 0;
+      evalCount = 0;
+      moveGenCount = 0;
+      copyBoardCount = 0;
+      evalTotalTime = 0;
+      moveGenTotalTime = 0;
       memset(historyTable, 0, sizeof(historyTable));
       //isInNullMove = NO;
       historyCount = 0;
       memset(positionHistory, 0, sizeof(positionHistory));
-      nodes = 0;
       _idBestMove  = nil;
       _idBestScore = -SCORE_INF - 1;
       [self.transpositionTable newGeneration];
@@ -686,14 +690,14 @@ static int nbCallsIsKingCheck = 0;
                                             beta:-alpha
                                          qsDepth:qsDepth + 1];
             
-            [board unmakeMove:m state:st];  // ← toujours ici, légal ou non
+            [board unmakeMove:m state:st];      // ← toujours ici, légal ou non
             
-            if (score >= beta)  return score;  // fail-soft
+            if (score >= beta)  return score;   // fail-soft
             
             if (score > alpha)  alpha = score;
             
          } else {
-            [board unmakeMove:m state:st]; // si en échec on annule le coup
+            [board unmakeMove:m state:st];      // si en échec on annule le coup
          }
       }
       
@@ -1381,46 +1385,33 @@ static int nbCallsIsKingCheck = 0;
    // MÉTHODE PossibleMovesForSide - GÉNÉRATION DES COUPS LÉGAUX
    -(NSSet *)PossibleMovesForSide:(Side)side board:(ChessBoard *)board
    {
-       NSMutableArray *allMoves = [NSMutableArray array];
-       [self GenMovesForSide:side board:board into:allMoves];
-       
-       //NSLog(@"🔍 PossibleMovesForSide pour %@:", (side == sideWhite) ? @"Blancs" : @"Noirs");
-       //NSLog(@"   Coups générés (avant filtre): %lu", (unsigned long)allMoves.count);
-       
-       NSMutableSet *legalMoves = [NSMutableSet set];
-       
-       for (Move *m in allMoves) {
-           // ✅ LOG pour chaque coup testé
-           //NSLog(@"   Test coup: %@", m);
-           
-           // ✅ Copier le board
-           ChessBoard *testBoard = board.copy;
-           
-          /*
-          // ✅ Vérifier que la copie contient bien les pièces
-           Piece *movingPiece = testBoard->pieceCase[m.fromSquare % 8][m.fromSquare / 8];
-           if (!movingPiece) {
-               NSLog(@"     ❌ Pas de pièce en (%d,%d) dans testBoard !",
-                     m.fromSquare % 8, m.fromSquare / 8);
-               continue;
-           }
-           */
-           
-           MoveState st = [testBoard makeMove:m];
-           
-           if (![self IsKingInCheck:side board:testBoard]) {
-               //NSLog(@"     ✅ Coup LÉGAL");
-               [legalMoves addObject:m];
-           }
-           //else NSLog(@"     ❌ Coup illégal (roi en échec)");
-           
-           // Pas besoin d'unmake (testBoard sera libéré)
-       }
-       
-       //NSLog(@"   → Coups légaux trouvés: %lu", (unsigned long)legalMoves.count);
-       
-       return legalMoves;
-   }
+      NSMutableArray *allMoves = [NSMutableArray array];
+      [self GenMovesForSide:side board:board into:allMoves];
+      
+      NSMutableSet *legalMoves = [NSMutableSet set];
+      
+      for (Move *m in allMoves) {
+         // ✅ LOG pour chaque coup testé
+         //NSLog(@"   Test coup: %@", m);
+         
+         // ✅ Copier le board
+         ChessBoard *testBoard = board.copy;
+         
+         /* RÉALISATION EFFECTIVE DU MOVE  ----  Il ne s'agit pas ici d'un "move de test" défait plus tard
+         par un 'unmakeMove'. On utilise donc un Cast forcé vers un 'void', car un 'MoveState' retourné ne
+         serait pas utilisé par un unmakeMove à suivre, ce qui créerait une alerte du compilateur.      */
+         //MoveState st = [testBoard makeMove:m];
+         (void)[testBoard makeMove:m];
+         
+         if (![self IsKingInCheck:side board:testBoard]) {
+            //NSLog(@"     ✅ Coup LÉGAL");
+            [legalMoves addObject:m];
+         }
+      }
+      //NSLog(@"   → Coups légaux trouvés: %lu", (unsigned long)legalMoves.count);
+      return legalMoves;
+      
+   } // !PossibleMovesForSide
 
 
    // ================================================================================================

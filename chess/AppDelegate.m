@@ -44,7 +44,7 @@
       
       /* MÀJ du listing des coups joués
       'InitialiseListeCoupsPartie' est appelée afin d'afficher le premier coup lorsque l'IA a les Blancs, sachant
-      qu'il faut d'abord définir la police utilisée dans le contrôle txtListeCoupsPartie (exigence de TextView)...  */
+      qu'il faut d'abord définir la police utilisée dans le contrôle txtListeCoupsPartie (exigence de TextView)*/
       [monConnecteur.txtListeCoupsPartie setFont:[NSFont fontWithName:@"Helvetica" size:14]];
       //[monConnecteur InitialiseListeCoupsPartie:stringCoupsPartie];
       
