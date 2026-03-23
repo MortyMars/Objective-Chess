@@ -9,8 +9,9 @@
 
 // Index PieceType : 0=Invalide, 1=Pion, 2=Cava, 3=Fou, 4=Tour, 5=Dame, 6=Roi
 // ── Valeurs de base ───────────────────────────────────────────────────────
-const int PeSTO_PieceValueMG[7] = { 0,  82, 337, 365, 477,  1025, 0 };
-const int PeSTO_PieceValueEG[7] = { 0,  94, 281, 297, 512,   936, 0 };
+//                                     P    N    B    R    Q    K
+const int PeSTO_PieceValueMG[7] = { 0, 82, 337, 365, 477, 1025, 0 };
+const int PeSTO_PieceValueEG[7] = { 0, 94, 281, 297, 512,  936, 0 };
 
 // ── PIONS ─────────────────────────────────────────────────────────────────
 // Rangée 1 (index 0-7) = rangée de départ Blancs, rangée 8 (56-63) = promotion
@@ -18,7 +19,10 @@ const int PeSTO_PieceValueEG[7] = { 0,  94, 281, 297, 512,   936, 0 };
 
 // TABLES MIDDLE GAME
 const int PeSTO_MG[7][64] = {
-   { 0 }, // [0] Invalide
+   
+   { // [0] Invalide
+         0
+   },
    
    { // [1] Pion MG
          0,   0,   0,   0,   0,   0,   0,   0,   // rang 1 PeSTO (rang 0 moteur)
@@ -88,7 +92,10 @@ const int PeSTO_MG[7][64] = {
 };
 
 const int PeSTO_EG[7][64] = {
-   { 0 }, // [0] Invalide
+   
+   { // [0] Invalide
+         0
+   },
    
    { // [1] Pion EG
          0,   0,   0,   0,   0,   0,   0,   0,
@@ -159,9 +166,12 @@ const int PeSTO_EG[7][64] = {
 
 
 // ── Calcul de phase ───────────────────────────────────────────────────────
-// Poids standard : Cavalier=1, Fou=1, Tour=2, Dame=4 → max = 24
+// Poids standard : Cava=1, Fou=1, Tour=2, Dame=4
+//                    4*1  + 4*1  + 4*2  +  2*4 -→ max = 24
 int PeSTO_GamePhase(int knights, int bishops, int rooks, int queens) {
-   int phase = knights + bishops + rooks * 2 + queens * 4;
-   if (phase > 24) phase = 24;   // clamper (ne devrait pas dépasser)
-   return (phase * 256 + 12) / 24;  // normaliser vers [0, 256]
+   
+   int phase = knights + bishops + rooks * 2 + queens * 4;  // 24 max
+   if (phase > 24) phase = 24;      // limiter à 24 (ne devrait pas dépasser)
+   return (phase * 256 + 12) / 24;  // normaliser dans la fourchette [0, 256]
+   
 }

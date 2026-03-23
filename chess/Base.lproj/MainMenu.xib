@@ -224,7 +224,7 @@ CA
                 <rect key="frame" x="0.0" y="0.0" width="1055" height="758"/>
                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                 <subviews>
-                    <textField identifier="chiffresSideBlancs" focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" preferredMaxLayoutWidth="13" id="huy-nn-Je9">
+                    <textField identifier="chiffresSideBlancs" focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" preferredMaxLayoutWidth="13" translatesAutoresizingMaskIntoConstraints="NO" id="huy-nn-Je9">
                         <rect key="frame" x="699" y="84" width="17" height="570"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" lineBreakMode="charWrapping" selectable="YES" title="8        7        6        5        4        3        2        1 " id="nm0-sE-JR7">
@@ -251,7 +251,7 @@ CA
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField identifier="chiffresSideBlancsGauche" focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" preferredMaxLayoutWidth="13" id="XEc-yi-VdK">
+                    <textField identifier="chiffresSideBlancsGauche" focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" preferredMaxLayoutWidth="13" translatesAutoresizingMaskIntoConstraints="NO" id="XEc-yi-VdK">
                         <rect key="frame" x="38" y="86" width="17" height="570"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" lineBreakMode="charWrapping" selectable="YES" title="8        7        6        5        4        3        2        1 " id="X7W-qz-pji">
@@ -326,7 +326,7 @@ CA
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                     </scrollView>
-                    <customView autoresizesSubviews="NO" id="n99-VP-T7p" customClass="ChessView" colorLabel="IBBuiltInLabel-Blue">
+                    <customView autoresizesSubviews="NO" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="n99-VP-T7p" customClass="ChessView" colorLabel="IBBuiltInLabel-Blue">
                         <rect key="frame" x="75" y="79" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     </customView>
@@ -436,7 +436,7 @@ CA
                         </buttonCell>
                         <color key="bezelColor" name="unemphasizedSelectedContentBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </button>
-                    <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="96l-tU-xYj">
+                    <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="96l-tU-xYj">
                         <rect key="frame" x="748" y="46" width="290" height="49"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" borderStyle="border" alignment="center" drawsBackground="YES" id="FkN-gQ-0yv">

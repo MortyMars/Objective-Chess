@@ -65,7 +65,9 @@
 
 
    // MÉTHODES HELPER
-   -(BOOL)IsSquareDefended:(Square)sq bySide:(Side)side board:(ChessBoard *)board;
+   -(BOOL)IsSquareDefended:(Square)sq
+                    bySide:(Side)side
+                     board:(ChessBoard *)board;
 
    -(BOOL)IsSquareAttackedAtX:(int)x
                             Y:(int)y

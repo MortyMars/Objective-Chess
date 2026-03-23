@@ -20,9 +20,9 @@
                          inBoard:(ChessBoard *)board;
 
    +(NSSet *) SearchInDirection:(Pos *)start
-                                dx:(int)dx
-                                dy:(int)dy
-                             board:(ChessBoard *)board;
+                             dx:(int)dx
+                             dy:(int)dy
+                          board:(ChessBoard *)board;
 
    // Méthodes de Classe SAR (Sans appel récursif)
    +(NSSet *) PosLegalesForPieceSAR:(Piece *)piece       // Version SAR de 'PosLegales...'

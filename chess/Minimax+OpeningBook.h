@@ -14,10 +14,11 @@
 
    // Méthode lookupOpeningBook
    -(Move *)lookupOpeningBook:(ChessBoard *)board
-                      side:(Side)side;
+                         side:(Side)side;
 
    // Méthode partialFEN
-   -(NSString *)partialFEN:(ChessBoard *)board side:(Side)side;
+   -(NSString *)partialFEN:(ChessBoard *)board
+                      side:(Side)side;
 
    // Méthode fenSymbolForPiece
    -(NSString *)fenSymbolForPiece:(Piece *)p;

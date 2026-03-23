@@ -54,28 +54,17 @@ LMR_REDUCTION_2 à 3 pour gratter encore de la profondeur.                      
       // Tableau pour Heuristic History
       int historyTable[2][8][8][8][8];  // [side][fromX][fromY][toX][toY]
       
-      // Compteur de profondeur de pile make/unmake
-      //int depthCounter;
-      
-      /* Supprimé des iVar, et désormais passé en paramètre
-      // Drapeau utilisé par le Null Move Pruning
-      //@public BOOL isInNullMove;  // initialisé dans BMFS
-      Fin de suppression */
-      
       // Variables stockant le meilleur coup entre itérations d'Iterative Deepening
       Move *_idBestMove;
       int   _idBestScore;
       
-      // Killer Moves
+      /* Killer Moves
+      Noter qu'une max depth Negamax 'limitée' à 64 nous laisse de la marge   */
       Move *_killerMoves[64][2][2]; // [max depth Negamax] [side 0=W 1=B] [slot]
-      /* Noter qu'une max depth Negamax 'limitée' à 64 nous laisse de la marge */
-
    }
 
    @property int depthCounter;
-
    @property (nonatomic, strong) TranspositionTable *transpositionTable;
-
    @property (nonatomic, strong) Move *lastIAMove;  // Dernier coup joué
 
    // Property temporaire pour Debug
@@ -101,15 +90,10 @@ LMR_REDUCTION_2 à 3 pour gratter encore de la profondeur.                      
                      alpha:(int)alpha
                       beta:(int)beta
                    qsDepth:(int)qsDepth;
-
-
-   // MÉTHODES AJOUTÉES POUR LE REFACTORING DU MOTEUR
    
 
    -(BOOL)IsKingInCheck:(Side)side board:(ChessBoard *)board;
 
-   
-   // DÉCLARATION DES MÉTHODES D'INSTANCE
 
    // Méthode déterminant le meilleur coup pour 'side''
    -(Move *)   BestMoveForSide:(Side)side             // côté blanc ou côté noir
@@ -124,7 +108,6 @@ LMR_REDUCTION_2 à 3 pour gratter encore de la profondeur.                      
                               board:(ChessBoard *)board;
 
 
-   // MÉTHODES DE CLASSE MCN
    // Méthode testant si 'side' met son adversaire en échec
    -(NSString *) TestEchecFavSide:(Side)side
                             Board:(ChessBoard *)board;
@@ -133,9 +116,6 @@ LMR_REDUCTION_2 à 3 pour gratter encore de la profondeur.                      
    -(BOOL)     TestEchecRoiSide:(Side)side
                         inBoard:(ChessBoard*)board;
 
-   // Méthode SSE qui calcule si une capture est bonne
-   /* +(int)StaticExchangeEvaluation:(Move *)capture
-                   board:(ChessBoard *)board; */
 
    // Détecte si une position a déjà été vue (répétition = nulle)
    -(BOOL)isRepetition:(uint64_t)zobristKey;
@@ -158,8 +138,6 @@ LMR_REDUCTION_2 à 3 pour gratter encore de la profondeur.                      
 
    
 
-
-   
 @end
 
 

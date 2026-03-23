@@ -857,11 +857,10 @@
 
 
    // ================================================================================================
-   // MÉTHODE EvalBoardForSide - VERSION AMÉLIORÉE AVEC ÉVALUATION POSITIONNELLE
-   // Cette méthode évalue la qualité d'une position d'échecs pour un camp donné
-   // PHILOSOPHIE D'ÉVALUATION :
+   // MÉTHODE EvalBoardForSide évaluant la qualité d'une situation de board pour un camp donné
+   // CRITÈRES D'ÉVALUATION :
    // - Matériel : Valeur brute des pièces (base)
-   // - Position : Où sont placées les pièces (crucial)
+   // - Position : Bonus positionnel (via tables PeSTO)
    // - Sécurité : Le roi est-il en sécurité ?
    // - Structure : Les pions sont-ils bien organisés ?
    // - Mobilité : Combien de coups possibles ?
@@ -871,12 +870,8 @@
    {
       evalWhitePOV = 0;  /* Évaluation du point de vue des Blancs (convention Negamax) */
       
-      /* Variables pour statistiques intermédiaires */
-      //int materialWhite = 0, materialBlack = 0;
-      //int developmentWhite = 0, developmentBlack = 0;
-      //int totalMaterial = 0;  /* Pour détecter la fin de partie */
-      
-      // ── PARTIE 1 : MATÉRIEL + PST PESTO + INTERPOLATION DE PHASE ─────────────
+      /* --------------------------------------------------
+      PARTIE 1 : MATÉRIEL + PeSTO + INTERPOL DE PHASE    */
       evalWhitePOV = 0;
       // Accumulateurs mg/eg séparés pour chaque camp
       int mgWhite = 0, egWhite = 0;
@@ -885,7 +880,7 @@
       int knights = 0, bishops = 0, rooks = 0, queens = 0;
       // Variables de développement (conservées pour Partie 3)
       int developmentWhite = 0, developmentBlack = 0;
-      // ── Passe unique sur le board ─────────────────────────────────────────────
+      // ── Passe unique sur le board
       for (int x = 0; x < 8; x++) {
           for (int y = 0; y < 8; y++) {
               Piece *piece = board->pieceCase[x][y];
@@ -939,7 +934,7 @@
               else                         { mgBlack += mg; egBlack += eg; }
           }
       }
-      // ── Interpolation de phase ────────────────────────────────────────────────
+      // ── Interpolation de phase
       int phase = PeSTO_GamePhase(knights, bishops, rooks, queens);
       self.lastPhase = phase;  // ← exposer pour le log provisoire
       // Score interpolé du point de vue des Blancs
@@ -948,15 +943,15 @@
       evalWhitePOV   = scoreWhite - scoreBlack;
       // Exposer la phase pour les Parties suivantes
       // (remplace le booléen isEndGame utilisé dans Parties 5 et 7)
-      BOOL isEndGame = (phase < 128);  // ~30% du matériel restant
+      BOOL isEndGame = (phase < 128);  // 128 correspond à 50% du matériel restant
       
       // NSLog de contrôle (ATTENTION VERBEUX)
       /* NSLog(@"📊 Phase=%d isEndGame=%d (knights=%d bishops=%d rooks=%d queens=%d)",
             phase, isEndGame, knights, bishops, rooks, queens); */
       
-      /* -------------------------------------------
+      /* --------------------------------------------------
       PARTIE 2 : ÉVAL. DE LA STRUCTURE DE PIONS
-      Détection des pions doublés (malus) et pions passés (bonus) */
+      Détection pions doublés (malus) et passés (bonus)  */
       for (int x = 0; x < 8; x++) {
          int whitePawnsInColumn = 0;
          int blackPawnsInColumn = 0;
@@ -1047,23 +1042,24 @@
          
       } // !for Partie 2
       
-      /* -------------------------------------------
+      /* --------------------------------------------------
       PARTIE 3 : BONUS DÉVELOPPEMENT
-      Les pièces (cavaliers/fous) sorties de leur position de départ reçoivent un bonus
-      Ceci a déjà  été calculé dans la boucle principale ci-dessus                   */
+      Les pièces (cavaliers/fous) sorties de leur position
+      de départ reçoivent un bonus. Ceci a déjà été calculé
+      dans la boucle principale ci-dessus                */
       int developmentDiff = developmentWhite - developmentBlack;
       evalWhitePOV += developmentDiff;  // Toujours du point de vue des Blancs
       
-      /* -------------------------------------------
+      /* --------------------------------------------------
       PARTIE 4 : BONUS MOBILITÉ
-      Comptage des coups pseudo-légaux disponibles pour chaque camp
-      Plus on a d'options, mieux c'est !                         */
+      Comptage des coups pseudo-légaux disponibles pour
+      chaque camp, plus on a d'options mieux c'est !     */
       int mobilityBonus = [self EvaluateMobility:board];
       evalWhitePOV += mobilityBonus;
       
-      /* -------------------------------------------
+      /* --------------------------------------------------
       PARTIE 5 : SÉCURITÉ DU ROI
-      Détecter si le Roi est dangereusement exposé */
+      Détecter si le Roi est dangereusement exposé       */
       for (int x = 0; x < 8; x++) {
          for (int y = 0; y < 8; y++) {
             Piece *piece = [board piece_colX:x rangY:y];
@@ -1171,8 +1167,8 @@
          }
       }
       
-      /* -------------------------------------------
-      PARTIE 6 : PIONS EN AVANT-DERNIÈRE RANGÉE   */
+      /* --------------------------------------------------
+      PARTIE 6 : PIONS EN AVANT-DERNIÈRE RANGÉE          */
       for (int x = 0; x < 8; x++) {
           Piece *pionB = board->pieceCase[x][6];
           if (pionB && pionB.type == Pion && pionB.side == sideWhite) {
@@ -1186,8 +1182,8 @@
           }
       }
       
-      /* -------------------------------------------
-      PARTIE 7 : BONUS ROQUE (MiddleGame only)    */
+      /* --------------------------------------------------
+      PARTIE 7 : BONUS ROQUE (MiddleGame only)           */
       if (!isEndGame) {
          
          // --- BLANCS ---
@@ -1300,15 +1296,16 @@
          }
       }
       
-      /* -------------------------------------------
-      PARTIE 8 : PIÈCES SUSPENDUES                */
-      /* Bonus pour le camp qui joue si des pièces adverses sont attaquées
-      et non défendues ou défendues par une pièce de valeur supérieure.
-      Exprimé en POV Blancs, symétrique par construction.               */
+      /* --------------------------------------------------
+      PARTIE 8 : PIÈCES SUSPENDUES
+      Application d'un bonus pour le camp qui joue si des
+      pièces adverses sont attaquées et non défendues ou
+      défendues par une pièce de valeur supérieure. Exprimé
+      en POV Blancs, symétrique par construction.        */
       if (!isEndGame) {
 
           static const int hangVal[7] = { 0, 82, 337, 365, 477, 1025, 0 };
-          //                           Inv  P    N    B    R    Q    K
+          // Rappel    ---->                 P    N    B    R    Q    K
 
           Side playingSide = side;
           Side enemySide   = (side == sideWhite) ? sideBlack : sideWhite;
@@ -1360,7 +1357,7 @@
               }
           }
       }
-      // -------------------------------------------
+      // ---------------------------------------------
       
       /* La mise à jour de l'interface est déplacée dans 'MakeIAMoveForSide' et sa variante 'Silent'
       pour limiter le nombre de mise à jour de l'interface pendant que l'IA décide de son coup    */
@@ -1995,7 +1992,6 @@
    uint64_t recomputeZobrist(ChessBoard *board)
    {
        uint64_t key = 0;
-
        // 🔹 Pièces sur l’échiquier
        for (int x = 0; x < 8; x++) {
            for (int y = 0; y < 8; y++) {
@@ -2006,20 +2002,16 @@
                key ^= zobristPiece[p.side][p.type][sq];
            }
        }
-
        // 🔹 Side to move
        if (board->sideToMove == sideBlack) {
            key ^= zobristSide;
        }
-
        // 🔹 Droits de roque
        key ^= zobristCastle[board->castlingRights];
-
        // 🔹 En-passant
        if (board->enPassantFile != -1) {
            key ^= zobristEnPassant[board->enPassantFile];
        }
-
        return key;
    }
 #endif

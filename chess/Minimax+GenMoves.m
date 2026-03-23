@@ -711,23 +711,11 @@
       }
       
       // 2️⃣ Attaque par Pion
-      // Direction d'attaque du pion dépend de son camp ET de l'orientation du plateau
-      /* Dépendait AVANT de sideJoueur ce qui est incorrect dans le repère moteur.
-      int pawnDir;
-      if (sideJoueur == sideWhite) {
-         pawnDir = (attackingSide == sideWhite) ? 1 : -1;
-      } else {
-         pawnDir = (attackingSide == sideWhite) ? -1 : 1;
-      } */
-      
-      // APRÈS — Modification en direction absolue dans le repère canonique
-      // Blancs avancent toujours vers y croissant
-      // Un pion Blanc en (px, py) attaque (px±1, py+1)
-      // Donc une case (x,y) est attaquée par un pion Blanc venant de (x±1, y-1)
+      /* La direction d'attaque du pion dans le repère canonique est constante :
+      Les Blancs avancent toujours vers y croissant
+      Un pion Blanc en case (px, py) attaque la case (px±1, py+1)
+      Donc une case (x,y) est attaquée par un pion Blanc venant de (x±1, y-1) */
       int pawnDir = (attackingSide == sideWhite) ? -1 : 1;
-      // pawnDir = direction vers la rangée d'où vient le pion attaquant
-      // Blanc attaque vers +y → vient de y-1 → pawnDir = -1
-      // Noir attaque vers -y → vient de y+1 → pawnDir = +1
       
       for (int dx = -1; dx <= 1; dx += 2) {
          int px = x + dx;
@@ -760,7 +748,7 @@
          }
       }
       
-      // 4️⃣ Attaque par Tour/Dame (lignes droites)
+      // 4️⃣ Attaque par Tour/Dame (sens colonnes et rangées)
       static const int rookDirs[4][2] = {{1,0},{-1,0},{0,1},{0,-1}};
       
       for (int d = 0; d < 4; d++) {
@@ -781,7 +769,7 @@
          }
       }
       
-      // 5️⃣ Attaque par Roi adverse (cases adjacentes)
+      // 5️⃣ Attaque par Roi adverse (ttes cases adjacentes)
       for (int dx = -1; dx <= 1; dx++) {
          for (int dy = -1; dy <= 1; dy++) {
             if (dx == 0 && dy == 0) continue;

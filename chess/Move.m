@@ -88,8 +88,8 @@
 
 
    // ==================================================================================================
-   // Méthode permettant de déterminer le move opposé à un move par rapport au centre du Board, nécessaire
-   // pour afficher un move dans la liste des coups ou dans le 'hint' lorsque le plateau est retourné
+   // Méthode permettant de déterminer le move opposé par rapport au centre du Board, nécessaire pour
+   // afficher un move dans la liste des coups et dans le 'hint', lorsque le plateau est retourné
    +(Move *)opMove:(Move *) move {
       
       int opXs = 7 - move.start.x;
