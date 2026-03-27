@@ -44,6 +44,15 @@ typedef struct {
 // Classe TranspositionTable
 @interface TranspositionTable : NSObject
 
+   {
+   @public
+      TTEntry     *table;         // Pointeur vers le tableau d'entrées
+      size_t      numEntries;     // Nombre total d'entrées
+      size_t      indexMask;      // Masque pour calcul d'index (numEntries - 1)
+      uint8_t     generation;     // Génération actuelle
+      TTStats     stats;          // Statistiques
+   }
+
    // INITIALISATION -------------------------------------------------------------
    -(instancetype)initWithSizeMB:(size_t)sizeMB;
 

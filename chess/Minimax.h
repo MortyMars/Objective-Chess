@@ -10,6 +10,7 @@
 #import "Move.h"
 #import "Zobrist.h"
 #import "TranspositionTable.h"
+#import "Util.h"
 
 
 #define INF 1000000     // Définit le score infini pour limiter sans contraindre
@@ -25,6 +26,9 @@ LMR_REDUCTION_2 à 3 pour gratter encore de la profondeur.                      
 #define LMR_REDUCTION_1    1   // réduction standard
 #define LMR_REDUCTION_2    2   // réduction agressive (coups très tardifs)
 #define LMR_LATE_MOVE      6   // seuil pour réduction agressive
+
+// Historique des positions pour détection de répétition
+#define MAX_GAME_LENGTH 512
 
 
 @class Move, ChessBoard; // compte tenu de l'appel de ces 2 classes dans la classe Minimax
@@ -61,6 +65,11 @@ LMR_REDUCTION_2 à 3 pour gratter encore de la profondeur.                      
       /* Killer Moves
       Noter qu'une max depth Negamax 'limitée' à 64 nous laisse de la marge   */
       Move *_killerMoves[64][2][2]; // [max depth Negamax] [side 0=W 1=B] [slot]
+      
+      // Historique de positions
+      uint64_t positionHistory[MAX_GAME_LENGTH];
+      int      historyCount;
+      
    }
 
    @property int depthCounter;
@@ -72,9 +81,6 @@ LMR_REDUCTION_2 à 3 pour gratter encore de la profondeur.                      
 
    // Introduction d'un Opening Book
    @property NSDictionary<NSString *, NSArray<NSString *> *> *openingBook;
-
-   // Historique des positions pour détection de répétition
-   #define MAX_GAME_LENGTH 512
 
    // DÉCLARATION DE MÉTHODES AFIN QU'ELLES SOIENT VISIBLES POUR LES TESTS
    -(int)NegamaxForSide:(Side)side

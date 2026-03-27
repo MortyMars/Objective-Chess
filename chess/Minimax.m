@@ -9,7 +9,7 @@
 #import "Minimax+GenMoves.h"
 #import "ChessBoard+MakeMoves.h"
 #import "ChessConfig.h"
-#import "Util.h"
+//#import "Util.h"
 #import "PeSTO.h"
 #import "Minimax+OpeningBook.h"
 
@@ -17,20 +17,16 @@
 // Définition ci-dessous de la valeur de base du mat reportée dans Util.h pour accès à Minimax + les TT
 // #define MATE_SCORE    100000
 
-#define SCORE_INF     200000   // définit à 200000 le plus bas des scores
-                               // SCORE_INF > MATE_SCORE, et SCORE_INF < INT_MAX/2
+#define SCORE_INF 200000         // définit à 200000 le plus bas des scores
+                                 // SCORE_INF > MATE_SCORE, et SCORE_INF < INT_MAX/2
 
-//static int nodes = 0;
-
-
-@interface Minimax () {
-    // ... tes iVars existantes ...
-    
-    // ✨ NOUVEAU : Historique de positions
-    uint64_t positionHistory[MAX_GAME_LENGTH];
-    int      historyCount;
-}
-@end
+/* Définition et qualibrage de la fenêtre d'aspiration
+- 50 est la valeur standard
+- à porter à 75 si le log révèle trop de fail-low/high
+- à réduire à 30 s'il n'en révèle  pas assez
+- 150 /200 revient à annuler l'effet d'aspiration   */
+#define ASPIRATION_WINDOW 50
+#define ASPIRATION_MIN_DEPTH 4   // N'activer qu'à partir de depth 4
 
 
 @implementation Minimax
@@ -96,26 +92,39 @@
       // 🔁 ITERATIVE DEEPENING : de depth 1 → NUMBER_MOVES_AHEAD
       for (int depth = 1; depth <= NUMBER_MOVES_AHEAD; depth++) {
          
-         // Réinitialiser alpha/beta à chaque itération
-         int alpha = -SCORE_INF;
-         int beta  =  SCORE_INF;
+         // ── Aspiration Windows ───────────────────────────────────
+         int alpha, beta;
+         /* L'aspiration Windows s'étant révélée difficile à calibrer
+         et ainsi inefficace au point de gréver les perfs du moteur,
+         elle est provisoiremnt désactivée,
+         if (depth >= ASPIRATION_MIN_DEPTH &&
+            abs(_idBestScore) < MATE_SCORE - NUMBER_MOVES_AHEAD) {
+               alpha = _idBestScore - ASPIRATION_WINDOW;
+               beta  = _idBestScore + ASPIRATION_WINDOW;
+         } else {
+               alpha = -SCORE_INF;
+               beta  =  SCORE_INF;
+         }
+         alpha et beta retrouvent leurs valeurs par défaut ------- */
+         alpha = -SCORE_INF;
+         beta  =  SCORE_INF;
          
          Move *iterBestMove  = nil;
          int   iterBestScore = -SCORE_INF - 1;
          
-         memset(_killerMoves, 0, sizeof(_killerMoves));  // ← Killer Moves
+         memset(_killerMoves, 0, sizeof(_killerMoves));
          
-         // Tri des coups — le hash move de la TT sera promu automatiquement
+         // Tri des coups
          NSMutableArray *moves = [NSMutableArray arrayWithArray:
                                   [movesPossibles allObjects]];
          [self ScoreMovesList:moves board:board side:side depth:depth];
          
-         // ✨ Promouvoir le meilleur coup de l'itération précédente
+         // Promouvoir le meilleur coup de l'itération précédente
          if (_idBestMove) {
             for (Move *m in moves) {
                if (m.fromSquare == _idBestMove.fromSquare &&
                    m.toSquare   == _idBestMove.toSquare) {
-                  m.orderingScore += 2000000; // Priorité maximale
+                  m.orderingScore += 2000000;
                   break;
                }
             }
@@ -125,55 +134,50 @@
             return (b.orderingScore - a.orderingScore);
          }];
          
-         // --- Boucle racine ---
-         for (Move *move in moves) {
+         // --- Recherche initiale avec fenêtre étroite ---
+         iterBestScore = [self searchRootMoves:moves
+                                         board:board
+                                          side:side
+                                         depth:depth
+                                         alpha:alpha
+                                          beta:beta
+                                   outBestMove:&iterBestMove];
+         
+         /* BLOC D'ASPIRATION WINDOW À CONSERVER COMMENTÉ
+         // --- Fail-low : score STRICTEMENT en dessous de la fenêtre ---
+         if (iterBestScore < alpha &&
+             depth >= ASPIRATION_MIN_DEPTH &&
+             abs(iterBestScore) < MATE_SCORE - NUMBER_MOVES_AHEAD) {
             
-            // Skip répétition immédiate
-            if (self.lastIAMove &&
-                move.fromSquare == self.lastIAMove.toSquare &&
-                move.toSquare   == self.lastIAMove.fromSquare) {
-               continue;
-            }
-            
-            positionHistory[historyCount++] = board->zobristKey;
-            MoveState st = [board makeMove:move];
-            
-            int score = -[self NegamaxForSide:(side == sideWhite ? sideBlack : sideWhite)
-                                        board:board
-                                        depth:depth - 1
-                                        alpha:-beta
-                                         beta:-alpha
-                                   inNullMove:NO];
-            
-            [board unmakeMove:move state:st];
-            historyCount--;
-            
-            if (score > iterBestScore) {
-               iterBestScore = score;
-               iterBestMove  = move;
-            }
-            if (score > alpha) alpha = score;
-            if (alpha >= beta) break; // Beta cutoff racine
+            NSLog(@"↙️ Fail-low depth=%d score=%d alpha=%d", depth, iterBestScore, alpha);
+            iterBestScore = [self searchRootMoves:moves
+                                            board:board
+                                             side:side
+                                            depth:depth
+                                            alpha:-SCORE_INF
+                                             beta:beta
+                                      outBestMove:&iterBestMove];
          }
+         // --- Fail-high : score STRICTEMENT au dessus de la fenêtre ---
+         else if (iterBestScore > beta &&
+                  depth >= ASPIRATION_MIN_DEPTH &&
+                  abs(iterBestScore) < MATE_SCORE - NUMBER_MOVES_AHEAD) {
+            
+            NSLog(@"↗️ Fail-high depth=%d score=%d beta=%d", depth, iterBestScore, beta);
+            iterBestScore = [self searchRootMoves:moves
+                                            board:board
+                                             side:side
+                                            depth:depth
+                                            alpha:alpha
+                                             beta:SCORE_INF
+                                      outBestMove:&iterBestMove];
+         } FIN DE BLOC CONSERVÉ COMMENTÉ  */
          
          // --- Valider l'itération ---
          if (iterBestMove) {
             _idBestMove  = iterBestMove;
             _idBestScore = iterBestScore;
-            /* // Log de Debug
-            if (board->nbEntiers >= 28 && board->nbEntiers <= 42) {
-                NSLog(@"🔥 Coup %d : phase=%d isEndGame=%d score=%d",
-                      board->nbEntiers,
-                      self.lastPhase,
-                      (self.lastPhase < 80),
-                      _idBestScore);
-            }
-            // Fin Log Debug */
          }
-         
-         // NSTimeInterval elapsed = [[NSDate date] timeIntervalSinceDate:startTime];
-         // NSLog(@"🔁 depth=%d → coup=%@ score=%d (%.2fs, %llu nœuds)",
-         //       depth, _idBestMove, _idBestScore, elapsed, nodes);
          
       } // fin iterative deepening
       
@@ -240,9 +244,14 @@
          // Score de répétition contextualisé :
          // - En position gagnante : malus pour décourager la répétition
          // - En position perdante : bonus pour encourager la répétition (sauvetage)
-         // On utilise evalWhitePOV du dernier calcul statique comme proxy
-         int contempt = (side == sideWhite) ? self.lastPhase / 4
-                                          : -(self.lastPhase / 4);
+         
+         // Contempt proportionnel à la phase ET au déséquilibre matériel
+         int baseContempt = self.lastPhase / 4;  // 0-64 selon phase
+         // En finale (phase faible), augmenter le contempt pour forcer la recherche
+         int phaseBonus = (self.lastPhase < 80) ? 30 : 0;
+         
+         int contempt = (side == sideWhite) ?  (baseContempt + phaseBonus)
+                                            : -(baseContempt + phaseBonus);
          // contempt ∈ [-64, +64] selon la phase
          // En ouverture (phase=256) : contempt = ±64 → forte dissuasion
          // En finale   (phase=0)   : contempt = 0  → répétition neutre
@@ -1058,8 +1067,8 @@
       evalWhitePOV += mobilityBonus;
       
       /* --------------------------------------------------
-      PARTIE 5 : SÉCURITÉ DU ROI
-      Détecter si le Roi est dangereusement exposé       */
+       PARTIE 5 : SÉCURITÉ DU ROI
+       Détecter si le Roi est dangereusement exposé       */
       for (int x = 0; x < 8; x++) {
          for (int y = 0; y < 8; y++) {
             Piece *piece = [board piece_colX:x rangY:y];
@@ -1131,36 +1140,51 @@
                
                /* ROI ACTIF EN FINALE */
                if (isEndGame) {
-                   // Localiser les deux Rois
-                   int wkx = -1, wky = -1, bkx = -1, bky = -1;
-                   for (int ix = 0; ix < 8 && (wkx < 0 || bkx < 0); ix++)
-                       for (int iy = 0; iy < 8 && (wkx < 0 || bkx < 0); iy++) {
-                           Piece *p = board->pieceCase[ix][iy];
-                           if (p && p.type == Roi) {
-                               if (p.side == sideWhite) { wkx = ix; wky = iy; }
-                               else                     { bkx = ix; bky = iy; }
-                           }
-                       } // Fin de for for
+                  // Localiser les deux Rois
+                  int wkx = -1, wky = -1, bkx = -1, bky = -1;
+                  for (int ix = 0; ix < 8 && (wkx < 0 || bkx < 0); ix++)
+                     for (int iy = 0; iy < 8 && (wkx < 0 || bkx < 0); iy++) {
+                        Piece *p = board->pieceCase[ix][iy];
+                        if (p && p.type == Roi) {
+                           if (p.side == sideWhite) { wkx = ix; wky = iy; }
+                           else                     { bkx = ix; bky = iy; }
+                        }
+                     } // Fin de for for
                   
-                   if (wkx >= 0 && bkx >= 0) {
-                       // Distance de Manhattan entre les deux Rois
-                       int kingDist = abs(wkx - bkx) + abs(wky - bky);
-                       // Centralisation : distance au centre (3.5, 3.5)
-                       int wCenterDist = abs(wkx - 3) + abs(wky - 3);
-                       int bCenterDist = abs(bkx - 3) + abs(bky - 3);
-                       // Bonus si avantage matériel : forcer le rapprochement des Rois
-                       if (evalWhitePOV > 100) {
-                           // Blancs gagnants : Roi Blanc vers Roi Noir, Roi Noir au bord
-                           evalWhitePOV -= kingDist * 4;    // récompense la proximité
-                           evalWhitePOV += bCenterDist * 6; // punit Roi Noir au bord
-                           evalWhitePOV -= wCenterDist * 2; // encourage Roi Blanc au centre
-                       } else if (evalWhitePOV < -100) {
-                           // Noirs gagnants : symétrique
-                           evalWhitePOV += kingDist * 4;
-                           evalWhitePOV -= wCenterDist * 6;
-                           evalWhitePOV += bCenterDist * 2;
-                       }
-                   }
+                  if (wkx >= 0 && bkx >= 0) {
+                     // Distance de Manhattan entre les deux Rois
+                     int kingDist = abs(wkx - bkx) + abs(wky - bky);
+                     // Centralisation : distance au centre (3.5, 3.5)
+                     int wCenterDist = abs(wkx - 3) + abs(wky - 3);
+                     int bCenterDist = abs(bkx - 3) + abs(bky - 3);
+                     // Bonus si avantage matériel : forcer le rapprochement des Rois
+                     if (evalWhitePOV > 100) {
+                        // Blancs gagnants : Roi Blanc vers Roi Noir, Roi Noir au bord
+                        evalWhitePOV -= kingDist * 4;    // récompense la proximité
+                        evalWhitePOV += bCenterDist * 6; // punit Roi Noir au bord
+                        evalWhitePOV -= wCenterDist * 2; // encourage Roi Blanc au centre
+                     } else if (evalWhitePOV < -100) {
+                        // Noirs gagnants : symétrique
+                        evalWhitePOV += kingDist * 4;
+                        evalWhitePOV -= wCenterDist * 6;
+                        evalWhitePOV += bCenterDist * 2;
+                     }
+                  }
+                  
+                  /* Déjà géré par kingEndGameTable PeSTO, mais ajouter un bonus explicite
+                  pour fuir vers le centre si on est en position perdante               */
+                  if (evalWhitePOV > 100 && piece.side == sideBlack) {
+                     // Roi Noir perdant : bonus si proche du centre
+                     int centerBonus = (4 - abs(x - 3)) + (4 - abs(y - 3));
+                     evalWhitePOV += centerBonus * 3; // positif = bon pour Blancs = mauvais pour Noirs
+                     // Ce malus pousse le Roi Noir vers le centre plutôt que dans les coins
+                  }
+                  if (evalWhitePOV < -100 && piece.side == sideWhite) {
+                     // Roi Blanc perdant : symétrique
+                     int centerBonus = (4 - abs(x - 3)) + (4 - abs(y - 3));
+                     evalWhitePOV -= centerBonus * 3;
+                  }
+                  
                } /* Fin de Roi actif en finale */
                
             }
@@ -1982,6 +2006,55 @@
 
        return minVal;
    } // !minAttackerValue
+
+
+   // ================================================================================================
+   // Méthode privée searchRootMoves
+   // Boucle racine factorisée pour l'Aspiration Windows, utilisée dans BMFS
+   -(int)searchRootMoves:(NSMutableArray *)moves
+                   board:(ChessBoard *)board
+                    side:(Side)side
+                   depth:(int)depth
+                   alpha:(int)alpha
+                    beta:(int)beta
+             outBestMove:(Move **)outBestMove
+   {
+       int iterBestScore = -SCORE_INF - 1;
+       *outBestMove = nil;
+
+       for (Move *move in moves) {
+
+           // Skip répétition immédiate
+           if (self.lastIAMove &&
+               move.fromSquare == self.lastIAMove.toSquare &&
+               move.toSquare   == self.lastIAMove.fromSquare) {
+               continue;
+           }
+
+           positionHistory[historyCount++] = board->zobristKey;
+           MoveState st = [board makeMove:move];
+
+           int score = -[self NegamaxForSide:(side == sideWhite ? sideBlack : sideWhite)
+                                       board:board
+                                       depth:depth - 1
+                                       alpha:-beta
+                                        beta:-alpha
+                                  inNullMove:NO];
+
+           [board unmakeMove:move state:st];
+           historyCount--;
+
+           if (score > iterBestScore) {
+               iterBestScore = score;
+               *outBestMove  = move;
+           }
+           if (score > alpha) alpha = score;
+           if (alpha >= beta) break;
+       }
+
+       return iterBestScore;
+      
+   } // !searchRootMoves
 
    
 @end

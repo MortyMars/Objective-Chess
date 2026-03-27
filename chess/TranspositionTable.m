@@ -26,18 +26,6 @@
 #define SCORE_NONE INT16_MIN
 
 
-// Interface privée
-@interface TranspositionTable () {
-   @public
-       TTEntry     *table;         // Pointeur vers le tableau d'entrées
-       size_t      numEntries;     // Nombre total d'entrées
-       size_t      indexMask;      // Masque pour calcul d'index (numEntries - 1)
-       uint8_t     generation;     // Génération actuelle
-       TTStats     stats;          // Statistiques
-   }
-@end
-
-
 @implementation TranspositionTable
 
    // ==============================================================================
