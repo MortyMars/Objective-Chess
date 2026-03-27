@@ -50,7 +50,8 @@
                                        depth:3
                                        alpha:-INT_MAX
                                         beta:INT_MAX
-                                  inNullMove:NO];
+                                  inNullMove:NO
+                                         ply:0];
       XCTAssertTrue(negaMax < 103900);
       NSLog(@"\n\n Valeur de retour de NegamaxFS = %d \n\n",negaMax);
    }
@@ -426,7 +427,8 @@
                              depth:4
                              alpha:-INT_MAX
                               beta:+INT_MAX
-                        inNullMove:NO];
+                        inNullMove:NO
+                               ply:0];
       }];
       
       /* Résultat du test réalisé le 20/04/22 avec NUMBER_MOVE_AHEAD = 4 :

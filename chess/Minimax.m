@@ -232,6 +232,7 @@
                   alpha:(int)alpha
                    beta:(int)beta
              inNullMove:(BOOL)inNullMove
+                    ply:(int)ply 
    {
       nodes++;
       
@@ -241,6 +242,8 @@
       
       // ✅ Détection de répétition AVANT probe TT
       if ([self isRepetition:board->zobristKey]) {
+         
+         /* REPRISE PROJET : Bloc commenté
          // Score de répétition contextualisé :
          // - En position gagnante : malus pour décourager la répétition
          // - En position perdante : bonus pour encourager la répétition (sauvetage)
@@ -250,14 +253,19 @@
          // En finale (phase faible), augmenter le contempt pour forcer la recherche
          int phaseBonus = (self.lastPhase < 80) ? 30 : 0;
          
+         
          int contempt = (side == sideWhite) ?  (baseContempt + phaseBonus)
                                             : -(baseContempt + phaseBonus);
          // contempt ∈ [-64, +64] selon la phase
          // En ouverture (phase=256) : contempt = ±64 → forte dissuasion
          // En finale   (phase=0)   : contempt = 0  → répétition neutre
-         return -contempt;
+         return -contempt; */
+         
+         // REPRISE PROJET
+         // ✅ Utiliser simplement une valeur fixe, tjs négative (répétition mauvaise pour le camp actif)
+         return -10; // Légèrement défavorable pour pousser à chercher mieux si possible
+         
       }
-      
       
       // ----------------------------------------------------------------------
       // 🔍 PROBE TT : Consulter la table de transposition
@@ -276,7 +284,7 @@
             BOOL seenBefore = !inCheck && [self isSeenBefore:board->zobristKey];
             if (!seenBefore) {
                
-               int ttScore = ttEntry->score;
+               int ttScore = scoreFromTT(ttEntry->score, ply);
                
                switch (ttEntry->nodeType) {
                   case TT_EXACT:
@@ -303,7 +311,6 @@
             // mais on ne retourne pas le score — on re-cherche
          }
       }
-      
       
       // Sauvegarder alpha APRÈS ajustements TT, et AVANT exploration
       int alphaOrig = alpha;
@@ -349,7 +356,8 @@
                                         depth:depth - 1 - R
                                         alpha:-beta
                                          beta:-beta + 1
-                                   inNullMove:YES];
+                                   inNullMove:YES
+                                          ply:ply +1];
         
         /* Suppression reprise Claude */
         // Désactiver le flag
@@ -363,7 +371,8 @@
         if (nullScore >= beta) {
             // Coupure beta ! Pas besoin de chercher plus
             // Note : on ne stocke PAS dans la TT (résultat approximatif)
-            return beta;  // Fail-soft
+            // return beta;         // Fail-soft erroné
+            return nullScore;       // Vrai Fail-soft
         }
       }
       
@@ -411,7 +420,7 @@
          
          // ✨ Stocker dans TT (score exact, pas de meilleur coup)
          [self.transpositionTable store:board->zobristKey
-                                  score:score
+                                  score:scoreToTT(score, ply)
                                   depth:depth
                                nodeType:TT_EXACT
                                bestMove:nil];
@@ -480,21 +489,25 @@
                                        depth:depth-1 - R // profondeur réduire de R (1 ou 2)
                                        alpha:-beta
                                         beta:-alpha
-                                  inNullMove:NO];
+                                  inNullMove:NO
+                                         ply:ply+1];
             
             
                // ── Re-recherche pleine profondeur si prometteur ─
-               if (score > alpha) {
+               // ✅ Correction : PVS-style re-search
+               if (score > alpha && score < beta) {
                   score = -[self NegamaxForSide:otherSide
                                           board:board
                                           depth:depth-1
                                           alpha:-beta
                                            beta:-alpha
-                                     inNullMove:NO];
+                                     inNullMove:NO
+                                            ply:ply+1];
                }
                // NSLog de contrôle du déclenchement du LMR
                // NSLog(@"🔻 LMR depth=%d moveIndex=%d R=%d", depth, moveIndex, R);
             }
+            
             // RECHERCHE PLEINE PROFONDEUR (NEGAMAX STANDARD)
             else {
                // ── Recherche pleine profondeur coups prioritaires
@@ -503,7 +516,8 @@
                                        depth:depth-1
                                        alpha:-beta
                                         beta:-alpha
-                                  inNullMove:NO];
+                                  inNullMove:NO
+                                         ply:ply+1];
             } // Brackett MCN !?
             
             // ✅ LOG pour les coups suspects
@@ -607,7 +621,7 @@
       }
       
       [self.transpositionTable store:board->zobristKey
-                               score:alpha
+                               score:scoreToTT(alpha, ply)
                                depth:depth
                             nodeType:nodeType
                             bestMove:bestMove];
@@ -1322,64 +1336,63 @@
       
       /* --------------------------------------------------
       PARTIE 8 : PIÈCES SUSPENDUES
-      Application d'un bonus pour le camp qui joue si des
-      pièces adverses sont attaquées et non défendues ou
-      défendues par une pièce de valeur supérieure. Exprimé
-      en POV Blancs, symétrique par construction.        */
-      if (!isEndGame) {
+      Évaluation symétrique des deux camps : chaque pièce
+      non défendue (ou défendue par une pièce plus chère)
+      génère un malus pour son camp, exprimé en POV Blancs.
+      Indépendant de 'side' → score stable à tout ply.
+      Actif en milieu de partie ET en finale.            */
 
-          static const int hangVal[7] = { 0, 82, 337, 365, 477, 1025, 0 };
-          // Rappel    ---->                 P    N    B    R    Q    K
+      static const int hangVal[7] = { 0, 82, 337, 365, 477, 1025, 0 };
+      //  Rappel  ---->                  P    N    B    R    Q    K
 
-          Side playingSide = side;
-          Side enemySide   = (side == sideWhite) ? sideBlack : sideWhite;
+      for (int evalSide = 0; evalSide <= 1; evalSide++) {
 
-          for (int x = 0; x < 8; x++) {
-              for (int y = 0; y < 8; y++) {
-                  Piece *p = board->pieceCase[x][y];
+        Side pieceSide   = (evalSide == 0) ? sideWhite : sideBlack;
+        Side attackSide  = (evalSide == 0) ? sideBlack : sideWhite;
+        int  sign        = (evalSide == 0) ? -1 : +1;
+        // sign=-1 : pièce Blanche suspendue = malus POV Blancs
+        // sign=+1 : pièce Noire  suspendue = bonus POV Blancs
 
-                  // On évalue uniquement les pièces adverses
-                  if (!p || p.type == Invalide ||
-                      p.type == Pion || p.type == Roi) continue;
-                  if (p.side != enemySide) continue;
+        for (int x = 0; x < 8; x++) {
+            for (int y = 0; y < 8; y++) {
 
-                  int val = hangVal[p.type];
+                Piece *p = board->pieceCase[x][y];
+                if (!p || p.type == Invalide ||
+                    p.type == Pion || p.type == Roi) continue;
+                if (p.side != pieceSide) continue;
 
-                  // Valeur minimale de l'attaquant du camp qui joue
-                  int minAtk = [self minAttackerValue:x y:y
-                                               bySide:playingSide board:board];
-                  if (minAtk == 0) continue;
+                int val    = hangVal[p.type];
 
-                  // La pièce adverse est-elle défendue par une pièce amie ?
-                  BOOL defended = [self IsSquareAttackedAtX:x Y:y
-                                                     bySide:enemySide Board:board];
+                // Valeur minimale de l'attaquant adverse
+                int minAtk = [self minAttackerValue:x y:y
+                                             bySide:attackSide board:board];
+                if (minAtk == 0) continue;  // pièce non attaquée
 
-                  int penalty = 0;
+                // La pièce est-elle défendue par un ami ?
+                BOOL defended = [self IsSquareAttackedAtX:x Y:y
+                                                   bySide:pieceSide Board:board];
+                int penalty = 0;
 
-                  if (!defended) {
-                      if (minAtk < val) {
-                          // Pièce suspendue par attaquant moins cher → vrai gain
-                          penalty = -((val - minAtk) / 2);
-                      } else if (minAtk == val) {
-                          // Échange de pièces égales → léger avantage
-                          penalty = -(val / 8);
-                      }
-                      // Si minAtk > val : l'attaque est défavorable → pas de bonus
-                  } else {
-                      if (minAtk < val) {
-                          // Défendue mais attaquant moins cher → échange potentiellement favorable
-                          penalty = -((val - minAtk) / 4);
-                      }
-                  }
+                if (!defended) {
+                    if (minAtk < val) {
+                        // Attaquant moins cher → vrai gain pour l'adversaire
+                        penalty = -((val - minAtk) / 2);
+                    } else if (minAtk == val) {
+                        // Échange égal → léger désavantage
+                        penalty = -(val / 8);
+                    }
+                    // minAtk > val : l'attaque est défavorable → pas de malus
+                } else {
+                    if (minAtk < val) {
+                        // Défendue mais attaquant moins cher → échange potentiellement favorable à l'adversaire
+                        penalty = -((val - minAtk) / 4);
+                    }
+                }
 
-                  // Bonus pour le camp qui joue = on soustrait la pénalité adverse
-                  // Toujours exprimé en POV Blancs
-                  if (penalty != 0) {
-                      if (playingSide == sideWhite) evalWhitePOV -= penalty;
-                      else                          evalWhitePOV += penalty;
-                  }
-              }
-          }
+                // Appliquer le malus en POV Blancs
+                if (penalty != 0) evalWhitePOV += sign * penalty;
+            }
+        }
       }
       // ---------------------------------------------
       
@@ -2039,7 +2052,8 @@
                                        depth:depth - 1
                                        alpha:-beta
                                         beta:-alpha
-                                  inNullMove:NO];
+                                  inNullMove:NO
+                                         ply:0];
 
            [board unmakeMove:move state:st];
            historyCount--;
@@ -2088,3 +2102,18 @@
        return key;
    }
 #endif
+
+
+// ── Helpers à ajouter (par exemple en tête de Minimax.m) ──────────
+
+static inline int scoreToTT(int score, int ply) {
+    if (score >  MATE_SCORE - 200) return score + ply;  // mat pour nous
+    if (score < -MATE_SCORE + 200) return score - ply;  // mat pour eux
+    return score;
+}
+
+static inline int scoreFromTT(int score, int ply) {
+    if (score >  MATE_SCORE - 200) return score - ply;
+    if (score < -MATE_SCORE + 200) return score + ply;
+    return score;
+}

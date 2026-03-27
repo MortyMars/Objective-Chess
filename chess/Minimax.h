@@ -85,10 +85,12 @@ LMR_REDUCTION_2 à 3 pour gratter encore de la profondeur.                      
    // DÉCLARATION DE MÉTHODES AFIN QU'ELLES SOIENT VISIBLES POUR LES TESTS
    -(int)NegamaxForSide:(Side)side
                   board:(ChessBoard *)board
-                  depth:(int)depth
+                  depth:(int)depth  // depth est la profondeur restante (NUMBER_MOVES_AHEAD est sa valeur max)
                   alpha:(int)alpha
                    beta:(int)beta
-             inNullMove:(BOOL)inNullMove;
+             inNullMove:(BOOL)inNullMove
+                    ply:(int)ply;   // ply est la distance depuis la racine. Le passage de ply en paramètre a pour
+                                    // but de faciliter son incrémentation à chaque appel récursif de NegamaxForSide
 
 
    -(int)QuiescenceForSide:(Side)side
@@ -147,7 +149,19 @@ LMR_REDUCTION_2 à 3 pour gratter encore de la profondeur.                      
 @end
 
 
-// Déclaration fonction de recalcul Zobrist 
-//#ifdef DEBUG_ZOBRIST
-   uint64_t recomputeZobrist(ChessBoard *board);
-//#endif
+// Déclaration fonction de recalcul Zobrist (utilisée en mode DEBUG_ZOBRIST
+uint64_t recomputeZobrist(ChessBoard *board);
+
+
+/* SCORES DE MAT ET TABLES DE TRANSPOSITION
+Déclaration des fonctions Helpers ajoutées pour le calcul des scores de mat
+PROBLÈME FONDAMENTAL :
+Un score de mat encode à combien de coups le mat est détecté, via la convention :
+score_mat = MATE_SCORE - ply_depuis_la_racine
+Exemple : mat détecté en 3 coups depuis la racine → score = 100000 - 3 = 99997.
+Ce score est relatif à la racine. Quand on le stocke en TT puis qu'on le récupère depuis
+un nœud différent (à un autre ply), il faut le recentrer sur le nœud courant, sinon le moteur
+croit voir un mat en 3 depuis un nœud qui est lui-même à ply=5 — ce qui correspond en réalité
+à un mat en 8 depuis la racine.*/
+static inline int scoreToTT(int score, int ply);
+static inline int scoreFromTT(int score, int ply);
