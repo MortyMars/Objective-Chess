@@ -315,6 +315,10 @@ BOOL engineIsBusy = NO;
       //MoveState st = [liveBoard makeMove:aiMove];
       (void)[liveBoard makeMove:aiMove];
       
+      // REPRISE DU PROJET
+      // Mise à jour de l'historique avec le coup AI
+      [maMinimax recordMoveInGameHistory:liveBoard->zobristKey];
+      
       // Affichage du coup IA en Log
       if (sideIA == sideBlack) {
          NSLog(@"🎲 Coup n°%d IA : %@", liveBoard->nbEntiers, aiMove);
@@ -472,6 +476,10 @@ BOOL engineIsBusy = NO;
          }
       #endif
       
+      // REPRISE DU PROJET
+      // Mise à jour de l'historique avec le coup Joueur
+      [maMinimax recordMoveInGameHistory:liveBoard->zobristKey];
+      
       // Gestion des indicateurs d'affichage du Roque dans la liste des coups joués
       petitRoque = NO;
       grandRoque = NO;
@@ -580,6 +588,10 @@ BOOL engineIsBusy = NO;
       serait pas utilisé par un unmakeMove à suivre, ce qui créerait une alerte du compilateur.      */
       // MoveState st = [board makeMove:aiMove];
       (void)[board makeMove:aiMove];
+      
+      // REPRISE DU PROJET
+      // Mise à jour de l'historique avec le coup AI
+      [maMinimax recordMoveInGameHistory:board->zobristKey];
       
       /* Sauvegarde des indicateurs de roque et de prise e.p. car RAZ plus loin par 'TestEchecFavSide' (???)
       avant de pouvoir les exploiter dans 'ConvertEnStringMove'

@@ -137,37 +137,35 @@
    // ==============================================================================
    // Méthode de consultation de la table
    -(TTEntry * _Nullable)probe:(uint64_t)zobristKey
-                       bestMove:(Move * _Nullable * _Nullable)outBestMove {
+                      bestMove:(Move * _Nullable * _Nullable)outBestMove {
        stats.probes++;
        
        size_t index = [self indexForKey:zobristKey];
        TTEntry *entry = &table[index];
        
-       // Entrée vide ?
        if (entry->key == 0) {
-           LOG_TT(@"TT probe: MISS (entrée vide) key=%llx", zobristKey);
            if (outBestMove) *outBestMove = nil;
            return NULL;
        }
        
-       // Collision détectée ?
        if (entry->key != zobristKey) {
            stats.collisions++;
-           LOG_TT(@"TT probe: COLLISION key=%llx stored=%llx", zobristKey, entry->key);
            if (outBestMove) *outBestMove = nil;
            return NULL;
        }
        
-       // Hit !
-       stats.hits++;
-       LOG_TT(@"TT probe: HIT key=%llx depth=%d score=%d type=%d",
-              zobristKey, entry->depth, entry->score, entry->nodeType);
-       
-       // Décoder le meilleur coup si demandé
+       // ✅ Toujours décoder le ttMove pour l'ordonnancement
        if (outBestMove) {
            *outBestMove = [self decodeMove:entry->bestMoveEncoded];
        }
        
+       // ✅ Ne retourner l'entrée (score) que si génération courante
+       if (entry->generation != generation) {
+           // ttMove déjà extrait — on retourne NULL pour forcer la re-recherche
+           return NULL;
+       }
+       
+       stats.hits++;
        return entry;
       
    } // !probe
@@ -221,10 +219,14 @@
          
          // Ajuster les scores de mat pour qu'ils soient indépendants de la profondeur
          // Convention : stocker le score depuis la racine, pas depuis le nœud courant
+         /* REPRISE DU CODE ----------------------------------------------------------
          int storedScore = score;
          if (score >  (MATE_SCORE - NUMBER_MOVES_AHEAD)) storedScore = score + depth;
          if (score < -(MATE_SCORE - NUMBER_MOVES_AHEAD)) storedScore = score - depth;
          entry->score = storedScore;
+         LE BLOC -EN DOUBLON AVEC CE QUE FAIT 'scoreToTT(score, ply)' DANS NEGAMAX-
+         EST REMPLACÉ PAR LA LIGNE CI-DESSOUS ------------------------------------- */
+         entry->score = score;
          
          entry->key = zobristKey;
          entry->depth = (uint8_t)depth;

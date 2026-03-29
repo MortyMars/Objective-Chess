@@ -133,6 +133,9 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       TestInvolution();
       engineIsBusy = NO;
       
+      // RAZ de l'historique de partie
+      [maMinimax resetGameHistory];
+      
    }
 
 
@@ -224,6 +227,9 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
       // Chargement du board dans la vue active et rafraichissement
       monConnecteur.maChessView->liveBoard = self;
       monConnecteur.maChessView.needsDisplay = YES;
+      
+      // RAZ de l'historique de partie
+      [maMinimax resetGameHistory];
       
       // 🔴 APRÈS INIT ZOBRIST, FORCER L'IA À JOUER LE PREMIER COUP !
       [self PremCoupAIBlancs];

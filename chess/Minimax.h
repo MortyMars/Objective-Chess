@@ -66,9 +66,13 @@ LMR_REDUCTION_2 à 3 pour gratter encore de la profondeur.                      
       Noter qu'une max depth Negamax 'limitée' à 64 nous laisse de la marge   */
       Move *_killerMoves[64][2][2]; // [max depth Negamax] [side 0=W 1=B] [slot]
       
-      // Historique de positions
+      // Historique de positions, dédié à la recherche
       uint64_t positionHistory[MAX_GAME_LENGTH];
       int      historyCount;
+      
+      // Historique Zobrist de la PARTIE RÉELLE (coups joués, pas la recherche)
+      uint64_t gameHistory[MAX_GAME_LENGTH];
+      int      gameHistoryCount;
       
    }
 
@@ -143,6 +147,13 @@ LMR_REDUCTION_2 à 3 pour gratter encore de la profondeur.                      
    // Méthodes ajoutant la 'Mobilité' dans EvalBoardForSide
    -(int)EvaluateMobility:(ChessBoard *)board;
    -(int)CountPseudoLegalMovesForSide:(Side)side board:(ChessBoard *)board;
+
+   // Méthode enregistrant le coup Joueur dans l'historique de partie, sachant que
+   // le coup Joueur est réalisé dans l'UI (clics à la souris) et non dans BMFS
+   -(void)recordMoveInGameHistory:(uint64_t)zobristKey;
+
+   // RAZ de l'historique de game
+   -(void)resetGameHistory;
 
    
 

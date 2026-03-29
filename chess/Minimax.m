@@ -9,7 +9,6 @@
 #import "Minimax+GenMoves.h"
 #import "ChessBoard+MakeMoves.h"
 #import "ChessConfig.h"
-//#import "Util.h"
 #import "PeSTO.h"
 #import "Minimax+OpeningBook.h"
 
@@ -41,6 +40,8 @@
          cacheMisses = 0;
          self.transpositionTable = [[TranspositionTable alloc] initWithSizeMB:128];
          [self buildOpeningBook];  // Ouverture de l'Opening Book
+         gameHistoryCount = 0;
+         memset(gameHistory, 0, sizeof(gameHistory));
       }
       return self;
    }
@@ -63,8 +64,17 @@
       moveGenTotalTime = 0;
       memset(historyTable, 0, sizeof(historyTable));
       //isInNullMove = NO;
+      
+      /* REPRISE DU PROJET - Ne plus remettre positionHistory à zéro "à blanc"
+      Le présent bloc est remplacé par le nouveau bloc immédiatement ci-après
       historyCount = 0;
-      memset(positionHistory, 0, sizeof(positionHistory));
+      memset(positionHistory, 0, sizeof(positionHistory)); ---------------- */
+      /* Initialiser positionHistory avec les positions réelles SAUF la dernière
+      (qui sera ajoutée par searchRootMoves avant chaque coup testé) */
+      int copyCount = MAX(0, gameHistoryCount - 1);
+      historyCount = copyCount;
+      memcpy(positionHistory, gameHistory, copyCount * sizeof(uint64_t));
+      
       _idBestMove  = nil;
       _idBestScore = -SCORE_INF - 1;
       [self.transpositionTable newGeneration];
@@ -218,6 +228,11 @@
       
       self.lastIAMove = _idBestMove;
       
+      /* // Enregistrer la position APRÈS le coup IA dans l'historique réel
+      if (gameHistoryCount < MAX_GAME_LENGTH) {
+          gameHistory[gameHistoryCount++] = board->zobristKey;
+      } */
+      
       return _idBestMove;
       
    } // !BMFS
@@ -262,8 +277,8 @@
          return -contempt; */
          
          // REPRISE PROJET
-         // ✅ Utiliser simplement une valeur fixe, tjs négative (répétition mauvaise pour le camp actif)
-         return -10; // Légèrement défavorable pour pousser à chercher mieux si possible
+         // ✅ Utiliser simplement une valeur fixe
+         return 0; // Répétition = position nulle, score neutre
          
       }
       
@@ -276,40 +291,23 @@
       BOOL inCheck = [self IsKingInCheck:side board:board];
       
       if (ttEntry) {
-         // ttMove est déjà rempli automatiquement !
-         // Utiliser le score de la TT si la profondeur est suffisante
-         if (ttEntry->depth >= depth) {
-            // Ne pas utiliser le score TT si la position a déjà été vue
-            // (le contexte peut avoir changé depuis le stockage)
-            BOOL seenBefore = !inCheck && [self isSeenBefore:board->zobristKey];
-            if (!seenBefore) {
-               
-               int ttScore = scoreFromTT(ttEntry->score, ply);
-               
-               switch (ttEntry->nodeType) {
+          if (ttEntry->depth >= depth) {
+              int ttScore = scoreFromTT(ttEntry->score, ply);
+              
+              switch (ttEntry->nodeType) {
                   case TT_EXACT:
-                     // Score exact : retourner directement
-                     return ttScore;
-                     
+                      return ttScore;
                   case TT_LOWER_BOUND:
-                     // Fail-high (beta cutoff) : score >= ttScore
-                     if (ttScore >= beta) return ttScore;
-                     if (ttScore > alpha) alpha = ttScore;
-                     break;
-                     
+                      if (ttScore >= beta) return ttScore;
+                      if (ttScore > alpha) alpha = ttScore;
+                      break;
                   case TT_UPPER_BOUND:
-                     // Fail-low (alpha cutoff) : score <= ttScore
-                     if (ttScore <= alpha) return ttScore;
-                     if (ttScore < beta) beta = ttScore;
-                     break;
-               }
-               
-               // Fenêtre alpha-beta fermée ?
-               if (alpha >= beta) return ttScore;
-            } // fin !seenBefore
-            // Si seenBefore : on garde ttMove pour l'ordonnancement
-            // mais on ne retourne pas le score — on re-cherche
-         }
+                      if (ttScore <= alpha) return ttScore;
+                      if (ttScore < beta) beta = ttScore;
+                      break;
+              }
+              if (alpha >= beta) return ttScore;
+          }
       }
       
       // Sauvegarder alpha APRÈS ajustements TT, et AVANT exploration
@@ -432,6 +430,7 @@
       Side otherSide = (side == sideWhite) ? sideBlack : sideWhite;
       Move *bestMove = nil;  // ✨ Tracker le meilleur coup pour TT
       
+      // Déclaration du compteur LMR
       int moveIndex = 0;   // ← compteur LMR
       
       for (Move *m in moves) {
@@ -556,15 +555,20 @@
             // Killer Move : coup silencieux qui cause un cutoff
             if (!m.isCapture && !m.isPromotion) {
                int sideIdx = (side == sideWhite)? 0 : 1;
-              // Éviter les doublons
-              BOOL alreadyKiller = (_killerMoves[depth][0] &&
-                  m.fromSquare == _killerMoves[depth][sideIdx][0].fromSquare &&
-                  m.toSquare   == _killerMoves[depth][sideIdx][0].toSquare);
-              
-              if (!alreadyKiller) {
+               // Éviter les doublons
+               BOOL alreadyKiller = (_killerMoves[depth][0] &&
+                                     m.fromSquare == _killerMoves[depth][sideIdx][0].fromSquare &&
+                                     m.toSquare   == _killerMoves[depth][sideIdx][0].toSquare);
+               
+               if (!alreadyKiller) {
                   _killerMoves[depth][sideIdx][1] = _killerMoves[depth][sideIdx][0];
                   _killerMoves[depth][sideIdx][0] = m;
-              }
+               }
+               // ✅ AJOUT : History Heuristic
+               historyTable[sideIdx][m.fromSquare % 8][m.fromSquare / 8]
+                           [m.toSquare % 8][m.toSquare / 8] += depth * depth;
+               // depth² : les cutoffs à grande profondeur valent plus
+               
             }
             break;
          }
@@ -1796,7 +1800,7 @@
 
    
    // ================================================================================================
-   // Détecte si une position a déjà été vue (répétition = nulle)
+   // isRepetition détecte si une position a déjà été vue (répétition = nulle)
    -(BOOL)isRepetition:(uint64_t)zobristKey
    {
        // Compter les occurrences de cette clé dans l'historique
@@ -2032,43 +2036,75 @@
                     beta:(int)beta
              outBestMove:(Move **)outBestMove
    {
-       int iterBestScore = -SCORE_INF - 1;
-       *outBestMove = nil;
-
-       for (Move *move in moves) {
-
-           // Skip répétition immédiate
-           if (self.lastIAMove &&
-               move.fromSquare == self.lastIAMove.toSquare &&
-               move.toSquare   == self.lastIAMove.fromSquare) {
-               continue;
-           }
-
-           positionHistory[historyCount++] = board->zobristKey;
-           MoveState st = [board makeMove:move];
-
-           int score = -[self NegamaxForSide:(side == sideWhite ? sideBlack : sideWhite)
-                                       board:board
-                                       depth:depth - 1
-                                       alpha:-beta
-                                        beta:-alpha
-                                  inNullMove:NO
-                                         ply:0];
-
-           [board unmakeMove:move state:st];
-           historyCount--;
-
-           if (score > iterBestScore) {
-               iterBestScore = score;
-               *outBestMove  = move;
-           }
-           if (score > alpha) alpha = score;
-           if (alpha >= beta) break;
-       }
-
-       return iterBestScore;
+      int iterBestScore = -SCORE_INF - 1;
+      *outBestMove = nil;
+      
+      for (Move *move in moves) {
+         
+         /* REPRISE DU CODE - Suppression du skip de répétition immédiate
+         // Skip répétition immédiate
+         if (self.lastIAMove &&
+             move.fromSquare == self.lastIAMove.toSquare &&
+             move.toSquare   == self.lastIAMove.fromSquare) {
+            continue;
+         } ----------------------------------------------------------- */
+         
+         positionHistory[historyCount++] = board->zobristKey;
+         MoveState st = [board makeMove:move];
+         
+         // ✅ AJOUTER : vérifier si le coup adverse produit un Pat
+         Side otherSide = (side == sideWhite)? sideBlack:sideWhite;
+         NSMutableArray *opponentMoves = [NSMutableArray array];
+         [self GenMovesForSide:otherSide board:board into:opponentMoves];
+         BOOL isOpponentStalemate = (opponentMoves.count == 0 &&
+                                     ![self IsKingInCheck:otherSide board:board]);
+         if (isOpponentStalemate) {
+             [board unmakeMove:move state:st];
+             historyCount--;
+             continue;  // Ignorer ce coup — il produit un Pat
+         }
+         
+         int score = -[self NegamaxForSide:(side == sideWhite ? sideBlack : sideWhite)
+                                     board:board
+                                     depth:depth - 1
+                                     alpha:-beta
+                                      beta:-alpha
+                                inNullMove:NO
+                                       ply:0];
+         
+         [board unmakeMove:move state:st];
+         historyCount--;
+         
+         if (score > iterBestScore) {
+            iterBestScore = score;
+            *outBestMove  = move;
+         }
+         if (score > alpha) alpha = score;
+         if (alpha >= beta) break;
+      }
+      
+      if (iterBestScore < 0)
+         NSLog(@"💣 Attention 'iterBestScore' porte une valeur négative : %d",iterBestScore);
+      
+      return iterBestScore;
       
    } // !searchRootMoves
+
+
+   // Méthode enregistrant le coup Joueur dans l'historique de partie, sachant que
+   // le coup Joueur est réalisé dans l'UI (clics à la souris) et non dans BMFS
+   -(void)recordMoveInGameHistory:(uint64_t)zobristKey {
+       if (gameHistoryCount < MAX_GAME_LENGTH) {
+           gameHistory[gameHistoryCount++] = zobristKey;
+       }
+   }
+
+
+   // RAZ de l'historique de game
+   -(void)resetGameHistory {
+       gameHistoryCount = 0;
+       memset(gameHistory, 0, sizeof(gameHistory));
+   }
 
    
 @end
