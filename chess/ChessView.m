@@ -40,12 +40,9 @@ BOOL engineIsBusy = NO;
          // Initialisation de liveBoard
          liveBoard = [[ChessBoard alloc] init];
          
-         // Initialisation àzéro des tableaux recevant les pièces capturées
+         // Initialisation des tableaux recevant les pièces capturées
          self.capturedByWhite = [NSMutableArray array];
          self.capturedByBlack = [NSMutableArray array];
-         
-         [self.capturedByWhite removeAllObjects];
-         [self.capturedByBlack removeAllObjects];
       }
       
       return self;

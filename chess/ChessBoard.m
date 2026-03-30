@@ -66,6 +66,10 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
          self->pieceCase[x][7] = nil;   // effacement rangée 7
       }
       
+      // Effacement des vignettes des pièces capturées
+      [monConnecteur.maChessView.capturedByWhite removeAllObjects];
+      [monConnecteur.maChessView.capturedByBlack removeAllObjects];
+      
       // Ajouts pour séparation UI / moteur
       sideJoueur = sideWhite;
       sideIA     = sideBlack;
@@ -154,6 +158,10 @@ BOOL kVerboseMoveDebug = YES; // déclaré dans Util.h
          self->pieceCase[x][6] = nil;
          self->pieceCase[x][7] = nil;
       }
+      
+      // Effacement des vignettes des pièces capturées
+      [monConnecteur.maChessView.capturedByWhite removeAllObjects];
+      [monConnecteur.maChessView.capturedByBlack removeAllObjects];
       
       // Ajouts pour séparation UI / moteur
       sideJoueur = sideBlack;
