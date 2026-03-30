@@ -39,6 +39,13 @@ BOOL engineIsBusy = NO;
       if (self) {
          // Initialisation de liveBoard
          liveBoard = [[ChessBoard alloc] init];
+         
+         // Initialisation àzéro des tableaux recevant les pièces capturées
+         self.capturedByWhite = [NSMutableArray array];
+         self.capturedByBlack = [NSMutableArray array];
+         
+         [self.capturedByWhite removeAllObjects];
+         [self.capturedByBlack removeAllObjects];
       }
       
       return self;
@@ -63,7 +70,7 @@ BOOL engineIsBusy = NO;
       
       /* CHARGEMENT DE L'IMAGE DE TOUTES LES PIÈCES - Pour que ça marche, l'image regroupant les pièces doit
       être au format de 360x120 avec une résolution de 72x72 - Chaque pièce a donc une taille de 60x60    */
-      NSImage *piecesImage = [NSImage imageNamed:@"piecesMCN.png"];
+      NSImage *piecesImage = [NSImage imageNamed:@"pieces.png"];
       
       // Dessin de l'échiquier et des pièces par balayage des 64 cases, une à une
       for (int x = 0; x < 8; x++) {
@@ -110,7 +117,7 @@ BOOL engineIsBusy = NO;
                int index = 0;
                switch (piece.type) {
                   case Invalide:         break;
-                  case Dame: index = 0;  break;   // La Dame est la pièce indexée 0 dans piecesMars.png
+                  case Dame: index = 0;  break;   // La Dame est la pièce indexée 0 dans pieces.png
                   case Roi:  index = 1;  break;   // Le Roi                       1
                   case Tour: index = 2;  break;   // La Tour                      2
                   case Pion: index = 3;  break;   // Le Pion                      3
@@ -118,7 +125,7 @@ BOOL engineIsBusy = NO;
                   case Cava: index = 5;  break;   // Le Cavalier                  5
                   default:                     break;
                }
-               /* Le dessin de chaque pièce est un carré de 60x60 extrait de la planche piècesMCN de 360x120
+               /* Le dessin de chaque pièce est un carré de 60x60 extrait de la planche pieces.png de 360x120
                'index' sert à positionner le curseur de sélection sur l'abcisse 0, 60, 120, 180, 240 ou 300
                Si la pièce est Noire l'ordonnée = 0, sinon elle est = 60 pour atteindre les pièces blanches */
                CGRect sourceRect = CGRectMake(index * 60, (side == sideBlack) ? 0 : 60, 60, 60);
@@ -191,6 +198,76 @@ BOOL engineIsBusy = NO;
             CGContextSetLineWidth(context, 5);                       // épaisseur 5
             CGContextStrokeRect(context, destRect);
          }
+      }
+      
+      // ✅ DESSIN DES PIÈCES CAPTURÉES
+      NSImage *capturedImage = [NSImage imageNamed:@"pieces_prises.png"];
+      // Votre planche 180x60 : 6 colonnes x 2 rangées, chaque vignette = 30x30
+      // Mapping index identique à drawBoard : Dame=0, Roi=1, Tour=2, Pion=3, Fou=4, Cava=5
+      // Rangée 0 (y=0) = Noirs, Rangée 1 (y=30) = Blancs (même convention que pieces.png)
+
+      CGFloat vignette  = 30.0;
+      CGFloat offsetX   = 665;   // marge gauche
+      CGFloat spacingW  = 18.0;  // chevauchement léger pour économiser l'espace
+
+      // --- Pièces capturées par les Blancs (PIÈCES NOIRES) ---
+      // Affichées sous l'échiquier (y proche de 0)
+      CGFloat yWhite = -vignette +45; // juste en dessous de l'échiquier
+      // Si votre vue dépasse l'échiquier vers le bas, ajustez ce y
+
+      NSArray *sortedCapturedByWhite = [self.capturedByWhite
+          sortedArrayUsingComparator:^NSComparisonResult(NSNumber *a, NSNumber *b) {
+              return [b compare:a]; // tri décroissant par valeur de PieceType
+          }];
+
+      for (int i = 0; i < (int)sortedCapturedByWhite.count; i++) {
+          PieceType type = (PieceType)[sortedCapturedByWhite[i] intValue];
+          int col = 0;
+          switch (type) {
+              case Dame: col = 0; break;
+              case Roi:  col = 1; break;
+              case Tour: col = 2; break;
+              case Pion: col = 3; break;
+              case Fou:  col = 4; break;
+              case Cava: col = 5; break;
+              default: break;
+          }
+          CGRect sourceRect = CGRectMake(col * 30, 0, 30, 30); // rangée 0 = Noirs
+          CGRect destRect   = CGRectMake(offsetX + i * spacingW, yWhite, vignette, vignette);
+          [capturedImage drawInRect:destRect
+                           fromRect:sourceRect
+                          operation:NSCompositingOperationSourceOver
+                           fraction:1.0];
+      }
+
+      // --- Pièces capturées par les Noirs (PIÈCES BLANCHES) ---
+      // Affichées au-dessus de l'échiquier
+      //CGFloat yBlack = self.bounds.size.height + 2; // juste au-dessus
+      CGFloat yBlack = -vignette +5; // juste en dessous de l'échiquier
+
+      NSArray *sortedCapturedByBlack = [self.capturedByBlack
+          sortedArrayUsingComparator:^NSComparisonResult(NSNumber *a, NSNumber *b) {
+              return [b compare:a];
+          }];
+
+      for (int i = 0; i < (int)sortedCapturedByBlack.count; i++) {
+          PieceType type = (PieceType)[sortedCapturedByBlack[i] intValue];
+          int col = 0;
+          switch (type) {
+              case Dame: col = 0; break;
+              case Roi:  col = 1; break;
+              case Tour: col = 2; break;
+              case Pion: col = 3; break;
+              case Fou:  col = 4; break;
+              case Cava: col = 5; break;
+              default: break;
+          }
+          CGRect sourceRect = CGRectMake(col * 30, 30, 30, 30); // rangée 1 = Blancs
+          CGRect destRect   = CGRectMake(offsetX + i * spacingW, yBlack, vignette, vignette);
+          [capturedImage drawInRect:destRect
+                           fromRect:sourceRect
+                          operation:NSCompositingOperationSourceOver
+                           fraction:1.0];
       }
       
    } // !drawBoard
@@ -314,6 +391,17 @@ BOOL engineIsBusy = NO;
       serait pas utilisé par un unmakeMove à suivre, ce qui créerait une alerte du compilateur.      */
       //MoveState st = [liveBoard makeMove:aiMove];
       (void)[liveBoard makeMove:aiMove];
+      
+      // Alimenter les tableaux des pièces prises
+      if (aiMove.isCapture && aiMove.capturedPiece) {
+          if (aiMove.capturedPiece.side == sideBlack) {
+              [monConnecteur.maChessView.capturedByWhite
+                  addObject:@(aiMove.capturedPiece.type)];
+          } else {
+              [monConnecteur.maChessView.capturedByBlack
+                  addObject:@(aiMove.capturedPiece.type)];
+          }
+      }
       
       // REPRISE DU PROJET
       // Mise à jour de l'historique avec le coup AI
@@ -476,6 +564,17 @@ BOOL engineIsBusy = NO;
          }
       #endif
       
+      // Alimenter les tableaux des pièces prises
+      if (moveJoueur.isCapture && moveJoueur.capturedPiece) {
+          if (moveJoueur.capturedPiece.side == sideBlack) {
+              [monConnecteur.maChessView.capturedByWhite
+                  addObject:@(moveJoueur.capturedPiece.type)];
+          } else {
+              [monConnecteur.maChessView.capturedByBlack
+                  addObject:@(moveJoueur.capturedPiece.type)];
+          }
+      }
+      
       // REPRISE DU PROJET
       // Mise à jour de l'historique avec le coup Joueur
       [maMinimax recordMoveInGameHistory:liveBoard->zobristKey];
@@ -588,6 +687,17 @@ BOOL engineIsBusy = NO;
       serait pas utilisé par un unmakeMove à suivre, ce qui créerait une alerte du compilateur.      */
       // MoveState st = [board makeMove:aiMove];
       (void)[board makeMove:aiMove];
+      
+      // Alimenter les tableaux des pièces prises
+      if (aiMove.isCapture && aiMove.capturedPiece) {
+          if (aiMove.capturedPiece.side == sideBlack) {
+              [monConnecteur.maChessView.capturedByWhite
+                  addObject:@(aiMove.capturedPiece.type)];
+          } else {
+              [monConnecteur.maChessView.capturedByBlack
+                  addObject:@(aiMove.capturedPiece.type)];
+          }
+      }
       
       // REPRISE DU PROJET
       // Mise à jour de l'historique avec le coup AI

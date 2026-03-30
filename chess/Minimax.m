@@ -2091,6 +2091,7 @@
    } // !searchRootMoves
 
 
+   // ================================================================================================
    // Méthode enregistrant le coup Joueur dans l'historique de partie, sachant que
    // le coup Joueur est réalisé dans l'UI (clics à la souris) et non dans BMFS
    -(void)recordMoveInGameHistory:(uint64_t)zobristKey {

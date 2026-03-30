@@ -282,7 +282,7 @@ CA
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     </box>
                     <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KkK-C2-v9Y">
-                        <rect key="frame" x="751" y="717" width="285" height="28"/>
+                        <rect key="frame" x="735" y="717" width="301" height="28"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" lineBreakMode="clipping" borderStyle="bezel" alignment="center" title="Coups joués" bezelStyle="round" id="VrH-oP-hoz">
                             <font key="font" metaFont="system"/>
@@ -300,18 +300,18 @@ CA
                         </textFieldCell>
                     </textField>
                     <scrollView fixedFrame="YES" borderType="line" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" translatesAutoresizingMaskIntoConstraints="NO" id="gGj-ZO-MXq">
-                        <rect key="frame" x="750" y="134" width="288" height="583"/>
+                        <rect key="frame" x="735" y="231" width="303" height="486"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <clipView key="contentView" drawsBackground="NO" id="3Yi-Br-mjc">
-                            <rect key="frame" x="1" y="1" width="269" height="581"/>
+                            <rect key="frame" x="1" y="1" width="284" height="484"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <textView editable="NO" importsGraphics="NO" richText="NO" verticallyResizable="YES" spellingCorrection="YES" smartInsertDelete="YES" id="hcA-ub-qgC">
-                                    <rect key="frame" x="0.0" y="0.0" width="269" height="581"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="284" height="484"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="windowBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                    <size key="minSize" width="269" height="581"/>
+                                    <size key="minSize" width="284" height="484"/>
                                     <size key="maxSize" width="288" height="10000000"/>
                                     <color key="insertionPointColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                 </textView>
@@ -322,7 +322,7 @@ CA
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                         <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="r9o-1D-Nd6">
-                            <rect key="frame" x="270" y="1" width="17" height="581"/>
+                            <rect key="frame" x="285" y="1" width="17" height="484"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                     </scrollView>
@@ -424,27 +424,6 @@ CA
                             <color key="backgroundColor" name="windowBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="l9Q-L1-nQ6">
-                        <rect key="frame" x="748" y="96" width="290" height="24"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <buttonCell key="cell" type="roundRect" title="---&gt;    Proposer Coup Joueur     &lt;---" bezelStyle="roundedRect" alignment="center" borderStyle="border" inset="2" id="E2x-8s-DWx" userLabel="-&gt; Proposer coup Joueur &lt;-">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="cellTitle"/>
-                            <connections>
-                                <action selector="onHintButtonClicked:" target="oGd-vg-EmX" id="V1Z-6y-6du"/>
-                            </connections>
-                        </buttonCell>
-                        <color key="bezelColor" name="unemphasizedSelectedContentBackgroundColor" catalog="System" colorSpace="catalog"/>
-                    </button>
-                    <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="96l-tU-xYj">
-                        <rect key="frame" x="748" y="46" width="290" height="49"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" borderStyle="border" alignment="center" drawsBackground="YES" id="FkN-gQ-0yv">
-                            <font key="font" metaFont="system"/>
-                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                        </textFieldCell>
-                    </textField>
                     <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5CO-2g-omR">
                         <rect key="frame" x="28" y="719" width="60" height="24"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -456,10 +435,37 @@ CA
                             <action selector="PlayAutoOnOff:" target="oGd-vg-EmX" id="cFE-yU-0dC"/>
                         </connections>
                     </button>
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="l9Q-L1-nQ6">
+                        <rect key="frame" x="735" y="193" width="303" height="24"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="roundRect" title="---&gt;    Proposer Coup Joueur     &lt;---" bezelStyle="roundedRect" alignment="center" borderStyle="border" inset="2" id="E2x-8s-DWx" userLabel="-&gt; Proposer coup Joueur &lt;-">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="cellTitle"/>
+                            <connections>
+                                <action selector="onHintButtonClicked:" target="oGd-vg-EmX" id="V1Z-6y-6du"/>
+                            </connections>
+                        </buttonCell>
+                        <color key="bezelColor" name="unemphasizedSelectedContentBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </button>
+                    <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="96l-tU-xYj">
+                        <rect key="frame" x="735" y="143" width="301" height="49"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" borderStyle="border" alignment="center" drawsBackground="YES" id="FkN-gQ-0yv">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cnC-kM-aXh">
+                        <rect key="frame" x="734" y="43" width="303" height="89"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" imageFrameStyle="grayBezel" id="pZQ-un-PPU"/>
+                        <color key="contentTintColor" name="controlAccentColor" catalog="System" colorSpace="catalog"/>
+                    </imageView>
                 </subviews>
             </view>
             <contentBorderThickness minY="32"/>
-            <point key="canvasLocation" x="-1299" y="-6447"/>
+            <point key="canvasLocation" x="-1299.5" y="-6447"/>
         </window>
         <customObject id="kit-5z-Zxr" userLabel="monAppDelegate" customClass="AppDelegate">
             <connections>

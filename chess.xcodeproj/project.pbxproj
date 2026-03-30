@@ -34,6 +34,10 @@
 		8359FCE82561F309000CCF2A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8359FCE72561F309000CCF2A /* AppDelegate.m */; };
 		836D55DE2F6A1B9600BAC6C8 /* Minimax+OpeningBook.m in Sources */ = {isa = PBXBuildFile; fileRef = 836D55DD2F6A1B9600BAC6C8 /* Minimax+OpeningBook.m */; };
 		836D55DF2F6A1B9600BAC6C8 /* Minimax+OpeningBook.m in Sources */ = {isa = PBXBuildFile; fileRef = 836D55DD2F6A1B9600BAC6C8 /* Minimax+OpeningBook.m */; };
+		8371D3492F79D73D00A5004E /* pieces_prises.png in Resources */ = {isa = PBXBuildFile; fileRef = 8371D3482F79D73D00A5004E /* pieces_prises.png */; };
+		8371D34A2F79D73D00A5004E /* pieces.png in Resources */ = {isa = PBXBuildFile; fileRef = 8371D3472F79D73D00A5004E /* pieces.png */; };
+		8371D34B2F79D73D00A5004E /* pieces_prises.png in Resources */ = {isa = PBXBuildFile; fileRef = 8371D3482F79D73D00A5004E /* pieces_prises.png */; };
+		8371D34C2F79D73D00A5004E /* pieces.png in Resources */ = {isa = PBXBuildFile; fileRef = 8371D3472F79D73D00A5004E /* pieces.png */; };
 		8391B0482F68A5040001DD3C /* PeSTO.m in Sources */ = {isa = PBXBuildFile; fileRef = 8391B0472F68A5040001DD3C /* PeSTO.m */; };
 		8391B0492F68A5040001DD3C /* PeSTO.m in Sources */ = {isa = PBXBuildFile; fileRef = 8391B0472F68A5040001DD3C /* PeSTO.m */; };
 		839B0EA62393F4E300254843 /* Util.m in Sources */ = {isa = PBXBuildFile; fileRef = 839B0EA52393F4E300254843 /* Util.m */; };
@@ -41,7 +45,6 @@
 		83A693AF28273A430098C629 /* Codes FEN.txt in Resources */ = {isa = PBXBuildFile; fileRef = 83A693AC28273A430098C629 /* Codes FEN.txt */; };
 		83B442B2254F17A00008D95C /* Connecteur.m in Sources */ = {isa = PBXBuildFile; fileRef = 83B442B1254F17A00008D95C /* Connecteur.m */; };
 		83D60B6D2829C84300A6196B /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 83D60B6C2829C84300A6196B /* README.md */; };
-		83E4FD9327F4DADA007F62F9 /* piecesMCN.png in Resources */ = {isa = PBXBuildFile; fileRef = 83E4FD9227F4DADA007F62F9 /* piecesMCN.png */; };
 		83FFBCC427C56562008DEBF3 /* MoveToStr.m in Sources */ = {isa = PBXBuildFile; fileRef = 83FFBCC327C56562008DEBF3 /* MoveToStr.m */; };
 /* End PBXBuildFile section */
 
@@ -104,6 +107,8 @@
 		8359FCE72561F309000CCF2A /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		836D55DC2F6A1B9600BAC6C8 /* Minimax+OpeningBook.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Minimax+OpeningBook.h"; sourceTree = "<group>"; };
 		836D55DD2F6A1B9600BAC6C8 /* Minimax+OpeningBook.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "Minimax+OpeningBook.m"; sourceTree = "<group>"; };
+		8371D3472F79D73D00A5004E /* pieces.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = pieces.png; sourceTree = "<group>"; };
+		8371D3482F79D73D00A5004E /* pieces_prises.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = pieces_prises.png; sourceTree = "<group>"; };
 		8391B0462F68A5040001DD3C /* PeSTO.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PeSTO.h; sourceTree = "<group>"; };
 		8391B0472F68A5040001DD3C /* PeSTO.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PeSTO.m; sourceTree = "<group>"; };
 		839B0EA52393F4E300254843 /* Util.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Util.m; sourceTree = "<group>"; };
@@ -111,7 +116,6 @@
 		83B442B0254F17A00008D95C /* Connecteur.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Connecteur.h; sourceTree = "<group>"; };
 		83B442B1254F17A00008D95C /* Connecteur.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Connecteur.m; sourceTree = "<group>"; };
 		83D60B6C2829C84300A6196B /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
-		83E4FD9227F4DADA007F62F9 /* piecesMCN.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = piecesMCN.png; sourceTree = "<group>"; };
 		83FFBCC327C56562008DEBF3 /* MoveToStr.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MoveToStr.m; sourceTree = "<group>"; };
 		83FFBCC527C5658C008DEBF3 /* MoveToStr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoveToStr.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -211,7 +215,8 @@
 				8342C20A2F38CAC40063DF68 /* Zobrist.h */,
 				8342C20B2F38CAC40063DF68 /* Zobrist.m */,
 				83A693AC28273A430098C629 /* Codes FEN.txt */,
-				83E4FD9227F4DADA007F62F9 /* piecesMCN.png */,
+				8371D3472F79D73D00A5004E /* pieces.png */,
+				8371D3482F79D73D00A5004E /* pieces_prises.png */,
 				49AE4ABB17948BAD009D59BE /* Images.xcassets */,
 				83D60B6C2829C84300A6196B /* README.md */,
 			);
@@ -321,11 +326,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				83A693AE28273A430098C629 /* Codes FEN.txt in Resources */,
-				83E4FD9327F4DADA007F62F9 /* piecesMCN.png in Resources */,
 				49AE4ABC17948BAD009D59BE /* Images.xcassets in Resources */,
 				49AE4AB417948BAD009D59BE /* Credits.rtf in Resources */,
 				83D60B6D2829C84300A6196B /* README.md in Resources */,
 				49AE4ABA17948BAD009D59BE /* MainMenu.xib in Resources */,
+				8371D3492F79D73D00A5004E /* pieces_prises.png in Resources */,
+				8371D34A2F79D73D00A5004E /* pieces.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -333,6 +339,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8371D34B2F79D73D00A5004E /* pieces_prises.png in Resources */,
+				8371D34C2F79D73D00A5004E /* pieces.png in Resources */,
 				83A693AF28273A430098C629 /* Codes FEN.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

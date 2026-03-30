@@ -39,6 +39,10 @@
 
    @property BOOL uiFlipped;
 
+   // Création de deux tableaux qui recevront les pièces capturées lors de la partie
+   @property (nonatomic, strong) NSMutableArray<NSNumber *> *capturedByWhite; // pièces Noires capturées
+   @property (nonatomic, strong) NSMutableArray<NSNumber *> *capturedByBlack; // pièces Blanches capturées
+
    
    // MÉTHODES -----------------------------------------------------------
    -(id)   initWithFrame:(NSRect)frame;
