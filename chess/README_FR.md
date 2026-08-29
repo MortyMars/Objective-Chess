@@ -30,8 +30,9 @@ Cosmétiques :
 - L'application est dotée d'un jeu d'icones
 - Les menus sont personnalisés et enrichis
 - Une 'barre d'état' reprenant l'évaluation du board, le trait, l'état du roque, celui de la cible e.p. et des compteurs, fait son apparition
+- Une zone de l'interface est réservée pour l'affichage des pièces prises au cours de la partie
 
-Notes de mise à jour (02/2026)
+Notes de mise à jour (04/2026)
 ------------------------------
 - v0.9.0-beta : Version d'initialisation de la reprise du fork, fonctionnelle mais affectée par certains bugs
 - v1.0.0-beta : Première version véritablement fonctionnelle, à la réserve que le programme joue juste réglementairement et assez mal
@@ -45,6 +46,7 @@ Notes de mise à jour (02/2026)
 - v1.1.0-beta : Refactoring du moteur de jeu (Minimax, ChessBoard, RuleBook) pour de meilleures performances - Ajout de critères positionnels à la fonction d'évaluation
 - v1.1.0 : Involutivité makeMove/unmakeMove acquise - Hachage Zobrist en place - Tables de transposition implémentées = Ces modifications concourent à une amélioration très significatives des performances du moteur
 - v1.1.1 : Le Joueur peut demander à l'IA de lui suggérer un (bon) coup
+- v1.1.2 : Une zone de l'interface est réservée pour l'affichage des pièces prises au cours de la partie
 
 Ce qui reste à faire (ma TODO list)
 -----------------------------------

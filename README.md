@@ -30,8 +30,9 @@ Visual:
 - The application features a set of icons.
 - The menus are customized and enhanced.
 - A 'status bar' displays the board evaluation, the move, the castling status, the target status, etc. and counters, makes its appearance
+- A section of the interface is reserved for displaying the pieces captured during the game
 
-Release Notes (02/2026)
+Release Notes (04/2026)
 ------------------------------
 - v0.9.0-beta: Initial version of the fork relaunch, functional but affected by some bugs
 - v1.0.0-beta: First truly functional version, with the caveat that the program plays only within the rules and rather poorly
@@ -45,6 +46,7 @@ Release Notes (02/2026)
 - v1.1.0-beta: Refactoring of the game engine (Minimax, ChessBoard, RuleBook) for better performance - Added positional criteria to the evaluation function
 - v1.1.0: Involutive makeMove/unmakeMove functionality achieved - Zobrist hashing implemented - Transposition tables implemented = These changes contribute to a very significant improvement in the engine's performance
 - v1.1.1: The Player can ask the AI to suggest a (good) move.
+- v1.1.2: A section of the interface is reserved for displaying the pieces captured during the game
 
 What remains to be done (my TODO list)
 -----------------------------------

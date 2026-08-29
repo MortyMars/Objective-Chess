@@ -14,15 +14,12 @@ uint64_t zobristCastle[16];
 uint64_t zobristEnPassant[8];
 
 
-
-
 // IMPLÉMENTATION DES FONCTIONS ZOBRIST
 
 // Générateur de nombre aléatoire
 static uint64_t rand64(void) {
     return ((uint64_t)arc4random() << 32) | arc4random();
 }
-
 
 // Initialisateur de la clé Zobrist
 void InitZobrist(void) {

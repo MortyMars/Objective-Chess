@@ -24,7 +24,6 @@
          @"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w" :
             @[@"e2e4", @"d2d4", @"c2c4", @"g1f3"],
          
-         
          // ============================================================
          // APRÈS 1.e4
          @"rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b" :
@@ -100,7 +99,6 @@
          // Ecossaise 4...Fc5 5.Fe3
          @"r1bqk1nr/pppp1ppp/2n5/2b5/3NP3/4B3/PPP2PPP/RN1QKB1R b" :
             @[@"d8f6", @"g8e7", @"d7d6"],
-         
          
          // ── Défense Sicilienne : 1.e4 c5 ────────────────────────────
          @"rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w" :
@@ -403,7 +401,8 @@
             @[@"e8g8", @"b8d7", @"c7c5"],
          
       };
-   }
+      
+   } // !buildOpeningBook
 
 
    // ================================================================================================

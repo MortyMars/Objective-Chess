@@ -23,7 +23,7 @@
    }
 
    // ==================================================================================================
-   // UNIQUE RÉELLE MÉTHODE (d'instance) de la classe ayant pour objectif d'initialiser l'application
+   // UNIQUE RÉELLE MÉTHODE de la classe ayant pour objectif d'initialiser l'application
    - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
    {
       /* L'appel ici, dans AppDelegate, de méthodes de la classe Connecteur permet d'avoir l'assurance
@@ -46,7 +46,7 @@
       'InitialiseListeCoupsPartie' est appelée afin d'afficher le premier coup lorsque l'IA a les Blancs, sachant
       qu'il faut d'abord définir la police utilisée dans le contrôle txtListeCoupsPartie (exigence de TextView)*/
       [monConnecteur.txtListeCoupsPartie setFont:[NSFont fontWithName:@"Helvetica" size:14]];
-      //[monConnecteur InitialiseListeCoupsPartie:stringCoupsPartie];
+      // [monConnecteur InitialiseListeCoupsPartie:stringCoupsPartie];
       
       // Initialisation des indicateurs
       monConnecteur.indicIAdoitJouer.transparent = YES;
