@@ -1,0 +1,75 @@
+//  CodesFEN.txt
+//  Chess
+//  Created by MCN on 03/04/2022
+//  Copyright © 2022 MCN. All rights reserved
+
+ --------------------------------------------------------------------------------------------------------------------
+|      Codes FEN (à copier /coller à l'invit de l'appli)                |  Commentaires                              |
+ --------------------------------------------------------------------------------------------------------------------
+                                                                        |
+Board de début de partie standard :                                     |
+-----------------------------------                                     |
+rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk e3 0 1               |  board de départ standard, trait aux blanc
+                                                                        |
+Diagrammes étudiés par l'IA contre l'IA :                               |
+-----------------------------------------                               |
+B1bqkb1r/3pp2p/p1n2p2/1Np3NQ/2P2P2/8/PP1P2PP/2B2RK1 w - - 0 1           |  mat réalisé par IA vs IA en 13 coups
+B1N1k1Q1/3ppn2/5p2/2p3p1/p1P1P2p/5P1N/PP4PP/6K1 w - - 0 1               |  mat réalisé par IA vs IA en 22 coups
+                                                                        |
+Diagrammes à proposer à l'IA :                                          |
+------------------------------                                          |
+8/7k/8/8/1N2b3/8/3K4/b7 w - - 0 1                                       |  Nalimov et la règle des 50 coups...
+r1qr1b2/1R2ppkp/3p2pN/ppnP11Q1/bn2P3/4P1NP/PBBP2P1/5RK1 w - - 0 1       |  w jouent e7-e5,puis matent en 1 coup (e.p.)
+Nk4bR/N4Q2/8/8/8/P7/KPP5/3q2BB w - - 0 1                                |  w matent en 1 coup
+                                                                        |
+Diagrammes pour tests lecture seconde partie FEN :                      |
+--------------------------------------------------                      |
+8/7k/8/8/1N2b3/8/3K4/b7 w - - 47 54                                     |  Base Nalimov pour test règle des 50 coups
+r3k3/8/8/8/1N2b3/8/b7/R3K3 w Qq - 0 1                                   |  Test affichage 'Roque' (grands roques OK)
+8/7k/8/8/1N2b3/8/3K4/b7 w - e4 0 1                                      |  Test affichage 'Cible e.p.'
+8/7k/8/8/1N2b3/8/3K4/b7 w Kkq h5 0 1                                    |  Test complet
+8/7k/8/8/1N2b3/8/3K4/b7 b QKqk e3 120 260                               |  Test coups et demis sur 3 chiffres
+8/7k/8/8/1N2b3/8/3K4/b7 w k e3 24                                       |  Test réaliste
+r1qrb3/1R4kp/3p2pN/ppnP11Q1/bn2P3/4P1NP/PBBP2P1/5RK1 b KQkq e3 99 999   |  Test d'un champ FEN de longueur quasi max
+                                                                        |
+Diagrammes de mat en 3, trait au Blancs :                               |
+-----------------------------------------                               |
+4rk2/5p1b/1p3R1K/p6p/2P2P2/1P6/2q4P/Q5R1 w - - 0 1                      |  Cas 1 : Browne       vs Brond          1971
+6rk/p4ppp/5B2/qBrnPQ2/Pb1p4/6R1/1P3P1P/R4K2 w - - 0 1                   |  Cas 2 : Johansen     vs Machlik        2013
+6rk/4r1p1/p5np/Pp1pq1N1/2p4Q/7R/1P3RPP/6K1 w - - 0 1                    |  Cas 3 : Kamieniecki  vs Dolukhanova    2010
+r2k4/pp1q4/n1pQ2p1/6N1/6P1/P7/1P2B3/1K6 w - - 0 1                       |  Cas 4 : Akopien      vs Gabriel        1996
+                                                                        |
+Diagrammes de nouveaux mat en moins de 4, trait au Blancs :             |
+-----------------------------------------------------------             |
+B7/2ppK3/2p4P/N2kp3/1P2p2R/1P2Pb2/3P4/8 w - - 0 1                       |  Cas 5  : Mat en 3 coups "très fort"
+4rrk1/2pRn3/pb3B1p/1p5Q/1Pp5/P3P1P1/5P1P/6K1 w - - 0 1                  |  Cas 6  : Mat en 7 demi-coups
+8/p7/kpK4p/p7/P7/8/7P/8 w - - 0 1                                       |  Cas 7  : Mat en 3 coups par sacrifice
+6r1/1q1p4/1p4r1/2p3B1/kpP4p/1R3b1P/KP2p3/8 w - - 0 1                    |  Cas 8  : Mat en 3 coups "difficile"
+4r1k1/3n1ppp/4r3/3n3q/Q2P4/5P2/PP2BP1P/R1B1R1K1 b - - 0 1               |  Cas 9  : Mat en 3 coups, trait aux Noirs
+r1bqkb1r/pppppppp/5n2/4N3/2BQP3/8/PPP2PPP/RNB1K2R b - - 0 1             |  Cas 10 : Test détection par IA mat en 1 coup
+r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w QKqk - 0 1     |  Cas 11 : Mat du berger
+                                                                        |
+Tests de Fonctionnement du Roque et MàJ indicateur :                    |
+----------------------------------------------------                    |
+r3k2r/p1ppqppp/3b4/3np3/N3P3/1p1PQN2/PP1BBPPP/R3K2R w QKqk e3 0 1       |  Test Roques Rois Blanc et Noir - Blancs en BAS
+R2K3R/P1PPQPPP/3B4/3NP3/n3p3/1P1pqn2/pp1bbppp/r2k3r w QKqk e3 0 1       |  Idem mais Noirs en BAS, Cas non géré par Diagramme
+                                                                        |
+Tests de Fonctionnement de la Promotion /Sous-Promotion :               |
+---------------------------------------------------------               |
+6k1/8/8/8/1P6/8/6K1/8 w - - 0 1                                         |
+                                                                        |
+Test d'affichage du double échec :                                      |
+----------------------------------                                      |
+r1b1k2r/ppp1qppp/8/3Pn3/7B/8/PPP2PPP/RN1QKN1R w - - 0 1                 |  Trait aux Blancs : Fh4>f6 -> Noirs : Ce5>f3++
+3qr3/4QPkp/2nbr1p1/5n2/8/8/8/6K1 w - - 0 1                              |  Trait aux Blancs : f7>f8
+                                                                        |
+Test d'affichage de la prise en passant :                               |
+-----------------------------------------                               |
+7k/5Q2/8/8/1p6/1P6/P7/4K3 w - - 0 1                                     |  Trait aux Blancs : Pa2>a4 -> Noirs : Pb4>a3 e.p.
+                                                                        |
+Recherche de bug (pos légale non jouée):                                |
+----------------------------------------                                |
+r7/pp4k1/8/2bn4/5q2/r6P/3p2K1/8 b - - 0                                 |
+r7/pp4k1/8/2bn4/2q5/r6P/3p4/7K w - - 0 1                                |  Moves attendus Kh1>h2, qc4>f4+, Kh2>g2, qf4>f3+
+rnbk2nr/ppp2p1p/4p3/6p1/3PpP2/2P2RNq/PP5P/RNBQ1BK1 b - - 0 1            |  Bug d'affichage des coups joués
+

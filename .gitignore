@@ -1,0 +1,30 @@
+# FICHIERS ET DOSSIERS NON SUIVIS
+# -------------------------------
+
+# macOS
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# Xcode - fichiers personnels uniquement
+xcuserdata/
+*.xcuserstate
+DerivedData/
+*.xcworkspace/xcuserdata/
+**/*.xcbkptlist
+
+# Build (au cas où...)
+build/
+*.o
+*.a
+
+# Doxygen
+Doxyfile*
+html/
+latex/
+
+# Dossiers fichiers persos
+Chess/*histo*.*
+_doc_annexe/
+_historique/
+

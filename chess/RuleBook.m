@@ -1,144 +1,239 @@
-//
-//  RuleBook.m
-//  chess
-//
-//  Created by Andrew Wang on 7/15/13.
-//  Copyright (c) 2013 Andrew Wang. All rights reserved.
-//
+// RuleBook.m
+// chess
+// Created by Andrew Wang on 15/07/2013,
+// Copyright (c) 2013 Andrew Wang. All rights reserved
+// Optimized New Engine (makeMove/unmakeMove based) by MCN in 2026
+
+//  CLASSE DÉFINISSANT LES RÈGLES DE DÉPLACEMENT DES PIÈCES SUR L'ÉCHIQUIER
 
 #import "RuleBook.h"
-#import "Piece.h"
 #import "ChessBoard.h"
-#import "util.h"
-#import "Pos.h"
+#import "ChessBoard+MakeMoves.h"
+#import "Minimax+GenMoves.h"
+#import "ChessConfig.h"
+#import "Zobrist.h"
+
+
 
 @implementation RuleBook
 
-+(NSSet *)coverageForPiece:(Piece *)piece atPos:(Pos *)pos inBoard:(ChessBoard *)board
-{
-    NSMutableSet *coverage = [[NSMutableSet alloc] init];
-    
-    if (piece.type == PieceTypeRook || piece.type == PieceTypeQueen) {
-        [coverage unionSet:[self flashlightBeam:pos dx:1 dy:0 board:board]];
-        [coverage unionSet:[self flashlightBeam:pos dx:-1 dy:0 board:board]];
-        [coverage unionSet:[self flashlightBeam:pos dx:0 dy:1 board:board]];
-        [coverage unionSet:[self flashlightBeam:pos dx:0 dy:-1 board:board]];
-    }
-    if (piece.type == PieceTypeBishop || piece.type == PieceTypeQueen) {
-        [coverage unionSet:[self flashlightBeam:pos dx:1 dy:1 board:board]];
-        [coverage unionSet:[self flashlightBeam:pos dx:-1 dy:1 board:board]];
-        [coverage unionSet:[self flashlightBeam:pos dx:1 dy:-1 board:board]];
-        [coverage unionSet:[self flashlightBeam:pos dx:-1 dy:-1 board:board]];
-    }
-    if (piece.type == PieceTypeKing) {
-        // normal moves
-        for (int x = pos.x - 1; x <= pos.x + 1; x++) {
-            for (int y = pos.y - 1; y <= pos.y + 1;y++) {
-                if (x >= 0 && y >= 0 && x < 8 && y < 8) {
-                    if (x != pos.x || y != pos.y) {
-                        [coverage addObject:[Pos posWithX:x y:y]];
-                    }
-                }
-            }
-        }
-        
-        // castle
-        if (piece.numMoves == 0) {
-            Piece *rightRook = [board pieceAtX:7 y:pos.y];
-            Piece *leftRook = [board pieceAtX:0 y:pos.y];
-            
-            // kingside
-            if (rightRook && rightRook.numMoves == 0) {
-                if (![board pieceAtX:6 y:pos.y] && ![board pieceAtX:5 y:pos.y])
-                    [coverage addObject:[Pos posWithX:6 y:pos.y]];
-            }
-            
-            // queenside
-            if (leftRook && leftRook.numMoves == 0) {
-                if (![board pieceAtX:3 y:pos.y] && ![board pieceAtX:2 y:pos.y] && ![board pieceAtX:1 y:pos.y])
-                    [coverage addObject:[Pos posWithX:2 y:pos.y]];
-            }
-        }
-    }
-    if (piece.type == PieceTypeKnight) {
-        if (pos.x >= 1 && pos.y >= 2)
-            [coverage addObject:[Pos posWithX:pos.x - 1 y:pos.y - 2]];
-        if (pos.x >= 2 && pos.y >= 1)
-            [coverage addObject:[Pos posWithX:pos.x - 2 y:pos.y - 1]];
-        if (pos.x >= 2 && pos.y <= 6)
-            [coverage addObject:[Pos posWithX:pos.x - 2 y:pos.y + 1]];
-        if (pos.x >= 1 && pos.y <= 5)
-            [coverage addObject:[Pos posWithX:pos.x - 1 y:pos.y + 2]];
-        if (pos.x <= 6 && pos.y >= 2)
-            [coverage addObject:[Pos posWithX:pos.x + 1 y:pos.y - 2]];
-        if (pos.x <= 5 && pos.y >= 1)
-            [coverage addObject:[Pos posWithX:pos.x + 2 y:pos.y - 1]];
-        if (pos.x <= 5 && pos.y <= 6)
-            [coverage addObject:[Pos posWithX:pos.x + 2 y:pos.y + 1]];
-        if (pos.x <= 6 && pos.y <= 5)
-            [coverage addObject:[Pos posWithX:pos.x + 1 y:pos.y + 2]];
-    }
-    if (piece.type == PieceTypePawn) {
-        int dir = piece.side == SideWhite ? 1 : -1;
-        // normal move
-        Pos *dest = [Pos posWithX:pos.x y:pos.y + dir];
-        if (![board pieceAtPos:dest]) {
-            [coverage addObject:dest];
-            
-            // double move on first turn
-            dest = [Pos posWithX:pos.x y:pos.y + 2 * dir];
-            if (piece.numMoves == 0 && ![board pieceAtPos:dest])
-                [coverage addObject:dest];
-        }
-        
-        // capture
-        Pos *posLeft = [Pos posWithX:pos.x - 1 y:pos.y + dir];
-        Pos *posRight = [Pos posWithX:pos.x + 1 y:pos.y + dir];
-        Piece *capturedPieceLeft = [board pieceAtPos:posLeft];
-        Piece *capturedPieceRight = [board pieceAtPos:posRight];
-        if (capturedPieceLeft) {
-            if (capturedPieceLeft.side != piece.side) {
-                [coverage addObject:posLeft];
-            }
-        }
-        if (capturedPieceRight) {
-            if (capturedPieceRight.side != piece.side) {
-                [coverage addObject:posRight];
-            }
-        }
-        
-        // TODO: en passant
-    }
-    
-    // remove all pieces that are the same side as the player!
-    NSMutableSet *toBeRemoved = [[NSMutableSet alloc] init];
-    for (Pos *pos in coverage) {
-        if ([board pieceAtPos:pos].side == piece.side) {
-            [toBeRemoved addObject:pos];
-        }
-    }
-    [coverage minusSet:toBeRemoved];
-    
-    return coverage;
-}
+   // ==================================================================================================
+   // MÉTHODE DÉFINISSANT LE JEU DES DÉPLACEMENTS ADMIS POUR CHAQUE TYPE DE PIÈCE
+   // Le principe de la méthode est de créer un objet NSSet et de le "remplir", si nécessaire en plusieurs
+   // étapes, avec les déplacements autorisés pour la pièce concernée.
+   // Contrairement à son quasi clone 'PosLegalesForPieceSAR' cette méthode intègre la suppression des
+   // positions générant la mise en échec de son Roi
+   +(NSSet<Pos *> *)PosLegalesForPiece:(Piece *)piece
+                                 atPos:(Pos *)pos
+                               inBoard:(ChessBoard *)board {
+      
+       NSMutableSet<Pos *> *result = [NSMutableSet set];
+       
+       #ifdef DEBUG_ZOBRIST
+       uint64_t hashEntree = board->zobristKey;
+       uint64_t recalcEntree = recomputeZobrist(board);
+       NSLog(@"🔵 PosLegales DÉBUT pour %@ en (%d,%d): hash=%llx (recalc=%llx)",
+             piece, pos.x, pos.y, hashEntree, recalcEntree);
+       if (hashEntree != recalcEntree) {
+           NSLog(@"⚠️ Hash DÉJÀ corrompu en entrée de PosLegales !");
+       }
+       #endif
+       
+       NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:32];
+       
+       // Génération moderne
+       [maMinimax GenMovesForSide:piece.side board:board into:moves];
+       
+       for (Move *m in moves) {
+           
+           // Ce coup concerne-t-il la pièce demandée ?
+           if (m.start.x != pos.x || m.start.y != pos.y)
+               continue;
+           
+           #ifdef DEBUG_ZOBRIST
+           uint64_t hashAvantMake = board->zobristKey;
+           #endif
+           
+           // Vérification légale via make/unmake
+           MoveState st = [board makeMove:m];
+           
+           #ifdef DEBUG_ZOBRIST
+           uint64_t hashApresMake = board->zobristKey;
+           uint64_t recalcApresMake = recomputeZobrist(board);
+           if (hashApresMake != recalcApresMake) {
+               NSLog(@"❌ PosLegales: makeMove %@ corrompt le hash", m);
+               NSLog(@"   Après make=%llx, recalc=%llx", hashApresMake, recalcApresMake);
+           }
+           #endif
+           
+           BOOL illegal = [maMinimax IsKingInCheck:piece.side board:board];
+           
+           [board unmakeMove:m state:st];
+           
+           #ifdef DEBUG_ZOBRIST
+           uint64_t hashApresUnmake = board->zobristKey;
+           uint64_t recalcApresUnmake = recomputeZobrist(board);
+           
+           if (hashApresUnmake != recalcApresUnmake) {
+               NSLog(@"❌ PosLegales: unmakeMove %@ corrompt le hash", m);
+               NSLog(@"   Avant make  : %llx", hashAvantMake);
+               NSLog(@"   Après unmake: %llx", hashApresUnmake);
+               NSLog(@"   Recalculé   : %llx", recalcApresUnmake);
+               NSLog(@"   Diff        : %llx", hashApresUnmake ^ recalcApresUnmake);
+           }
+           
+           if (hashApresUnmake != hashAvantMake) {
+               NSLog(@"💥 PosLegales: unmakeMove ne restaure pas le hash pour %@", m);
+               NSLog(@"   Avant make  : %llx", hashAvantMake);
+               NSLog(@"   Après unmake: %llx", hashApresUnmake);
+               NSLog(@"   Diff        : %llx", hashAvantMake ^ hashApresUnmake);
+           }
+           #endif
+           
+           if (illegal)
+               continue;
+           
+           // Coup légal → on ajoute la destination
+           [result addObject:m.dest];
+       }
+       
+       #ifdef DEBUG_ZOBRIST
+       uint64_t hashSortie = board->zobristKey;
+       uint64_t recalcSortie = recomputeZobrist(board);
+       NSLog(@"🔵 PosLegales FIN: hash=%llx (recalc=%llx)", hashSortie, recalcSortie);
+       if (hashSortie != hashEntree) {
+           NSLog(@"💥💥💥 PosLegales a changé le hash global !");
+           NSLog(@"   Entrée: %llx", hashEntree);
+           NSLog(@"   Sortie: %llx", hashSortie);
+           NSLog(@"   Diff  : %llx", hashEntree ^ hashSortie);
+       }
+       #endif
+       
+       return result;
+       
+   } // !PosLegalesForPiece
 
-+(NSSet *)flashlightBeam:(Pos *)start dx:(int)dx dy:(int)dy board:(ChessBoard *)board
-{
-    NSMutableSet *beam = [[NSMutableSet alloc] initWithCapacity:8];
-    
-    int x = start.x, y = start.y;
-    
-    do {
-        x += dx;
-        y += dy;
-        
-        if (x < 0 || y < 0 || x > 7 || y > 7) break;
-        
-        Pos *pos = [Pos posWithX:x y:y];
-        [beam addObject:pos];
-    } while (![board pieceAtX:x y:y]);
-    
-    return beam;
-}
+   // ==================================================================================================
+   // Méthode de Classe Quasi-Clone de 'PosLegalesForPiece' en version SAR, càd sans appel récursif
+   // Elle est appelée PAR 'TestEchecRoiSideSAR' pour y déterminer le jeu des position acceptées nécessaire
+   // au test de mise en échec
+   // Plutôt que de faire appel à cette version renommée on aurait pu copier le code dans TestEchecRoiSide,
+   // mais le code est un peu plus aéré et la façon, peu glorieuse, est plus transparente
+   // Cette présente version, utilisée pour obtenir le jeu PosAcceptee brut, n'intègre pas la supp des pos
+   // créant une mise en échec de son propre roi (elle intègre 'aSupprimer1' mais pas 'aSupprimer2')
+   +(NSSet<Pos *> *)PosLegalesForPieceSAR:(Piece *)piece
+                                    atPos:(Pos *)pos
+                                  inBoard:(ChessBoard *)board {
+      
+      NSMutableSet<Pos *> *result = [NSMutableSet set];
+      
+      NSMutableArray<Move *> *moves = [NSMutableArray arrayWithCapacity:32];
+      
+      // Génération moderne
+      [maMinimax GenMovesForSide:piece.side board:board into:moves];
+      
+      for (Move *m in moves) {
+         
+         // Ce coup concerne-t-il la pièce demandée ?
+         if (m.start.x != pos.x || m.start.y != pos.y)
+            continue;
+         
+         // Vérification légale via make/unmake
+         MoveState st = [board makeMove:m];
+         
+         BOOL illegal = [maMinimax IsKingInCheck:piece.side board:board];
+         [board unmakeMove:m state:st];
+         
+         if (illegal)
+            continue;
+         
+         // Coup légal → on ajoute la destination
+         [result addObject:m.dest];
+      }
+      
+      return result;
+      
+   } // !PosLegalesForPieceSAR
+
+
+   // ==================================================================================================
+   // Création d'un jeu de cases acceptées dans une direction donnée, dénommé "ligneDeCases"
+   // Cette méthode n'est utile que pour les pièces à grands déplacements et n'est appelée (cf. plus haut)
+   // que dans le présent fichier RuleBook.m
+   // Elle allège le code de détermination des déplacements acceptés pour la Dame, la Tour, et le Fou
+   +(NSSet *)SearchInDirection:(Pos *)start
+                            dx:(int)dx
+                            dy:(int)dy
+                         board:(ChessBoard *)board {
+      
+      NSMutableSet *ligneDeCases = [[NSMutableSet alloc] initWithCapacity:8];
+      
+      int x = start.x, y = start.y;
+      
+      do {
+         x += dx;
+         y += dy;
+         
+         // le numéro de la ligne et de la colonne doit être compris entre 0 et 7
+         if (x < 0 || y < 0 || x > 7 || y > 7) break;
+         
+         Pos *pos = [Pos posWithX:x y:y];        // définition de la nouvelle position
+         [ligneDeCases addObject:pos];           // on ajoute la position nouvelle au jeu des possibilités
+      } while (![board piece_colX:x rangY:y]);   // ...tant qu'il n'y a pas de pièce en [x,y]
+      
+      // On retourne la ligne de cases autorisées, ligne qui sera ajoutée au jeu des pos possibles
+      return ligneDeCases;
+   } // FIN de 'SearchInDirection'
+
+
+   // ==================================================================================================
+   // MCN - Méthode de Classe Quasi-Clone de [Minimax TestEchecRoiSide] en version SAR (sans appel récursif)
+   // Elle est appelée dans 'PosLegalesForPiece' et appelle une version renommée 'PosLegalesForPieceSAR'
+   // pour éviter l'appel récursif qui plante le programme
+   +(BOOL)TestEchecRoiSideSAR:(Side)side inBoard:(ChessBoard *)board {
+      
+      BOOL roiSideEnEchec = NO;
+      //NSMutableSet *movesSideAdv = [[NSMutableSet alloc] init];
+      Side otherSide = (side == sideWhite)? sideBlack:sideWhite;
+      
+      // On parcourt chaque case du 'board' courant, à la recherche des pièces adverses (càd 'otherSide)
+      // et pour chacune d'elle on vérifie chacune de ses destinations possibles>>
+      for (int x = 0; x < 8; x++)
+      {
+         for (int y = 0; y < 8; y++)
+         {
+            Pos *pos = [Pos posWithX:x y:y];
+            Piece *pieceAdv = [board piece_colX:x rangY:y];
+            if (pieceAdv)
+            {
+               if (pieceAdv.side == otherSide)
+               {
+                  NSSet *PosAcceptees = [RuleBook PosLegalesForPieceSAR:pieceAdv atPos:pos inBoard:board];
+                  for (Pos *possibleDest in PosAcceptees)
+                  {
+                     Move *moveSideAdv = [[Move alloc] initWithStart:pos Dest:possibleDest];
+                     //[movesSideAdv addObject:moveSideAdv];
+                     
+                     // DÉTECTION MISE EN ÉCHEC  >>et sur chacune de ces cases destinations on regarde
+                     // si on trouve notre Roi, auquel cas nous sommes en situation d'Échec :-(
+                     Piece *piece = [board piece_colX:moveSideAdv.dest.x rangY:moveSideAdv.dest.y];
+                     if (piece.type == Roi)
+                     {
+                        if (piece.side == side)
+                        {
+                           roiSideEnEchec = YES;
+                           return roiSideEnEchec;
+                        }
+                     }
+                  }  // !for
+               }  // !if
+            } // !if
+         } // !for y
+      } // !for x
+      
+      return roiSideEnEchec;
+      
+   } // !TestEchecRoiSideSAR
+
 
 @end

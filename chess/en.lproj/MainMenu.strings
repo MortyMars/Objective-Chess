@@ -1,0 +1,174 @@
+
+/* Class = "NSMenuItem"; title = "Mettre en avant"; ObjectID = "5"; */
+"5.title" = "Mettre en avant";
+
+/* Class = "NSMenuItem"; title = "Fenêtre"; ObjectID = "19"; */
+"19.title" = "Fenêtre";
+
+/* Class = "NSMenuItem"; title = "Réduire"; ObjectID = "23"; */
+"23.title" = "Réduire";
+
+/* Class = "NSMenu"; title = "Fenêtre"; ObjectID = "24"; */
+"24.title" = "Fenêtre";
+
+/* Class = "NSMenu"; title = "AMainMenu"; ObjectID = "29"; */
+"29.title" = "AMainMenu";
+
+/* Class = "NSMenuItem"; title = "Objective-Chess"; ObjectID = "56"; */
+"56.title" = "Objective-Chess";
+
+/* Class = "NSMenu"; title = "Objective-Chess"; ObjectID = "57"; */
+"57.title" = "Objective-Chess";
+
+/* Class = "NSMenuItem"; title = "À propos..."; ObjectID = "58"; */
+"58.title" = "À propos...";
+
+/* Class = "NSMenuItem"; title = "Préférences…"; ObjectID = "129"; */
+"129.title" = "Préférences…";
+
+/* Class = "NSMenuItem"; title = "Masquer Chess"; ObjectID = "134"; */
+"134.title" = "Masquer Chess";
+
+/* Class = "NSMenuItem"; title = "Quitter Chess"; ObjectID = "136"; */
+"136.title" = "Quitter Chess";
+
+/* Class = "NSMenuItem"; title = "Masquer les autres"; ObjectID = "145"; */
+"145.title" = "Masquer les autres";
+
+/* Class = "NSMenuItem"; title = "Montrer tout"; ObjectID = "150"; */
+"150.title" = "Montrer tout";
+
+/* Class = "NSMenuItem"; title = "Zoom"; ObjectID = "239"; */
+"239.title" = "Zoom";
+
+/* Class = "NSMenuItem"; title = "Diagramme"; ObjectID = "295"; */
+"295.title" = "Diagramme";
+
+/* Class = "NSMenu"; title = "Diagramme"; ObjectID = "296"; */
+"296.title" = "Diagramme";
+
+/* Class = "NSWindow"; title = "Objective-Chess"; ObjectID = "371"; */
+"371.title" = "Objective-Chess";
+
+/* Class = "NSMenuItem"; title = "Partie"; ObjectID = "375"; */
+"375.title" = "Partie";
+
+/* Class = "NSMenu"; title = "Partie"; ObjectID = "376"; */
+"376.title" = "Partie";
+
+/* Class = "NSMenuItem"; title = "Aide"; ObjectID = "490"; */
+"490.title" = "Aide";
+
+/* Class = "NSMenu"; title = "Aide"; ObjectID = "491"; */
+"491.title" = "Aide";
+
+/* Class = "NSMenuItem"; title = "Aide d'Objective-Chess"; ObjectID = "492"; */
+"492.title" = "Aide d'Objective-Chess";
+
+/* Class = "NSMenuItem"; title = "Poursuivre avec les ..."; ObjectID = "2Mw-ev-95d"; */
+"2Mw-ev-95d.title" = "Poursuivre avec les ...";
+
+/* Class = "NSTextFieldCell"; title = "Échec :"; ObjectID = "8n2-OU-0K0"; */
+"8n2-OU-0K0.title" = "Échec :";
+
+/* Class = "NSTextFieldCell"; title = "1        2        3        4        5        6        7        8 "; ObjectID = "CeI-Db-o68"; */
+"CeI-Db-o68.title" = "1        2        3        4        5        6        7        8 ";
+
+/* Class = "NSMenuItem"; title = "Enregistrer..."; ObjectID = "DTE-XM-7ta"; */
+"DTE-XM-7ta.title" = "Enregistrer...";
+
+/* Class = "NSTextFieldCell"; title = "Cible e.p. : -"; ObjectID = "EV9-nc-rg1"; */
+"EV9-nc-rg1.title" = "Cible e.p. : -";
+
+/* Class = "NSMenuItem"; title = "Partie Facile"; ObjectID = "FmA-TO-TuR"; */
+"FmA-TO-TuR.title" = "Partie Facile";
+
+/* Class = "NSTextFieldCell"; title = "H                G                F                 E                D                 C                B                 A"; ObjectID = "GV4-qK-oTr"; */
+"GV4-qK-oTr.title" = "H                G                F                 E                D                 C                B                 A";
+
+/* Class = "NSMenu"; title = "Niveau IA"; ObjectID = "Il0-OH-eav"; */
+"Il0-OH-eav.title" = "Niveau IA";
+
+/* Class = "NSTextFieldCell"; title = "Éval : 0"; ObjectID = "MT7-hd-ihc"; */
+"MT7-hd-ihc.title" = "Éval : 0";
+
+/* Class = "NSMenuItem"; title = "Diagramme IA vs IA"; ObjectID = "NV3-n8-UbL"; */
+"NV3-n8-UbL.title" = "Diagramme IA vs IA";
+
+/* Class = "NSMenuItem"; title = "Enregistrer..."; ObjectID = "QUt-pu-JBa"; */
+"QUt-pu-JBa.title" = "Enregistrer...";
+
+/* Class = "NSTextFieldCell"; title = "H                G                F                 E                 D                C                B                A"; ObjectID = "RPQ-GV-q7Z"; */
+"RPQ-GV-q7Z.title" = "H                G                F                 E                 D                C                B                A";
+
+/* Class = "NSMenuItem"; title = "Jouer les Noirs"; ObjectID = "S1g-mz-X24"; */
+"S1g-mz-X24.title" = "Jouer les Noirs";
+
+/* Class = "NSMenuItem"; title = "Échanges Rapides"; ObjectID = "SVH-PX-VLW"; */
+"SVH-PX-VLW.title" = "Échanges Rapides";
+
+/* Class = "NSMenuItem"; title = "Pour les Champions..."; ObjectID = "VpS-V6-Uwx"; */
+"VpS-V6-Uwx.title" = "Pour les Champions...";
+
+/* Class = "NSTextFieldCell"; title = "Coups joués"; ObjectID = "VrH-oP-hoz"; */
+"VrH-oP-hoz.title" = "Coups joués";
+
+/* Class = "NSTextFieldCell"; title = "8        7        6        5        4        3        2        1 "; ObjectID = "X7W-qz-pji"; */
+"X7W-qz-pji.title" = "8        7        6        5        4        3        2        1 ";
+
+/* Class = "NSTextFieldCell"; title = "Coup n° : 1"; ObjectID = "XQU-ry-KRi"; */
+"XQU-ry-KRi.title" = "Coup n° : 1";
+
+/* Class = "NSMenu"; title = "Nouvelle Partie"; ObjectID = "Yz0-fq-7U9"; */
+"Yz0-fq-7U9.title" = "Nouvelle Partie";
+
+/* Class = "NSMenuItem"; title = "Nouvelle Partie"; ObjectID = "Zgz-Ap-TKX"; */
+"Zgz-Ap-TKX.title" = "Nouvelle Partie";
+
+/* Class = "NSTextFieldCell"; title = "50 demis : 0"; ObjectID = "Zh0-79-wfU"; */
+"Zh0-79-wfU.title" = "50 demis : 0";
+
+/* Class = "NSTextFieldCell"; title = "1        2        3        4        5        6        7        8 "; ObjectID = "aBL-K6-9LB"; */
+"aBL-K6-9LB.title" = "1        2        3        4        5        6        7        8 ";
+
+/* Class = "NSMenuItem"; title = "Reprendre..."; ObjectID = "amO-oo-ban"; */
+"amO-oo-ban.title" = "Reprendre...";
+
+/* Class = "NSMenuItem"; title = "Partie Réfléchie"; ObjectID = "dwH-Mx-0KQ"; */
+"dwH-Mx-0KQ.title" = "Partie Réfléchie";
+
+/* Class = "NSMenuItem"; title = "Niveau IA"; ObjectID = "f7P-q3-ot6"; */
+"f7P-q3-ot6.title" = "Niveau IA";
+
+/* Class = "NSMenuItem"; title = "Notes de versions..."; ObjectID = "fbF-QG-4e7"; */
+"fbF-QG-4e7.title" = "Notes de versions...";
+
+/* Class = "NSTextFieldCell"; title = "Trait : Blancs"; ObjectID = "fpj-p6-yLA"; */
+"fpj-p6-yLA.title" = "Trait : Blancs";
+
+/* Class = "NSMenuItem"; title = "Résoudre..."; ObjectID = "kTH-aP-34k"; */
+"kTH-aP-34k.title" = "Résoudre...";
+
+/* Class = "NSMenuItem"; title = "Jouer les Blancs"; ObjectID = "klm-fN-Vms"; */
+"klm-fN-Vms.title" = "Jouer les Blancs";
+
+/* Class = "NSTextFieldCell"; title = "A                B                C                 D                E                 F                G                H"; ObjectID = "l5z-WH-FHE"; */
+"l5z-WH-FHE.title" = "A                B                C                 D                E                 F                G                H";
+
+/* Class = "NSMenuItem"; title = "Niveau Standard"; ObjectID = "lNJ-f3-93u"; */
+"lNJ-f3-93u.title" = "Niveau Standard";
+
+/* Class = "NSTextFieldCell"; title = "A                B                C                 D                E                 F                 G                H"; ObjectID = "lpa-XC-TOt"; */
+"lpa-XC-TOt.title" = "A                B                C                 D                E                 F                 G                H";
+
+/* Class = "NSTextFieldCell"; title = "8        7        6        5        4        3        2        1 "; ObjectID = "nm0-sE-JR7"; */
+"nm0-sE-JR7.title" = "8        7        6        5        4        3        2        1 ";
+
+/* Class = "NSTextFieldCell"; title = "Roque : KQkq"; ObjectID = "r6W-bn-9BY"; */
+"r6W-bn-9BY.title" = "Roque : KQkq";
+
+/* Class = "NSMenuItem"; title = "Charger un diagramme"; ObjectID = "rI1-Jc-YBr"; */
+"rI1-Jc-YBr.title" = "Charger un diagramme";
+
+/* Class = "NSTextFieldCell"; title = "Info : Welcome on Objective-Chess ;-)"; ObjectID = "yWu-PK-Amg"; */
+"yWu-PK-Amg.title" = "Info : Welcome on Objective-Chess ;-)";

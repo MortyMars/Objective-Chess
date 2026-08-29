@@ -1,16 +1,35 @@
-//
-//  RuleBook.h
-//  chess
-//
-//  Created by Andrew Wang on 7/15/13.
-//  Copyright (c) 2013 Andrew Wang. All rights reserved.
-//
+// RuleBook.h
+// chess
+// Created by Andrew Wang on 15/07/2013,
+// Copyright (c) 2013 Andrew Wang. All rights reserved
+// Optimized New Engine (makeMove/unmakeMove based) by MCN in 2026
 
-#import <Foundation/Foundation.h>
-#import "util.h"
 
-@class Piece,ChessBoard,Pos;
+
+#import "Util.h"
+
+
+@class Piece,Pos;
+@class ChessBoard;
+
 @interface RuleBook : NSObject
 
-+(NSSet *)coverageForPiece:(Piece *)piece atPos:(Pos *)pos inBoard:(ChessBoard *)board;
+   // Méthodes de Classe
+   +(NSSet *) PosLegalesForPiece:(Piece *)piece
+                           atPos:(Pos *)pos
+                         inBoard:(ChessBoard *)board;
+
+   +(NSSet *) SearchInDirection:(Pos *)start
+                             dx:(int)dx
+                             dy:(int)dy
+                          board:(ChessBoard *)board;
+
+   // Méthodes de Classe SAR (Sans appel récursif)
+   +(NSSet *) PosLegalesForPieceSAR:(Piece *)piece       // Version SAR de 'PosLegales...'
+                              atPos:(Pos *)pos
+                            inBoard:(ChessBoard *)board;
+
+   +(BOOL)    TestEchecRoiSideSAR:(Side)side             // Version SAR de 'TestEchecRoi...'
+                          inBoard:(ChessBoard *)board;
+
 @end
