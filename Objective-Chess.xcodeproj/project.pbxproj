@@ -86,7 +86,7 @@
 		49C0319F1794B238001A2048 /* Minimax.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Minimax.m; sourceTree = "<group>"; };
 		49C031A11794B4D6001A2048 /* Move.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Move.h; sourceTree = "<group>"; };
 		49C031A21794B4D6001A2048 /* Move.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Move.m; sourceTree = "<group>"; };
-		830799FF27ECB7630047CE06 /* Chess.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Chess.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		830799FF27ECB7630047CE06 /* Objective-Chess.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Objective-Chess.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		83079A0427ECB7BC0047CE06 /* ChessTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChessTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		83079A0627ECB7BD0047CE06 /* ChessTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ChessTests.m; sourceTree = "<group>"; };
 		83172A4527FA0873006FB509 /* Diagramme.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Diagramme.m; sourceTree = "<group>"; };
@@ -147,7 +147,7 @@
 				49AE4AAA17948BAD009D59BE /* Supporting Files */,
 				83079A0527ECB7BD0047CE06 /* ChessTests */,
 				49AE4AA217948BAD009D59BE /* Frameworks */,
-				830799FF27ECB7630047CE06 /* Chess.app */,
+				830799FF27ECB7630047CE06 /* Objective-Chess.app */,
 				83079A0427ECB7BC0047CE06 /* ChessTests.xctest */,
 			);
 			sourceTree = "<group>";
@@ -249,9 +249,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		49AE4A9F17948BAD009D59BE /* Chess */ = {
+		49AE4A9F17948BAD009D59BE /* Objective-Chess */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 49AE4AD117948BAD009D59BE /* Build configuration list for PBXNativeTarget "Chess" */;
+			buildConfigurationList = 49AE4AD117948BAD009D59BE /* Build configuration list for PBXNativeTarget "Objective-Chess" */;
 			buildPhases = (
 				49AE4A9C17948BAD009D59BE /* Sources */,
 				49AE4A9D17948BAD009D59BE /* Frameworks */,
@@ -261,9 +261,9 @@
 			);
 			dependencies = (
 			);
-			name = Chess;
+			name = "Objective-Chess";
 			productName = chess;
-			productReference = 830799FF27ECB7630047CE06 /* Chess.app */;
+			productReference = 830799FF27ECB7630047CE06 /* Objective-Chess.app */;
 			productType = "com.apple.product-type.application";
 		};
 		83079A0327ECB7BC0047CE06 /* ChessTests */ = {
@@ -301,7 +301,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 49AE4A9B17948BAD009D59BE /* Build configuration list for PBXProject "Chess" */;
+			buildConfigurationList = 49AE4A9B17948BAD009D59BE /* Build configuration list for PBXProject "Objective-Chess" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -314,7 +314,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				49AE4A9F17948BAD009D59BE /* Chess */,
+				49AE4A9F17948BAD009D59BE /* Objective-Chess */,
 				83079A0327ECB7BC0047CE06 /* ChessTests */,
 			);
 		};
@@ -394,7 +394,7 @@
 /* Begin PBXTargetDependency section */
 		83079A0927ECB7BD0047CE06 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 49AE4A9F17948BAD009D59BE /* Chess */;
+			target = 49AE4A9F17948BAD009D59BE /* Objective-Chess */;
 			targetProxy = 83079A0827ECB7BD0047CE06 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -613,7 +613,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		49AE4A9B17948BAD009D59BE /* Build configuration list for PBXProject "Chess" */ = {
+		49AE4A9B17948BAD009D59BE /* Build configuration list for PBXProject "Objective-Chess" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				49AE4ACF17948BAD009D59BE /* Debug */,
@@ -622,7 +622,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		49AE4AD117948BAD009D59BE /* Build configuration list for PBXNativeTarget "Chess" */ = {
+		49AE4AD117948BAD009D59BE /* Build configuration list for PBXNativeTarget "Objective-Chess" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				49AE4AD217948BAD009D59BE /* Debug */,

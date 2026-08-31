@@ -1,7 +1,7 @@
 Objective-Chess - Objective-C Chess Implementation (Negamax Alpha Beta)
 -----------------------------------------------------------------------
 
-This fork is a reworking of an attractive chess implementation, notable for being one of the few written for macOS in Objective-C, a language that remains undeniably elegant, although now somewhat outdated.
+This project is a reworking of an attractive chess implementation, notable for being one of the few written for macOS in Objective-C, a language that remains undeniably elegant, although now somewhat outdated.
 
 Features
 --------
