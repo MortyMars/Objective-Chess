@@ -1,8 +1,7 @@
 // Minimax.m
 // chess
-// Created by Andrew Wang on 15/07/2013
-// Copyright (c) 2013 Andrew Wang. All rights reserved.
-// Optimized New Engine (makeMove/unmakeMove based) by MCN in 2026
+// Initial code by Andrew Wang on 15/07/2013
+// Refactoring by MortyMars early 2026
 
 
 #import "Minimax.h"
@@ -517,7 +516,7 @@
                                         beta:-alpha
                                   inNullMove:NO
                                          ply:ply+1];
-            } // Brackett MCN !?
+            } // Brackett !?
             
             // ✅ LOG pour les coups suspects
             if (depth == NUMBER_MOVES_AHEAD) {  // Seulement au niveau racine

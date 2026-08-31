@@ -1,7 +1,7 @@
 //  CodesFEN.txt
 //  Chess
-//  Created by MCN on 03/04/2022
-//  Copyright © 2022 MCN. All rights reserved
+//  Created by MortyMars on 03/04/2022
+
 
  --------------------------------------------------------------------------------------------------------------------
 |      Codes FEN (à copier /coller à l'invit de l'appli)                |  Commentaires                              |

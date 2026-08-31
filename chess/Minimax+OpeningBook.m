@@ -1,7 +1,6 @@
 // Minimax+OpeningBook.m
 // chess
-// Created by MCN on 18/03/2026 for optimized New Engine
-// Copyright (c) 2026 MCN. All rights reserved
+// Created by MortyMars on 18/03/2026
 
 
 #import "Minimax+OpeningBook.h"

@@ -1,8 +1,8 @@
 // AppDelegate.m
 // chess
-// Created by Andrew Wang on 15/07/2013
-// Copyright (c) 2013 Andrew Wang. All rights reserved
-// Updated by MCN in 2020
+// Initial code by Andrew Wang on 15/07/2013
+// Refactoring by MortyMars in 2020
+
 
 #import "AppDelegate.h"
 #import "ChessConfig.h"
@@ -10,7 +10,7 @@
 
 @implementation AppDelegate
 
-   @synthesize connecteurFromIB; // MCN - IBOutlet pour Interface Builder
+   @synthesize connecteurFromIB; // IBOutlet pour Interface Builder
    //@synthesize maMinimax;
 
    // ==================================================================================================
@@ -65,7 +65,7 @@
       //maMinimax = maMinimax;
       maMinimax = [[Minimax alloc] init];
       
-      // MCN - NSLog de contrôle
+      // NSLog de contrôle
       NSLog(@"Interface initialisée et chargée");
       NSLog(@"Welcome sur Objective-Chess 😉\n");
       

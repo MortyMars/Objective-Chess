@@ -1,7 +1,7 @@
 // Connecteur.m
 // Chess
-// Created by MCN on 01/11/2020
-// Copyright © 2020 MCN - All rights reserved
+// Created by MortyMars on 01/11/2020
+
 
 // CLASSE CONTROLEUR INTERAGISSANT AVEC L'UI ET SES DIFFERENTS OBJETS
 

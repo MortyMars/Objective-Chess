@@ -1,7 +1,7 @@
 //  ChessTests.h
 //  ChessTests
-//  Created by MCN on 22/04/2022.
-//  Copyright © 2022 MCN - All rights reserved.
+//  Created by MortyMars on 22/04/2022.
+
 
 #import <XCTest/XCTest.h>
 #import <Foundation/Foundation.h>

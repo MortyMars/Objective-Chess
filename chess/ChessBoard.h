@@ -1,8 +1,7 @@
 // ChessBoard.h
 // chess
-// Created by Andrew Wang on 15/07/2013
-// Copyright (c) 2013 Andrew Wang. All rights reserved
-// Optimized New Engine (makeMove/unmakeMove based) by MCN in 2026
+// Initial code by Andrew Wang on 15/07/2013
+// Refactoring by MortyMars early 2026
 
 
 #import "MoveToStr.h"

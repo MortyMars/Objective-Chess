@@ -1,10 +1,7 @@
-//
 //  BoardsForTests.m
 //  ChessTests
-//
-//  Created by MCN on 21/04/2022.
-//  Copyright © 2022 MCN. All rights reserved.
-//
+//  Created by MortyMars on 21/04/2022.
+
 
 #import "BoardsForTests.h"
 //#import "ChessTests.h"

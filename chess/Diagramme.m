@@ -1,7 +1,7 @@
 // Diagramme.m
 // Chess
-// Created by MCN on 03/04/2022
-// Copyright © 2022 MCN. All rights reserved
+// Created by MortyMars on 03/04/2022
+
 
 #import "Diagramme.h"
 #import "ChessConfig.h"
@@ -576,7 +576,7 @@ NSString *strPieces;
       NOTER : c'est 'PerformMove' qui positionne les indicateurs de roque */
       BOOL roque = petitRoque;         BOOL ROQUE = grandRoque;         BOOL ENPASS = enPassant;
       
-      /* MCN - AJOUT DU COUP IA À LA LISTE DE CEUX DÉJÀ JOUÉS
+      /* AJOUT DU COUP IA À LA LISTE DE CEUX DÉJÀ JOUÉS
       EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard */
        
       /* VÉRIF OBSOLÈTE CPTE TENU DE LA GESTION PAR L'IA DE SES PROPRES PROMOTIONS
@@ -651,7 +651,7 @@ NSString *strPieces;
 
    /* MÉTHODE OBSOLÈTE À DÉSACTIVER
    // ==================================================================================================
-   // MCN - Version silencieuse de 'TestEchecFavSide'
+   // Version silencieuse de 'TestEchecFavSide'
    // Détection des positions d'Échec en faveur du coté 'Side' (autrement dit Roi 'otherSide' en échec)
    +(NSString *)SilentTestEchecFavSide:(Side)side Board:(ChessBoard *)board
    {
@@ -696,7 +696,7 @@ NSString *strPieces;
 
 
    // ==================================================================================================
-   // Méthode MCN - Version silencieuse de MajStatusBarViaMove
+   // Version silencieuse de MajStatusBarViaMove
    // Mettant à jour la majorité des champs de la 'Barre d'état'
    -(void) SilentMajStatusBarViaMove:(Move *)move PrecBoard:(ChessBoard *)precBoard StrCheck:(NSString *)strCheck {
       // lblTrait
@@ -733,7 +733,7 @@ NSString *strPieces;
 
    /* MÉTHODE OBSOLÈTE À DÉSACTIVER
    // ==================================================================================================
-   // MCN - Méthode de classe pour assurer la gestion du Pat et du Mat - Version silencieuse
+   // Méthode de classe pour assurer la gestion du Pat et du Mat - Version silencieuse
    // CETTE MÉTHODE NE DOIT ÊTRE APPELÉE QU'APRÈS QU'UN TEST SUR 'PossibleMovesForSide' AIT RÉVÉLÉ QUE LE
    // JEU DE MOVES EST VIDE, CAR C'EST BIEN CE TEST QUI CARACTÉRISE UNE SITUATION DE MAT OU DE PAT,
    // LA PRÉSENTE MÉTHODE NE FAIT QUE LA TRAITER...

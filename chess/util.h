@@ -1,14 +1,13 @@
 // Util.h
 // chess
-// Created by Andrew Wang on 15/07/2013,
-// Copyright (c) 2013 Andrew Wang. All rights reserved
-// Optimized New Engine (makeMove/unmakeMove based) by MCN in 2026
+// Initial code by Andrew Wang on 15/07/2013,
+// Refactoring by MortyMars early 2026
 
 
 // =====================================================================================================
 // DEFINE ET MACROS
 
-/* MCN - Macro permettant de supprimer les indications Date, Heure, Appli, ... des messages NSLog */
+/* Macro permettant de supprimer les indications Date, Heure, Appli, ... des messages NSLog */
 #define NSLog(FORMAT, ...) printf("%s\n", [[NSString stringWithFormat:FORMAT, ##__VA_ARGS__] UTF8String]);
 
 // Macros de transposition de la propriété 'square' d'un 'move'

@@ -1,7 +1,7 @@
 // Zobrist.m
 // Chess
-// Created by MCN on 2026-02-08.
-// Copyright © 2026 MCN - All rights reserved
+// Created by MortyMars on 2026-02-08.
+
 
 #import "Zobrist.h"
 #import "ChessConfig.h"

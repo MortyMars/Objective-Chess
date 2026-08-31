@@ -1,8 +1,8 @@
 //  main.m
 //  chess
-//
-//  Created by Andrew Wang on 15/07/2013, Completed by MCN on 03/2022
-//  Copyright (c) 2013 Andrew Wang. All rights reserved.
+//  Initial code by Andrew Wang on 15/07/2013
+//  Refactoring by MortyMars early 2022
+
 
 int main(int argc, const char * argv[])
 {

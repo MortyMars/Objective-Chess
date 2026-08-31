@@ -1,11 +1,11 @@
 // ChessView.m
 // chess
-// Created by Andrew Wang on 15/07/2013
-// Copyright (c) 2013 Andrew Wang. All rights reserved
-// Updated by MCN on 2020
+// Initial code by Andrew Wang on 15/07/2013
+// Refactoring by MortyMars in 2020
 
-//  CLASSE DE DÉFINITION DE L'ÉCHIQUIER EN TERMES DE VUES (construction graphique de l'échiquier, des pièces...)
-//  par opposition à la classe ChessBoard qui traite les données d'un 'board'
+
+// CLASSE DE DÉFINITION DE L'ÉCHIQUIER EN TERMES DE VUES (construction graphique de l'échiquier, des pièces...)
+// par opposition à la classe ChessBoard qui traite les données d'un 'board'
 
 #import "ChessView.h"
 #import "ChessConfig.h"
@@ -511,7 +511,7 @@ BOOL engineIsBusy = NO;
 
 
    // ==================================================================================================
-   // MCN - Méthode d'instance
+   // Méthode d'instance
    // Création d'une méthode Joueur symétrique à celle déjà existante pour réaliser le move de l'IA
    // L'idée première est d'homogénéiser la structure du code et d'en simplifier la lecture...
    -(void) MakeJoueurMoveVersDest:(Pos *) dest
@@ -707,7 +707,7 @@ BOOL engineIsBusy = NO;
       BOOL ROQUE = grandRoque;
       BOOL ENPASS = enPassant;
       
-      /* MCN - AJOUT DU COUP IA À LA LISTE DE CEUX DÉJÀ JOUÉS
+      /* AJOUT DU COUP IA À LA LISTE DE CEUX DÉJÀ JOUÉS
       EXTRACTION ET TRANSFORMATION de la chaine contenue dans 'move' en notation plus standard */
       
       /* Récup info d'une mise en échec éventuelle et de Prise e.p. pour renseigner 'ConvertEnStringMove'
@@ -770,7 +770,7 @@ BOOL engineIsBusy = NO;
 
 
    // ==================================================================================================
-   // MCN Méthode d'instance mettant à jour la majorité des champs de la 'Barre d'état'
+   // Méthode d'instance mettant à jour la majorité des champs de la 'Barre d'état'
    // lblTrait et lblInfo font l'objet d'un traitement spécifique hors de la présent méthode
    -(void) MajStatusBarViaMove:(Move *)move PrecBoard:(ChessBoard *)precBoard StrCheck:(NSString *)strCheck {
       
