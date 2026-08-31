@@ -1,11 +1,12 @@
 // PeSTO.m — Tables positionnelles PeSTO + interpolation de phase
 // Source : https://www.chessprogramming.org/PeSTO%27s_Evaluation_Function
+// Reworking by MortyMars early 2026
+
+
 // Convention : index 0 = a1 (bas gauche Blancs), index 63 = h8
 // Orientation : rangée 1 Blancs en bas → rangée 8 Noirs en haut
 
-
 #import "PeSTO.h"
-
 
 // Index PieceType : 0=Invalide, 1=Pion, 2=Cava, 3=Fou, 4=Tour, 5=Dame, 6=Roi
 // ── Valeurs de base ───────────────────────────────────────────────────────

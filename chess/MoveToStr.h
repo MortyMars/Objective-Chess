@@ -1,7 +1,7 @@
 // MoveToStr.h
 // Chess
-// Created by MCN on 22/02/2022
-// Copyright © 2022 MCN. All rights reserved
+// Created by MortyMars on 22/02/2022
+
 
 #include "ChessBoard.h"
 #include "Minimax.h"

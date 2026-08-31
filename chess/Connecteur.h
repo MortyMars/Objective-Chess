@@ -1,7 +1,7 @@
 // Connecteur.h
 // Chess
-// Created by MCN on 01/11/2020.
-// Copyright © 2020 MCN - All rights reserved
+// Created by MortyMars on 01/11/2020.
+
 
 #import "Minimax.h"
 #import "ChessView.h"
@@ -85,7 +85,7 @@
    -(IBAction)SetDifficulty5:(id)sender;
 
    
-   // Création des Outlet MCN pour gestion du menu 'Partie->Difficulté'
+   // Création des Outlet pour gestion du menu 'Partie->Difficulté'
    @property (strong) IBOutlet NSMenuItem *menuRapide;
    @property (strong) IBOutlet NSMenuItem *menuFacile;
    @property (strong) IBOutlet NSMenuItem *menuSTD;

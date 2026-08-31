@@ -1,10 +1,10 @@
 // RuleBook.m
 // chess
-// Created by Andrew Wang on 15/07/2013,
-// Copyright (c) 2013 Andrew Wang. All rights reserved
-// Optimized New Engine (makeMove/unmakeMove based) by MCN in 2026
+// Initial code by Andrew Wang on 15/07/2013,
+// Refactoring by MortyMars in 2026
 
-//  CLASSE DÉFINISSANT LES RÈGLES DE DÉPLACEMENT DES PIÈCES SUR L'ÉCHIQUIER
+
+// CLASSE DÉFINISSANT LES RÈGLES DE DÉPLACEMENT DES PIÈCES SUR L'ÉCHIQUIER
 
 #import "RuleBook.h"
 #import "ChessBoard.h"
@@ -187,7 +187,7 @@
 
 
    // ==================================================================================================
-   // MCN - Méthode de Classe Quasi-Clone de [Minimax TestEchecRoiSide] en version SAR (sans appel récursif)
+   // Méthode de Classe Quasi-Clone de [Minimax TestEchecRoiSide] en version SAR (sans appel récursif)
    // Elle est appelée dans 'PosLegalesForPiece' et appelle une version renommée 'PosLegalesForPieceSAR'
    // pour éviter l'appel récursif qui plante le programme
    +(BOOL)TestEchecRoiSideSAR:(Side)side inBoard:(ChessBoard *)board {

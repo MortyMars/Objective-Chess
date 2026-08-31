@@ -1,13 +1,11 @@
 //  ChessTests.m
 //  ChessTests
-//  Created by MCN on 24/03/2022.
-//  Copyright © 2022 MCN - All rights reserved.
+//  Created by MortyMars on 24/03/2022.
 
 
 #import "ChessTests.h"
 #import "BoardsForTests.h"
 #import "ChessBoard+MakeMoves.h"
-
 
 
 @implementation ChessTests

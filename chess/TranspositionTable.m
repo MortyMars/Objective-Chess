@@ -1,6 +1,7 @@
 // TranspositionTable.m
 // Chess
-//
+// Created by MortyMars early 2026
+
 
 #import "TranspositionTable.h"
 #import <stdlib.h>  // Pour malloc/free

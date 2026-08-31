@@ -1,5 +1,8 @@
 // PeSTO.h — Tables positionnelles PeSTO + interpolation de phase
 // Source : https://www.chessprogramming.org/PeSTO%27s_Evaluation_Function
+// Reworking by MortyMars early 2026
+
+
 // Convention : index 0 = a1 (bas gauche Blancs), index 63 = h8
 // Orientation : rangée 1 Blancs en bas → rangée 8 Noirs en haut
 

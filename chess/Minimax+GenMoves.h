@@ -1,7 +1,6 @@
 // Minimax+GenMoves.h
 // chess
-// Created by MCN on 16/02/2026 for optimized New Engine
-// Copyright (c) 2026 MCN. All rights reserved
+// Created by MortyMars on 16/02/2026
 
 
 #import "Minimax.h"

@@ -1,8 +1,10 @@
 // TranspositionTable.h
 // Chess
-//
+// Created by MortyMars early 2026
+
+
 // Tables de Transposition
-// Utilise les clés Zobrist pour stocker/récupérer les positions évaluées
+// Utilisent les clés Zobrist pour stocker/récupérer les positions évaluées
 
 #import <Foundation/Foundation.h>
 #import "Move.h"
